@@ -1,0 +1,23 @@
+/* 1 */
+{
+    "_id" : ObjectId("5d04e362ad1b8e0bd7b7b09d"),
+    "updatedAt" : ISODate("2019-06-15T12:24:02.674Z"),
+    "createdAt" : ISODate("2019-06-15T12:24:02.674Z"),
+    "export" : 76.5,
+    "import" : 79.5,
+    "date" : ISODate("2019-06-15T00:00:00.000Z"),
+    "currency" : "Euro",
+    "__v" : 0
+}
+
+/* 2 */
+{
+    "_id" : ObjectId("5d04e39dad1b8e0bd7b7b09e"),
+    "updatedAt" : ISODate("2019-06-15T12:25:01.479Z"),
+    "createdAt" : ISODate("2019-06-15T12:25:01.479Z"),
+    "export" : 47.35,
+    "import" : 49.55,
+    "date" : ISODate("2019-06-15T00:00:00.000Z"),
+    "currency" : "Australian Dollar",
+    "__v" : 0
+}

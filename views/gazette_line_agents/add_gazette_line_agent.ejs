@@ -1,0 +1,340 @@
+<% include ../partials/head %>
+</head>
+<body class="hold-transition skin-blue sidebar-mini">
+	<div class="wrapper">
+
+		<header class="main-header">
+			<% include ../partials/header %>
+		</header>
+
+		<aside class="main-sidebar">
+			<% include ../partials/aside %>
+		</aside>
+
+		<div class="content-wrapper">
+			<section class="content-header">
+				<h1>
+					Manage Gazette Line Agents
+				</h1>
+			</section>
+			<section class="content">
+				<!-- for main content of the page -->
+				<div class="row">
+					<div class="col-md-12">
+						<!-- general form elements -->
+						<div class="box box-info">
+							<div class="box-header">
+								<h3 class="box-title">Add Gazette Line Agents</h3>
+							</div><!-- /.box-header -->
+							<!-- form start -->
+							<form id="gazette_line_agent_form" method="POST" class="" role="form">
+								<div class="box-body">
+									<div id="AlertInfo">                            
+										<div class="alert alert-danger" style="display: none">
+											<i class="fa fa-warning"></i>
+											<button class="close" data-dismiss="alert">×</button>
+											<span id="errorMsg">You have some form errors. Please check below.</span>
+										</div>
+
+										<div class="alert alert-success " style="display: none">
+											<i class="fa fa-check"></i>
+											<button class="close" data-dismiss="alert">×</button>
+											<span id="successMsg">Your form validation is successful!</span>
+										</div>
+									</div>
+
+									<div class="row">
+										<div class="col-md-12">
+											<div class="col-md-6">
+												<div class="form-group">
+													<label class="col-md-3 control-label">Sector <span style="color:red;">*</span></label>
+													<div class="col-md-7">
+														<input type="hidden" name="sector_id" value="<%= sector._id %>" id="sector_id">
+														<select name="gazette_sector_id" id="gazette_sector_id" class="form-control">
+															<option value="">Select Gazette Sector</option>
+															<option value="1">EUROPE/GULF</option>
+															<option value="2">USA/EUROPE</option>
+															<option value="3">GULF/AFRICA</option>
+															<option value="4">FAR EAST/INDIAN SUB CONTINENT</option>
+															<option value="5">GULF/FAR EAST</option>
+															<option value="6">GULF</option>
+														</select>
+													</div>
+												</div>
+											</div>
+											<div class="col-md-6">
+												<div class="form-group">
+													<label class="col-md-4 control-label">Terminal <span style="color:red;">*</span></label>
+													<div class="col-md-8">
+														<select name="port_id" id="port_id" class="form-control">
+															<option value="">Select Terminal</option>
+															<% if (ports != '') { %>
+															<% ports.map(function(port, ind) {  %>
+															<option value="<%= port._id %>"><%= port.name %></option>
+															<% }) } %>
+														</select>
+													</div>
+												</div>
+											</div>
+										</div>
+
+										<div class="col-md-12" style="margin-top: 10px;">
+											<div class="col-md-6">
+												<div class="form-group">
+													<label class="col-md-3 control-label">Service <span style="color:red;">*</span></label>
+													<div class="col-md-7">
+														<select name="service_id" id="service_id" class="form-control">
+															<option value="">Select Service</option>
+															<option value="1">HIMALAYA EXP</option>
+															<option value="2">ME1</option>
+															<option value="3">IMED-GEM2</option>
+															<option value="4">IPAK-EPIC1</option>
+															<option value="5">EPIC2-IPAK-2</option>
+															<option value="6">IMEX</option>
+															<option value="7">ME3</option>
+															<option value="8">INDUS EXP</option>
+															<option value="9">MECL1</option>
+															<option value="10">INDAMEX</option>
+															<option value="11">MIDAS LOOP2</option>
+															<option value="12">MESAWA LOOP1</option>
+															<option value="13">MWE</option>
+															<option value="14">SWAX</option>
+															<option value="15">INGWE</option>
+															<option value="16">CIX2-CISC-NCI</option>
+															<option value="17">CI2</option>
+															<option value="18">AIS</option>
+															<option value="19">CIX</option>
+															<option value="20">CI1-AS6-CIX1</option>
+															<option value="21">SCIX</option>
+															<option value="22">CIX3</option>
+															<option value="23">AIS3-CIX3</option>
+															<option value="24">FM3</option>
+															<option value="25">HLS-TIP</option>
+															<option value="26">PS3</option>
+															<option value="27">GALEX</option>
+															<option value="28">NDX</option>
+															<option value="29">NEW IIX SERVICE</option>
+															<option value="30">NMG</option>
+															<option value="31">ASX</option>
+														</select>
+													</div>
+												</div>
+											</div>
+										</div>
+
+										<div class="col-md-12 table-responsive">
+											<table class="table table-bordered">
+												<thead>
+													<tr>
+														<th>Line <span style="color:red;">*</span></th>
+														<th>Agent <span style="color:red;">*</span></th>
+														<th>Action</th>
+													</tr>
+												</thead>
+												<tbody id="gazette_line_agent_tbody">
+													<tr>
+														<td>
+															<div class="form-group">
+																<input name="line[]" id="line" class="form-control" placeholder="line">
+															</div>
+														</td>
+														<td>
+															<div class="form-group">
+																<input name="agent[]" id="agent" class="form-control" placeholder="Agent">
+															</div>
+														</td>
+														<td>
+															<div class="form-group">
+																<div class="form-group">
+																<button type="button" class="btn btn-primary btn-xs" id="add"><i class="fa fa-plus"></i></button>
+															</div>
+															</div>
+														</td>
+													</tr>
+												</tbody>
+											</table>
+										</div>
+										<!-- <div class="col-md-8">
+												<div class="col-md-12">
+													<div class="form-group">
+														<label class="col-md-4 control-label">Date <span style="color:red;">*</span></label>
+														<div class="col-md-6">
+															<input type="text" class="form-control input-sm" id="date" name="date" placeholder="Date">
+														</div>
+													</div>
+												</div>
+
+												<div class="col-md-12">
+													<div class="form-group">
+														<label class="col-md-4 control-label">Currency <span style="color:red;">*</span></label>
+														<div class="col-md-6">
+															<input type="text" class="form-control" id="currency" name="currency" placeholder="Currency">
+														</div>
+													</div>
+												</div>
+
+												<div class="col-md-12">
+													<div class="form-group">
+														<label class="col-md-4 control-label">Import <span style="color:red;">*</span></label>
+														<div class="col-md-6">
+															<input type="text" class="form-control input-sm" id="import" name="import" placeholder="Import">
+														</div>
+													</div>
+												</div>
+
+												<div class="col-md-12">
+													<div class="form-group">
+														<label class="col-md-4 control-label">Export <span style="color:red;">*</span></label>
+														<div class="col-md-6">
+															<input type="text" class="form-control" id="export" name="export" placeholder="Export">
+														</div>
+													</div>
+												</div>
+										</div> -->
+									</div>
+								</div>        
+
+								<div class="box-footer">
+									<div class="row">
+										<div class="col-md-5 hidden-sm"></div>
+										<div class="col-md-6 col-sm-12">
+											<span class="pull-right col-sm-pull-left">
+												<button type="submit" id="save_gazette_line_agent" class="btn btn-sm btn-success"><i class="glyphicon glyphicon-check"></i> Submit</button>
+												<button type="reset" class="btn btn-sm btn-danger"><i class="glyphicon glyphicon-refresh"></i> Reset</button>
+											</span>
+										</div>
+									</div>
+								</div>
+							</form>
+						</div><!-- /.box -->
+					</div>
+				</div>
+			</section>
+		</div>
+
+		<footer class="main-footer">
+			<% include ../partials/footer %>
+		</footer>
+	</div>
+
+	<% include ../partials/tail %>
+
+	<script type="text/javascript" src="../../jquery-validation/js/jquery.validate.js"></script>
+	<script type="text/javascript" src="../../jquery-validation/js/additional-methods.min.js"></script>
+	<script type="text/javascript">
+		$(document).ready(function() {
+
+			$(document).on('click', '#add', function() {
+				$('#gazette_line_agent_tbody').append(`
+											<tr>
+														<td>
+															<div class="form-group">
+																<input name="line[]" id="line" class="form-control" placeholder="line">
+															</div>
+														</td>
+														<td>
+															<div class="form-group">
+																<input name="agent[]" id="agent" class="form-control" placeholder="Agent">
+															</div>
+														</td>
+														<td>
+															<div class="form-group">
+																<button type="button" class="btn btn-danger btn-xs remove"><i class="fa fa-trash"></i></button>
+															</div>
+														</td>
+													</tr>
+										`)
+			});
+
+			$(document).on('click', '.remove', function() {
+				$(this).parent().parent().parent().remove();
+			});
+
+			$(document).on('click', '#save_gazette_line_agent', function() {
+	            var myForm = $('#gazette_line_agent_form');
+	            var errorMsgDiv = $('.alert-danger');
+	            var successMsgDiv = $('.alert-success');
+
+	            myForm.validate({
+	                errorElement: 'span', //default input error message container
+	                errorClass: 'help-block help-block-error', // default input error message class
+	                focusInvalid: false, // do not focus the last invalid input
+	                ignore: "",  // validate all fields including form hidden input
+	                rules: {
+	                    "gazette_sector_id": {
+	                        required: true
+	                    },
+	                    "port_id": {
+	                        required: true
+	                    },
+	                    "service_id": {
+	                        required: true
+	                    },
+	                    "line[]": {
+	                        required: true
+	                    },
+	                    "agent[]": {
+	                        required: true
+	                    }
+	                },
+
+	                invalidHandler: function (event, validator) { //display error alert on form submit     
+	                    successMsgDiv.hide();
+	                    $("html, body").animate({ scrollTop: 0 }, "slow");
+	                    errorMsgDiv.show();
+	                    errorMsgDiv.delay(3000).fadeOut();
+	                },
+
+	                highlight: function (element) { // hightlight error inputs
+	                    $(element)
+	                        .closest('.form-group').addClass('has-error'); // set error class to the control group
+	                },
+
+	                unhighlight: function (element) { // revert the change done by hightlight
+	                    $(element)
+	                        .closest('.form-group').removeClass('has-error'); // set error class to the control group
+	                },
+
+	                success: function (label) {
+	                    label
+	                        .closest('.form-group').removeClass('has-error'); // set success class to the control group
+	                },
+
+	                submitHandler: function (form) {
+	                    $.ajax({
+	                        url: "/gazette_line_agents/store",
+	                        type: "POST",
+	                        data:  $('#gazette_line_agent_form').serialize(),
+	                        success: function(data)
+	                        {
+	                            var res = data.split("|"); 
+	                            if(res[0]=='error')
+	                            {
+	                                $('#errorMsg').html(res[1]);
+	                                successMsgDiv.hide();
+	                                $("html, body").animate({ scrollTop: 0 }, "slow");
+	                                errorMsgDiv.show();  
+	                                errorMsgDiv.delay(3000).fadeOut();
+	                            }
+	                            else if(res[0]=='success')
+	                            {
+	                                $('#successMsg').html(res[1]);
+	                                errorMsgDiv.hide();
+	                                $("html, body").animate({ scrollTop: 0 }, "slow");
+	                                successMsgDiv.show();
+	                                successMsgDiv.delay(3000).fadeOut();
+	                                setTimeout(function() {
+	                                window.location.href = "/gazette_line_agents/list";
+	                                }, 1500);
+	                            }
+	                        }
+	                    });
+	                }
+	            });
+	        });
+    	});
+	</script>
+	</body>
+</html>
+
+

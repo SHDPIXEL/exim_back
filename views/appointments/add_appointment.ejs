@@ -1,0 +1,251 @@
+<% include ../partials/head %>
+<link rel="stylesheet" href="../../jquery_ui/css/jquery-ui.min.css">
+<link rel="stylesheet" type="text/css" href="../../select2/css/select2.min.css">
+</head>
+<body class="hold-transition skin-blue sidebar-mini">
+	<div class="wrapper">
+
+		<header class="main-header">
+			<% include ../partials/header %>
+		</header>
+
+		<aside class="main-sidebar">
+			<% include ../partials/aside %>
+		</aside>
+
+		<div class="content-wrapper">
+			<section class="content-header">
+				<h1>
+					Manage Appointments
+				</h1>
+			</section>
+			<section class="content">
+				<!-- for main content of the page -->
+				<div class="row">
+					<div class="col-md-12">
+						<!-- general form elements -->
+						<div class="box box-info">
+							<div class="box-header">
+								<h3 class="box-title">Add Appointment</h3>
+							</div><!-- /.box-header -->
+							<!-- form start -->
+							<form id="appointment_form" method="POST" class="form-horizontal" role="form">
+								<div class="box-body">
+									<div id="AlertInfo">                            
+										<div class="alert alert-danger" style="display: none">
+											<i class="fa fa-warning"></i>
+											<button class="close" data-dismiss="alert">×</button>
+											<span id="errorMsg">You have some form errors. Please check below.</span>
+										</div>
+
+										<div class="alert alert-success " style="display: none">
+											<i class="fa fa-check"></i>
+											<button class="close" data-dismiss="alert">×</button>
+											<span id="successMsg">Your form validation is successful!</span>
+										</div>
+									</div>
+
+									<div class="row">
+										<div class="col-md-12">
+											<div class="col-md-6">
+												<div class="col-md-12">
+													<div class="form-group">
+														<label class="col-md-4 control-label">Job Title <span style="color:red;">*</span></label>
+														<div class="col-md-6">
+															<select multiple="multiple" class="form-control input-sm" id="job_title_id" name="job_title_id[]">
+																<!-- <option value="">Select Job Title</option> -->
+																<% if(job_titles != '') { %>
+																	<% job_titles.map(function(job_title) { %>
+																		<option value="<%= job_title._id %>"><%= job_title.job_title %></option>
+																<% }) } %>
+															</select>
+														</div>
+													</div>
+												</div>
+
+												<div class="col-md-12">
+													<div class="form-group">
+														<label class="col-md-4 control-label">Date <span style="color:red;">*</span></label>
+														<div class="col-md-6">
+															<input type="text" class="form-control input-sm" id="date" name="date" placeholder="Date">
+														</div>
+													</div>
+												</div>
+											</div>   
+
+											<div class="col-md-6">
+												<div class="col-md-12">
+													<div class="form-group">
+														<label class="col-md-4 control-label">Edition <span style="color:red;">*</span></label>
+														<div class="col-md-6">
+															<select class="form-control input-sm" id="edition_id" name="edition_id">
+																<option value="">Select Edition</option>
+																<% if(editions != '') { %>
+																	<% editions.map(function(edition) { %>
+																		<option value="<%= edition._id %>"><%= edition.edition %></option>
+																<% }) } %>
+															</select>
+														</div>
+													</div>
+												</div>
+
+												<div class="col-md-12">
+													<div class="form-group">
+														<label class="col-md-4 control-label">Status <span style="color:red;">*</span></label>
+														<div class="col-md-6">
+															<select class="form-control input-sm" id="status" name="status">
+																<option value="">Select Status</option>
+																<option value="1">Active</option>
+																<option value="0">Inactve</option>
+															</select>
+														</div>
+													</div>
+												</div>
+											</div>
+										</div>
+
+										<div class="col-md-12">
+											<div class="form-group">
+												<label class="col-md-2 control-label">Description <span style="color:red;">*</span></label>
+												<div class="col-md-10">
+													<textarea class="form-control input-sm" id="description" name="description" placeholder="Description"></textarea>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>        
+
+								<div class="box-footer">
+									<div class="row">
+										<div class="col-md-5 hidden-sm"></div>
+										<div class="col-md-6 col-sm-12">
+											<span class="pull-right col-sm-pull-left">
+												<button type="submit" id="save_appointment" class="btn btn-sm btn-success"><i class="glyphicon glyphicon-check"></i> Submit</button>
+												<button type="reset" class="btn btn-sm btn-danger"><i class="glyphicon glyphicon-refresh"></i> Reset</button>
+											</span>
+										</div>
+									</div>
+								</div>
+							</form>
+						</div><!-- /.box -->
+					</div>
+				</div>
+			</section>
+		</div>
+
+		<footer class="main-footer">
+			<% include ../partials/footer %>
+		</footer>
+	</div>
+
+	<% include ../partials/tail %>
+
+	<script type="text/javascript" src="../../jquery-validation/js/jquery.validate.min.js"></script>
+	<script type="text/javascript" src="../../jquery-validation/js/additional-methods.min.js"></script>
+	<script src="../../jquery_ui/js/jquery-ui.min.js"></script>
+	<!-- <script src="../../ckeditor/js/ckeditor.js"></script> -->
+	<script type="text/javascript" src="https://ckeditor.com/docs/vendors/4.12.1/ckeditor/ckeditor.js"></script>
+	<script type="text/javascript" src="../../select2/js/select2.min.js"></script>
+	<script type="text/javascript">
+		$(document).ready(function() {
+
+			CKEDITOR.replace( 'description', {
+				extraPlugins: 'colorbutton, colordialog, justify, font'
+			} );
+
+			$(document).on('click', '#save_appointment', function() {
+	            var myForm = $('#appointment_form');
+	            var errorMsgDiv = $('.alert-danger');
+	            var successMsgDiv = $('.alert-success');
+
+	            myForm.validate({
+	                errorElement: 'span', //default input error message container
+	                errorClass: 'help-block help-block-error', // default input error message class
+	                focusInvalid: false, // do not focus the last invalid input
+	                ignore: "",  // validate all fields including form hidden input
+	                rules: {
+	                    "job_title_id": {
+	                        required: true
+	                    },
+	                    "edition_id": {
+	                        required: true
+	                    },
+	                    "date": {
+	                        required: true
+	                    },
+	                    "description": {
+	                        required: true
+	                    },
+	                    "status": {
+	                        required: true
+	                    }
+	                },
+
+	                invalidHandler: function (event, validator) { //display error alert on form submit     
+	                    successMsgDiv.hide();
+	                    errorMsgDiv.show();
+	                    errorMsgDiv.delay(3000).fadeOut();
+	                },
+
+	                highlight: function (element) { // hightlight error inputs
+	                    $(element)
+	                        .closest('.form-group').addClass('has-error'); // set error class to the control group
+	                },
+
+	                unhighlight: function (element) { // revert the change done by hightlight
+	                    $(element)
+	                        .closest('.form-group').removeClass('has-error'); // set error class to the control group
+	                },
+
+	                success: function (label) {
+	                    label
+	                        .closest('.form-group').removeClass('has-error'); // set success class to the control group
+	                },
+
+	                submitHandler: function (form) {
+
+	                    $.ajax({
+	                        url: "/appointments/store",
+	                        type: "POST",
+	                        data:  $('#appointment_form').serialize(),
+	                        success: function(data)
+	                        {
+	                            var res = data.split("|"); 
+	                            if(res[0]=='error')
+	                            {
+	                                $('#errorMsg').html(res[1]);
+	                                errorMsgDiv.show();  
+	                                successMsgDiv.hide();
+	                                errorMsgDiv.delay(3000).fadeOut();
+	                            }
+	                            else if(res[0]=='success')
+	                            {
+	                                $('#successMsg').html(res[1]);
+	                                successMsgDiv.show();
+	                                errorMsgDiv.hide();
+	                                successMsgDiv.delay(3000).fadeOut();
+	                                setTimeout(function() {
+	                                window.location.href = "/appointments/add";
+	                                }, 1000);
+	                            }
+	                        }
+	                    });
+	                }
+	            });
+	        });
+
+	        $( "#date" ).datepicker({
+                changeMonth: true,
+                changeYear: true,
+                dateFormat: 'yy-mm-dd'
+            });
+
+            $('#job_title_id').select2({
+            	placeholder: "Select Job Title"
+            });
+    	});
+	</script>
+	</body>
+</html>
+
+

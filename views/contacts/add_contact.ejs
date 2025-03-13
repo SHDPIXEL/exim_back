@@ -1,0 +1,264 @@
+<% include ../partials/head %>
+</head>
+<body class="hold-transition skin-blue sidebar-mini">
+	<div class="wrapper">
+
+		<header class="main-header">
+			<% include ../partials/header %>
+		</header>
+
+		<aside class="main-sidebar">
+			<% include ../partials/aside %>
+		</aside>
+
+		<div class="content-wrapper">
+			<section class="content-header">
+				<h1>
+					Manage Contacts
+				</h1>
+			</section>
+			<section class="content">
+				<!-- for main content of the page -->
+				<div class="row">
+					<div class="col-md-12">
+						<!-- general form elements -->
+						<div class="box box-info">
+							<div class="box-header">
+								<h3 class="box-title">Add Contact</h3>
+							</div><!-- /.box-header -->
+							<!-- form start -->
+							<form id="contact_form" method="POST" class="form-horizontal" role="form">
+								<div class="box-body">
+									<div id="AlertInfo">                            
+										<div class="alert alert-danger" style="display: none">
+											<i class="fa fa-warning"></i>
+											<button class="close" data-dismiss="alert">×</button>
+											<span id="errorMsg">You have some form errors. Please check below.</span>
+										</div>
+
+										<div class="alert alert-success " style="display: none">
+											<i class="fa fa-check"></i>
+											<button class="close" data-dismiss="alert">×</button>
+											<span id="successMsg">Your form validation is successful!</span>
+										</div>
+									</div>
+
+									<div class="row">
+										<div class="col-md-12">
+											<div class="col-md-6">
+												<div class="col-md-12">
+													<div class="form-group">
+														<label class="col-md-4 control-label">Office <span style="color:red;">*</span></label>
+														<div class="col-md-6">
+															<select class="form-control" id="office" name="office">
+																<option value="">Select Office</option>
+	                                                            <option value="1">AGRA</option>
+	                                                            <option value="2">AHMEDABAD</option>
+	                                                            <option value="3">BANGALORE</option>
+	                                                            <option value="4">BHADOHI</option>
+	                                                            <option value="5">CHENNAI</option>
+	                                                            <option value="6">GANDHIDHAM</option>
+	                                                            <option value="7">JAIPUR</option>
+	                                                            <option value="8">JAMNAGAR</option>
+	                                                            <option value="9">JODHPUR</option>
+	                                                            <option value="10">KANPUR</option>
+	                                                            <option value="11">KOCHI</option>
+	                                                            <option value="12">KOLKATA</option>
+	                                                            <option value="13">LUDHIANA</option>
+	                                                            <option value="14">MUMBAI (Branch)</option>
+	                                                            <option value="15">NEW DELHI</option>
+	                                                            <option value="16">PUNE</option>
+	                                                            <option value="17">TUTICORIN</option>
+	                                                            <option value="18">VADODARA</option>
+	                                                            <option value="19">VISAKHAPATNAM</option>
+	                                                            <option value="100">MUMBAI (Head)</option>
+															</select>
+														</div>
+													</div>
+												</div>
+
+												<div class="col-md-12">
+													<div class="form-group">
+														<label class="col-md-4 control-label">Type <span style="color:red;">*</span></label>
+														<div class="col-md-6">
+															<select class="form-control input-sm" id="type" name="type">
+																<option value="">Select Office</option>
+	                                                            <option value="head_office">Head Office</option>
+	                                                            <option value="branch_office">Branch Office</option>
+	                                                        </select>
+														</div>
+													</div>
+												</div>
+											</div>
+
+											<div class="col-md-6">
+												<div class="col-md-12">
+													<div class="form-group">
+														<label class="col-md-4 control-label">Telephone <!-- <span style="color:red;">*</span> --></label>
+														<div class="col-md-6">
+															<input type="text" class="form-control input-sm" id="telephone" name="telephone" placeholder="Telephone">
+														</div>
+													</div>
+												</div>
+
+												<div class="col-md-12">
+													<div class="form-group">
+														<label class="col-md-4 control-label">Fax <!-- <span style="color:red;">*</span> --></label>
+														<div class="col-md-6">
+															<input type="text" class="form-control" id="fax" name="fax" placeholder="Fax">
+														</div>
+													</div>
+												</div>
+											</div>   											
+										</div>
+
+										<div class="col-md-12">
+											<div class="form-group">
+												<label class="col-md-2 control-label">Address <!-- <span style="color:red;">*</span> --></label>
+												<div class="col-md-10">
+													<textarea rows="5" class="form-control" id="address" name="address" placeholder="Address"></textarea>
+												</div>
+											</div>
+										</div>
+
+										<div class="col-md-12" id="emails">
+											<div class="form-group">
+												<label class="col-md-2 control-label">Emails <!-- <span style="color:red;">*</span> --></label>
+												<div class="col-md-5">
+													<input type="email" name="email[]" class="form-control" id="email" placeholder="Email">
+												</div>
+												<div class="col-md-2">
+													<button type="button" id="add" class="btn btn-primary btn-xs"><i class="fa fa-plus"></i></button>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>        
+
+								<div class="box-footer">
+									<div class="row">
+										<div class="col-md-5 hidden-sm"></div>
+										<div class="col-md-6 col-sm-12">
+											<span class="pull-right col-sm-pull-left">
+												<button type="submit" id="save_contact" class="btn btn-sm btn-success"><i class="glyphicon glyphicon-check"></i> Submit</button>
+												<button type="reset" class="btn btn-sm btn-danger"><i class="glyphicon glyphicon-refresh"></i> Reset</button>
+											</span>
+										</div>
+									</div>
+								</div>
+							</form>
+						</div><!-- /.box -->
+					</div>
+				</div>
+			</section>
+		</div>
+
+		<footer class="main-footer">
+			<% include ../partials/footer %>
+		</footer>
+	</div>
+
+	<% include ../partials/tail %>
+
+	<script type="text/javascript" src="../../jquery-validation/js/jquery.validate.min.js"></script>
+	<script type="text/javascript" src="../../jquery-validation/js/additional-methods.min.js"></script>
+	<script type="text/javascript">
+		$(document).ready(function() {
+
+			$(document).on('click', '#add', function() {
+				$('#emails').append(`
+									<div class="form-group">
+										<label class="col-md-2 control-label"></label>
+										<div class="col-md-5">
+											<input type="email" name="email[]" class="form-control" id="email" placeholder="Email">
+										</div>
+										<div class="col-md-2">
+											<button type="button" class="btn btn-danger btn-xs remove"><i class="fa fa-trash"></i></button>
+										</div>
+									</div>
+								`)
+			});
+
+			$(document).on('click', '.remove', function() {
+				$(this).parent().parent().remove();
+			});
+
+			$(document).on('click', '#save_contact', function() {
+	            var myForm = $('#contact_form');
+	            var errorMsgDiv = $('.alert-danger');
+	            var successMsgDiv = $('.alert-success');
+
+	            myForm.validate({
+	                errorElement: 'span', //default input error message container
+	                errorClass: 'help-block help-block-error', // default input error message class
+	                focusInvalid: false, // do not focus the last invalid input
+	                ignore: "",  // validate all fields including form hidden input
+	                rules: {
+	                    "office": {
+	                        required: true
+	                    },
+	                    "type": {
+	                        required: true
+	                    }
+	                },
+
+	                invalidHandler: function (event, validator) { //display error alert on form submit     
+	                    successMsgDiv.hide();
+	                    $("html, body").animate({ scrollTop: 0 }, "slow");
+	                    errorMsgDiv.show();
+	                    errorMsgDiv.delay(3000).fadeOut();
+	                },
+
+	                highlight: function (element) { // hightlight error inputs
+	                    $(element)
+	                        .closest('.form-group').addClass('has-error'); // set error class to the control group
+	                },
+
+	                unhighlight: function (element) { // revert the change done by hightlight
+	                    $(element)
+	                        .closest('.form-group').removeClass('has-error'); // set error class to the control group
+	                },
+
+	                success: function (label) {
+	                    label
+	                        .closest('.form-group').removeClass('has-error'); // set success class to the control group
+	                },
+
+	                submitHandler: function (form) {
+	                    $.ajax({
+	                        url: "/contacts/store",
+	                        type: "POST",
+	                        data:  $('#contact_form').serialize(),
+	                        success: function(data)
+	                        {
+	                            var res = data.split("|"); 
+	                            if(res[0]=='error')
+	                            {
+	                                $('#errorMsg').html(res[1]);
+	                                successMsgDiv.hide();
+	                                $("html, body").animate({ scrollTop: 0 }, "slow");
+	                                errorMsgDiv.show();  
+	                                errorMsgDiv.delay(3000).fadeOut();
+	                            }
+	                            else if(res[0]=='success')
+	                            {
+	                                $('#successMsg').html(res[1]);
+	                                errorMsgDiv.hide();
+	                                $("html, body").animate({ scrollTop: 0 }, "slow");
+	                                successMsgDiv.show();
+	                                successMsgDiv.delay(3000).fadeOut();
+	                                setTimeout(function() {
+	                                window.location.href = "/contacts/list";
+	                                }, 1500);
+	                            }
+	                        }
+	                    });
+	                }
+	            });
+	        });
+    	});
+	</script>
+	</body>
+</html>
+
+

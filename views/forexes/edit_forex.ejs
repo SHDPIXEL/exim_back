@@ -1,0 +1,296 @@
+<% include ../partials/head %>
+<link rel="stylesheet" href="../../jquery_ui/css/jquery-ui.min.css">
+</head>
+<body class="hold-transition skin-blue sidebar-mini">
+	<div class="wrapper">
+
+		<header class="main-header">
+			<% include ../partials/header %>
+		</header>
+
+		<aside class="main-sidebar">
+			<% include ../partials/aside %>
+		</aside>
+
+		<div class="content-wrapper">
+			<section class="content-header">
+				<h1>
+					Manage Forex
+				</h1>
+			</section>
+			<section class="content">
+				<!-- for main content of the page -->
+				<div class="row">
+					<div class="col-md-12">
+						<!-- general form elements -->
+						<div class="box box-info">
+							<div class="box-header">
+								<h3 class="box-title">Edit Forex</h3>
+							</div><!-- /.box-header -->
+							<!-- form start -->
+							<form id="forex_form" method="PATCH" class="" role="form">
+								<div class="box-body">
+									<div id="AlertInfo">                            
+										<div class="alert alert-danger" style="display: none">
+											<i class="fa fa-warning"></i>
+											<button class="close" data-dismiss="alert">×</button>
+											<span id="errorMsg">You have some form errors. Please check below.</span>
+										</div>
+
+										<div class="alert alert-success " style="display: none">
+											<i class="fa fa-check"></i>
+											<button class="close" data-dismiss="alert">×</button>
+											<span id="successMsg">Your form validation is successful!</span>
+										</div>
+									</div>
+
+									<div class="row">
+										<div class="col-md-8">
+											<div class="form-group">
+												<label class="col-md-2 control-label">Date <span style="color:red;">*</span></label>
+												<div class="col-md-6">
+													<input type="text" class="form-control input-sm" id="date" name="date" placeholder="Date" value="<%= moment(forex.date).format('YYYY-MM-DD') %>">
+												</div>
+											</div>
+										</div>
+
+										<div class="col-md-12 table-responsive">
+											<table class="table table-bordered">
+												<thead>
+													<tr>
+														<th>Currency</th>
+														<th>TT Selling Rates Clean Remittance Outwards</th>
+														<th>Bill Selling Rates for Imports</th>
+														<th>TT Buying Rates Clean Remittance Inwards</th>
+														<th>Bill Buying Rates for Exports</th>
+														<th>Action</th>
+													</tr>
+												</thead>
+												<tbody id="forex_tbody">
+													<tr>
+														<td>
+															<div class="form-group">
+																<input type="hidden" id="forex_id" name="forex_id" value="<%= forex.sql_id %>">
+																<select name="currency[]" id="currency" class="form-control">
+																	<option value="">Select Currency</option>
+																	<% if (currencies != '') { %>
+																	<% currencies.map(function(currency, ind) {  %>
+																	<option value="<%= currency.currency %>" <%= (currency.currency == forex.currency) ? 'selected' : '' %>><%= currency.currency %></option>
+																	<% }) } %>
+																</select>
+															</div>
+														</td>
+														<td>
+															<div class="form-group">
+																<input type="text" class="form-control input-sm" id="tt_selling_rates_clean_remittance_outwards" name="tt_selling_rates_clean_remittance_outwards[]" placeholder="TT Selling Rates Clean Remittance Outwards" value="<%= forex.tt_selling_rates_clean_remittance_outwards %>">
+															</div>
+														</td>
+														<td>
+															<div class="form-group">
+																<input type="text" class="form-control" id="bill_selling_rates_for_imports" name="bill_selling_rates_for_imports[]" placeholder="Bill Selling Rates for Imports" value="<%= forex.bill_selling_rates_for_imports %>">
+															</div>
+														</td>
+														<td>
+															<div class="form-group">
+																<input type="text" class="form-control input-sm" id="tt_buying_rates_clean_remittance_inwards" name="tt_buying_rates_clean_remittance_inwards[]" placeholder="TT Buying Rates Clean Remittance Inwards" value="<%= forex.tt_buying_rates_clean_remittance_inwards %>">
+															</div>
+														</td>
+														<td>
+															<div class="form-group">
+																<input type="text" class="form-control" id="bill_buying_rates_for_exports" name="bill_buying_rates_for_exports[]" placeholder="Bill Buying Rates for Exports" value="<%= forex.bill_buying_rates_for_exports %>">
+															</div>
+														</td>
+														<td>
+															<div class="form-group">
+																<button type="button" id="add" class="btn btn-primary btn-xs"><i class="fa fa-plus"></i></button>
+															</div>
+														</td>
+													</tr>
+												</tbody>
+											</table>
+										</div>
+										<!-- <div class="col-md-8">
+												<div class="col-md-12">
+													<div class="form-group">
+														<label class="col-md-4 control-label">Currency <span style="color:red;">*</span></label>
+														<div class="col-md-6">
+															<input type="hidden" id="forex_id" name="forex_id" value="<%= forex._id %>">
+															<input type="text" class="form-control" id="currency" name="currency" placeholder="Currency" value="<%= forex.currency %>">
+														</div>
+													</div>
+												</div>
+
+												<div class="col-md-12">
+													<div class="form-group">
+														<label class="col-md-4 control-label">TT Selling Rates Clean Remittance Outwards <span style="color:red;">*</span></label>
+														<div class="col-md-6">
+															<input type="text" class="form-control input-sm" id="tt_selling_rates_clean_remittance_outwards" name="tt_selling_rates_clean_remittance_outwards" placeholder="TT Selling Rates Clean Remittance Outwards" value="<%= forex.tt_selling_rates_clean_remittance_outwards %>">
+														</div>
+													</div>
+												</div>
+
+												<div class="col-md-12">
+													<div class="form-group">
+														<label class="col-md-4 control-label">TT Buying Rates Clean Remittance Inwards <span style="color:red;">*</span></label>
+														<div class="col-md-6">
+															<input type="text" class="form-control input-sm" id="tt_buying_rates_clean_remittance_inwards" name="tt_buying_rates_clean_remittance_inwards" placeholder="TT Buying Rates Clean Remittance Inwards" value="<%= forex.tt_buying_rates_clean_remittance_inwards %>">
+														</div>
+													</div>
+												</div>
+
+												<div class="col-md-12">
+													<div class="form-group">
+														<label class="col-md-4 control-label">Date <span style="color:red;">*</span></label>
+														<div class="col-md-6">
+															<input type="text" class="form-control input-sm" id="date" name="date" placeholder="Date" value="<%= moment(forex.date).format('YYYY-MM-DD') %>">
+														</div>
+													</div>
+												</div>
+
+												<div class="col-md-12">
+													<div class="form-group">
+														<label class="col-md-4 control-label">Bill Selling Rates for Imports <span style="color:red;">*</span></label>
+														<div class="col-md-6">
+															<input type="text" class="form-control" id="bill_selling_rates_for_imports" name="bill_selling_rates_for_imports" placeholder="Bill Selling Rates for Imports" value="<%= forex.bill_selling_rates_for_imports %>">
+														</div>
+													</div>
+												</div>
+
+												<div class="col-md-12">
+													<div class="form-group">
+														<label class="col-md-4 control-label">Bill Buying Rates for Exports <span style="color:red;">*</span></label>
+														<div class="col-md-6">
+															<input type="text" class="form-control" id="bill_buying_rates_for_exports" name="bill_buying_rates_for_exports" placeholder="Bill Buying Rates for Exports" value="<%= forex.bill_buying_rates_for_exports %>">
+														</div>
+													</div>
+												</div>
+										</div> -->
+									</div>
+								</div>        
+
+								<div class="box-footer">
+									<div class="row">
+										<div class="col-md-5 hidden-sm"></div>
+										<div class="col-md-6 col-sm-12">
+											<span class="pull-right col-sm-pull-left">
+												<button type="submit" id="save_forex" class="btn btn-sm btn-success"><i class="glyphicon glyphicon-check"></i> Submit</button>
+												<button type="reset" class="btn btn-sm btn-danger"><i class="glyphicon glyphicon-refresh"></i> Reset</button>
+											</span>
+										</div>
+									</div>
+								</div>
+							</form>
+						</div><!-- /.box -->
+					</div>
+				</div>
+			</section>
+		</div>
+
+		<footer class="main-footer">
+			<% include ../partials/footer %>
+		</footer>
+	</div>
+
+	<% include ../partials/tail %>
+
+	<script type="text/javascript" src="../../jquery-validation/js/jquery.validate.min.js"></script>
+	<script type="text/javascript" src="../../jquery-validation/js/additional-methods.min.js"></script>
+	<script src="../../jquery_ui/js/jquery-ui.min.js"></script>
+	<script type="text/javascript">
+		$(document).ready(function() {
+
+			$(document).on('click', '#save_forex', function() {
+	            var myForm = $('#forex_form');
+	            var errorMsgDiv = $('.alert-danger');
+	            var successMsgDiv = $('.alert-success');
+
+	            myForm.validate({
+	                errorElement: 'span', //default input error message container
+	                errorClass: 'help-block help-block-error', // default input error message class
+	                focusInvalid: false, // do not focus the last invalid input
+	                ignore: "",  // validate all fields including form hidden input
+	                rules: {
+	                    "currency": {
+	                        required: true
+	                    },
+	                    "tt_selling_rates_clean_remittance_outwards": {
+	                        required: true
+	                    },
+	                    "bill_buying_rates_for_exports": {
+	                        required: true
+	                    },
+	                    "tt_buying_rates_clean_remittance_inwards": {
+	                        required: true
+	                    },
+	                    "bill_selling_rates_for_imports": {
+	                        required: true
+	                    },
+	                    "date": {
+	                        required: true
+	                    }
+	                },
+
+	                invalidHandler: function (event, validator) { //display error alert on form submit     
+	                    successMsgDiv.hide();
+	                    errorMsgDiv.show();
+	                    errorMsgDiv.delay(3000).fadeOut();
+	                },
+
+	                highlight: function (element) { // hightlight error inputs
+	                    $(element)
+	                        .closest('.form-group').addClass('has-error'); // set error class to the control group
+	                },
+
+	                unhighlight: function (element) { // revert the change done by hightlight
+	                    $(element)
+	                        .closest('.form-group').removeClass('has-error'); // set error class to the control group
+	                },
+
+	                success: function (label) {
+	                    label
+	                        .closest('.form-group').removeClass('has-error'); // set success class to the control group
+	                },
+
+	                submitHandler: function (form) {
+	                	var id = $('#forex_id').val();
+	                    $.ajax({
+	                        url: "/forexes/update/"+id,
+	                        type: "PUT",
+	                        data:  $('#forex_form').serialize(),
+	                        success: function(data)
+	                        {
+	                            var res = data.split("|"); 
+	                            if(res[0]=='error')
+	                            {
+	                                $('#errorMsg').html(res[1]);
+	                                errorMsgDiv.show();  
+	                                successMsgDiv.hide();
+	                                errorMsgDiv.delay(3000).fadeOut();
+	                            }
+	                            else if(res[0]=='success')
+	                            {
+	                                $('#successMsg').html(res[1]);
+	                                successMsgDiv.show();
+	                                errorMsgDiv.hide();
+	                                successMsgDiv.delay(3000).fadeOut();
+	                                setTimeout(function() {
+	                                window.location.href = "/forexes/list";
+	                                }, 1000);
+	                            }
+	                        }
+	                    });
+	                }
+	            });
+	        });
+
+	        $( "#date" ).datepicker({
+                changeMonth: true,
+                changeYear: true,
+                dateFormat: 'yy-mm-dd'
+            });
+    	});
+	</script>
+	</body>
+</html>
+
+

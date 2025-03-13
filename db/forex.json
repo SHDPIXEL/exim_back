@@ -1,0 +1,27 @@
+/* 1 */
+{
+    "_id" : ObjectId("5d04e292ad1b8e0bd7b7b09b"),
+    "updatedAt" : ISODate("2019-06-15T12:20:34.623Z"),
+    "createdAt" : ISODate("2019-06-15T12:20:34.623Z"),
+    "bill_buying_rates_for_exports" : 69.1,
+    "tt_buying_rates_clean_remittance_inwards" : 69.14,
+    "bill_selling_rates_for_imports" : 70.47,
+    "tt_selling_rates_clean_remittance_outwards" : 70.34,
+    "date" : ISODate("2019-06-14T00:00:00.000Z"),
+    "currency" : "Swiss Franc",
+    "__v" : 0
+}
+
+/* 2 */
+{
+    "_id" : ObjectId("5d04e2f5ad1b8e0bd7b7b09c"),
+    "updatedAt" : ISODate("2019-06-15T12:22:13.308Z"),
+    "createdAt" : ISODate("2019-06-15T12:22:13.308Z"),
+    "bill_buying_rates_for_exports" : 77.66,
+    "tt_buying_rates_clean_remittance_inwards" : 77.71,
+    "bill_selling_rates_for_imports" : 79.01,
+    "tt_selling_rates_clean_remittance_outwards" : 78.85,
+    "date" : ISODate("2019-06-15T00:00:00.000Z"),
+    "currency" : "Euro",
+    "__v" : 0
+}

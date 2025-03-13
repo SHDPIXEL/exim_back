@@ -1,0 +1,211 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+<title>Exim India Newsletter</title>
+</head>
+
+<body>
+  <div align="center">
+    <table width="740" cellspacing="0" cellpadding="0"  bgcolor="#f0f9fe">
+      <tr>
+      	<td>
+          	<center  style="font-family: Arial, sans-serif; color: #424343; font-size: 10pt">Can't see images? <a href="http://eximindiaonline.in:3000/newsletter/newsletter_preview?date=<%= date %>">View here!</a></center>
+          </td>
+      </tr>
+
+      <tr style="padding:0; margin:0; border:0" valign="top" align="left">
+        <td style="padding:0; margin:0; border:0" valign="top" align="center">
+          <table width="700" cellspacing="0" cellpadding="0"  bgcolor="#ffffff">          
+            <tr style="padding:0; margin:0; border:0" valign="top" align="left">
+              <td style="padding:0; margin:0; border:0" valign="top" align="left"><img style="margin:0; padding:0" 
+                src="http://eximin.net/enews/Exim_Logo1.gif" align="center" alt="EXIM Means Value for Money " /></td>
+            </tr>
+            <tr style="padding:0; margin:0; border:0" valign="top" align="center">
+              <td style="padding:0; margin:0; border:0" valign="top" align="center" bgcolor="#003366">
+                <span style="color:#fff;font-size:15px;font-family: 'Georgia', Times New Roman, Times, serif";>India's Leading Maritime & Logistics Publication House and Infomedia Service Provider</span>
+              </td>
+            </tr>
+          <!--
+             <tr style="padding:0; margin:0; border:0" valign="top" align="left">
+              <td style="padding:5px 0 5px 0; margin:0; border:0" valign="top" align="left"><a href="http://ctl.net.in/ctl-bhp-2020-default.aspx" target="_blank">
+                          <img src="http://eximin.net/enews/ctlbhp2020banner.jpg"  style="margin:0; padding:0" border="0"/>
+                        </a></td>
+            </tr>
+          -->
+            <tr style="padding:0; margin:0; border:0" valign="top" align="left">
+              <td style="padding:0; margin:0; border:0" valign="top" align="left"><table width="700" cellspacing="0" cellpadding="0">
+              <tr style="padding:0; margin:0; border:0" valign="top" align="left">
+                <td width="500" align="left" valign="top" style="padding:0; margin:0; border:0">
+                  <table width="500" cellspacing="0" cellpadding="0">
+                    <% var count = 1; if(category_id != '') { %>
+                    <% category_id.map(function(val, ind) { %>
+                    <% if(val._id.category_id == '1') { 
+                        var category_name = 'Shipping News';
+                      } else if(val._id.category_id == '2') {
+                            var category_name = 'Trade News';
+                      } else if(val._id.category_id == '3') {
+                            var category_name = 'Port News';
+                      } else if(val._id.category_id == '4') {
+                            var category_name = 'Transport News';
+                      } else if(val._id.category_id == '5') {
+                            var category_name = 'Indian Economy';
+                      } else if(val._id.category_id == '6') {
+                          var category_name = 'Special Report';
+                      } %>
+
+                    <% if(val._id.category_id != '7' && val._id.category_id != '8') { %>
+                    <tr valign="top" align="left" bgcolor="#9c0063" style="font-weight: bold; font-size: 13px; color: #fff; font-family:Verdana; padding:0; margin:0; border:0">
+                      <td style="padding:0; margin:0; border:0" valign="top" align="left" width="65"><img src="http://eximin.net/enews/Arrow.gif" width="65" /></td>
+                      <td style="padding:0; margin:0; border:0" valign="middle" align="left" width="133"><%= category_name %></td>
+                      <% if(val._id.category_id !== '') { %>
+                      <% if(count == '1') { %>
+                      <td style="padding:0; margin:0; border:0" valign="middle" align="left" width="300"> <%= moment(val._id.date).format('dddd, Do MMMM YYYY')%></td>
+                      <% } else { %>
+                      <td style="padding:0; margin:0; border:0" valign="middle" align="left" width="300"></td>
+                      <% } } %>
+                    </tr>
+                    <% } %>
+                    <% if(news != '') { %>
+                    <% news.map(function(value, i) { %>
+                    <% if(value.category_id == val._id.category_id) { %>
+                    <tr style="padding:0; margin:0; border:0" valign="top" align="left">
+                      <td style="padding:5px 0; margin:0; border:0" valign="top" align="left" colspan="3"><a style="text-decoration:none; font-size:15px; color:#06c; font-family: 'Georgia', Times New Roman, Times, serif" href="http://eximin.net/NewsDetails.aspx?name=<%= value.sql_id %>"><%= value.headline %></a></td>
+                    </tr>
+                    <% } %>
+                    <% }) } %>
+                    <% count++; }) } %>
+                  </table>
+                </td>
+                <td style="padding:0; margin:0; border:0" valign="top" align="left" width="250">
+                  <table width="200" cellspacing="0" cellpadding="0">
+                  <!--  <tr style="padding:0; margin:0; border:0" valign="top" align="left">
+                      <td style="padding:0; margin:0; border:0" valign="top" align="left">
+                        <a href="http://gujaratjunction.com/GJ2020Highlights.aspx" target="_blank">
+                          <img src="http://eximindiaonline.in/exim_app/GJ2020.jpg" width="" style="margin:0; padding:0" border="0"/>
+                        </a>
+                      </td>
+                    </tr>-->
+                  
+                    <tr style="padding:0; margin:0; border:0" valign="top" align="left">
+                      <td style="padding:0; margin:0; border:0" valign="top" align="left">
+                      </td>
+                    </tr>
+                  
+                    <tr style="padding:0; margin:0; border:0" valign="top" align="left">
+                      <td style="padding:0; margin:0; border:0" valign="top" align="left">&nbsp;</td>
+                    </tr>
+                    <tr style="padding:0; margin:0;" valign="top" align="left">
+                      <td valign="top" align="left" style="font-family: Georgia, 'Times New Roman', Times, serif; font-weight:bold;font-size:13px; text-align:center; color: #FF7182; border-bottom:1px solid #FF7182; border-top:1px solid #FF7182; margin:0; padding:5px;">Other Online Services
+                      </td>
+                    </tr>
+                    <tr style="padding:0; margin:0; border:0" valign="top" align="left">
+                      <td style="padding:0; margin:0; border:0" valign="top" align="left">&nbsp;</td>
+                    </tr>
+                    <tr style="padding:0; margin:0; border:0" valign="top" align="left">
+                      <td style="padding:0; margin:0; border:0" valign="top" align="left">
+                      	<img style="margin:0; padding:0" src="http://eximin.net/enews/N_Arrow.gif" /> <a style="font-size:13px; color:#9F6164; font-family: 'Georgia', Times New Roman, Times, serif; vertical-align:top;" href="http://eximin.net/EnewsSubscribe.aspx" target="_blank"> E-News in your Inbox </a>
+                      </td>
+                    </tr>
+                    <tr style="padding:0; margin:0; border:0" valign="top" align="left">
+                      <td style="padding:0; margin:0; border:0" valign="top" align="left">
+                      	<img style="margin:0; padding:0" src="http://eximin.net/enews/N_Arrow.gif" /> <a style="font-size:13px; color:#9F6164; font-family: 'Georgia', Times New Roman, Times, serif; vertical-align:top;" href="http://eximin.net/DcopyNewUser.aspx" target="_blank"> Digital Copy on your PC  </a>
+                      </td>
+                    </tr>
+                    <tr style="padding:0; margin:0; border:0" valign="top" align="left">
+                      <td style="padding:0; margin:0; border:0" valign="top" align="left">
+                      	<img style="margin:0; padding:0" src="http://eximin.net/enews/N_Arrow.gif" /> <a style="font-size:13px; color:#9F6164; font-family: 'Georgia', Times New Roman, Times, serif; vertical-align:top;" href="http://eximin.net/Subscription.aspx" target="_blank"> Subscribe for a Print Copy </a>
+                      </td>
+                    </tr>
+                    <tr style="padding:0; margin:0; border:0" valign="top" align="left">
+                      <td style="padding:0; margin:0; border:0" valign="top" align="left">
+                      	<img style="margin:0; padding:0" src="http://eximin.net/enews/N_Arrow.gif" /> <a style="font-size:13px; color:#9F6164; font-family: 'Georgia', Times New Roman, Times, serif; vertical-align:top;" href="http://eximin.net/PastNewsArchives.aspx" target="_blank"> News Archives </a>
+                      </td>
+                    </tr>
+                    <tr style="padding:0; margin:0; border:0" valign="top" align="left">
+                      <td style="padding:0; margin:0; border:0" valign="top" align="left">&nbsp;</td>
+                    </tr>
+
+ <!-- 
+                    <tr style="padding:0; margin:0; border:0" valign="top" align="left">
+                      <td style="padding:0; margin:0; border:0" valign="top" align="left">&nbsp;</td>
+                    </tr>
+                    <tr style="padding:0; margin:0;" valign="top" align="left">
+                      <td valign="top" align="left" style="font-family: Georgia, 'Times New Roman', Times, serif; font-weight:bold;font-size:12px; text-align:center;
+                           color: #B84B9E; border-bottom:1px solid #B84B9E; border-top:1px solid #B84B9E; margin:0; padding:5px;">B2B Events (Exhibititon, Conference, Awards) 
+                      </td>
+                    </tr>
+                    <tr style="padding:0; margin:0; border:0" valign="top" align="left">
+                      <td style="padding:0; margin:0; border:0" valign="top" align="left">&nbsp;</td>
+                    </tr>
+                 
+
+                  
+
+                    <tr style="padding:0; margin:0; border:0" valign="top" align="left">
+                      <td style="padding:0; margin:0; border:0" valign="top" align="left">
+                    	   <img style="margin:0; padding:0" src="http://eximin.net/enews/N_Arrow.gif" /> 
+                          <a style="font-size:13px; color:#93228D; font-family: 'Georgia', Times New Roman, Times, serif; vertical-align:top;"href="http://gujaratjunction.com/GJ2020Highlights.aspx" target="_blank"> 11th Gujarat Junction 2020 </a>
+                      </td>
+                    </tr>
+                    
+                      <tr style="padding:0; margin:0; border:0" valign="top" align="left">
+                      <td style="padding:0; margin:0; border:0" valign="top" align="left">
+                      	<img style="margin:0; padding:0" src="http://eximin.net/enews/N_Arrow.gif" /> 
+                          <a style="font-size:13px; color:#93228D; font-family: 'Georgia', Times New Roman, Times, serif; vertical-align:top;"
+                           href="http://secc.in/SECC2020_Highlights.aspx" target="_blank"> SECC 2020 </a>
+                      </td>
+                    </tr>
+                
+                    <tr style="padding:0; margin:10px; border:0" valign="top" align="left">
+                      <td style="padding:0; margin:0; border:0" valign="top" align="left" bgcolor="#003366">
+                      <span  style="font-size:13px; font-family: 'Georgia', Times New Roman, Times, serif; color:#fff;vertical-align :top;">
+                      Passion to Perform ! Committed to Excellence !! </span>
+                      </td>
+                    </tr>
+                    -->
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+          
+              <tr valign="top" align="left">
+                <td style="padding:0; margin:0; border:0" valign="middle" align="center" colspan="2">
+                  <img style="margin-top: 5px; padding:0" src="http://eximin.net/enews/pub.jpg" /> 
+                </td>
+              </tr>
+
+          
+
+          <tr style="padding:0; margin:0; border:0" valign="top" align="left">
+            <td style="padding:0; margin:0; border:0" valign="top" align="left">
+            	<div style="font-size: 13px; padding-left:10px; color: #191919; font-family:'Verdana', Geneva, sans-serif; text-align:left">
+                	<p>
+                    <strong><u>Disclaimer:</u></strong>
+                      This email has been sent to you by Exim India (for more information visit <a style="color:#191919; text-decoration:none" href="http://www.eximin.net"> www.eximin.net</a>). This email is intended solely
+                      for the addressee and the information it contains is confidential. If you are not the intended recipient, please inform us as soon as
+                      possible. Write your queries to <a style="color:#191919;" href="mailto:admin@exim-india.com">admin@exim-india.com</a>.
+                  </p>
+                    
+                    <p>
+                    	<strong>To ensure that Exim India Newsletter find your inbox, please whitelist news@eximin.net in your email account.</strong>
+                    </p>
+                    
+                    <p>
+                    	<strong>
+                        Exim India Publication Group</strong>
+                    </p>
+                </div>
+            </td>
+          </tr>
+                  
+        </table>
+    </td>
+  </tr>
+</table>
+      	
+</div>
+</body>
+</html>

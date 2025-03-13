@@ -1,0 +1,283 @@
+<% include ../partials/head %>
+<link rel="stylesheet" href="../../jquery_ui/css/jquery-ui.min.css">
+
+	<style type="text/css">
+	    .btn-file { 
+	        width: 30% !important;
+	    }
+
+	    .btn-file input[type=file] {
+	        position: absolute;
+	        top: 0;
+	        right: 0;
+	        min-width: 100%;
+	        min-height: 100%;
+	        font-size: 100px;
+	        text-align: right;
+	        filter: alpha(opacity=0);
+	        opacity: 0;
+	        outline: none;
+	        background: white;
+	        cursor: inherit;
+	        display: block;
+	    }
+    </style>
+</head>
+<body class="hold-transition skin-blue sidebar-mini">
+	<div class="wrapper">
+
+		<header class="main-header">
+			<% include ../partials/header %>
+		</header>
+
+		<aside class="main-sidebar">
+			<% include ../partials/aside %>
+		</aside>
+
+		<div class="content-wrapper">
+			<section class="content-header">
+				<h1>
+					Manage Gazette Vessels
+				</h1>
+			</section>
+			<section class="content">
+				<!-- for main content of the page -->
+				<div class="row">
+					<div class="col-md-12">
+						<!-- general form elements -->
+						<div class="box box-info">
+							<div class="box-header">
+								<h3 class="box-title">Upload Gazette Vessels</h3>
+							</div><!-- /.box-header -->
+							<!-- form start -->
+							<form id="gazette_vessel_form" method="POST" class="" role="form" enctype="multipart/form-data">
+								<div class="box-body">
+									<div id="AlertInfo">                            
+										<div class="alert alert-danger" style="display: none">
+											<i class="fa fa-warning"></i>
+											<button class="close" data-dismiss="alert">×</button>
+											<span id="errorMsg">You have some form errors. Please check below.</span>
+										</div>
+
+										<div class="alert alert-success " style="display: none">
+											<i class="fa fa-check"></i>
+											<button class="close" data-dismiss="alert">×</button>
+											<span id="successMsg">Your form validation is successful!</span>
+										</div>
+									</div>
+
+									<div class="row">
+										<div class="col-md-12">
+											<div class="col-md-6">
+												<div class="col-md-12">
+                                    				<div class="form-group">
+                                        				<label class="col-md-4 control-label">Export Sample File <!-- <span style="color:red;">*</span> --></label>
+                                        				<a href="/gazette_vessels/export_gazette_vessels" target="_blank" class="btn btn-info btn-file col-md-offset-1"><i class="fa fa-download"></i> Export</a>
+                                    				</div>
+                                				</div>
+											</div>
+										</div>
+
+										<div class="col-md-12">
+											<div class="col-md-6">
+												<div class="col-md-12">
+                                    				<div class="form-group">
+                                        				<label class="col-md-4 control-label">Import File (.csv) <span style="color:red;">*</span></label>
+                                        				<label class="col-md-offset-1 btn btn-primary btn-file"><i class="fa fa-folder-open" aria-hidden="true"></i> Browse <input type="file" id="file" name="file" style="display: none;">
+                                        				</label>
+                                    				</div>
+                                				</div>
+											</div>
+
+											<div class="col-md-6">
+												<div class="col-md-12">
+                                    				<div class="form-group">
+                                        				<label class="col-md-2 control-label">Date <span style="color:red;">*</span></label>
+                                        				<div class="col-md-6">
+															<input type="text" class="form-control input-sm" id="date" name="date" placeholder="Date">
+														</div>
+                                    				</div>
+                                				</div>
+											</div>
+										</div>
+
+										<div class="col-md-12" id="gazette_vessels_data" style="height: 400px; overflow: scroll;"></div>
+									</div>
+								</div>        
+
+								<div class="box-footer">
+									<div class="row">
+										<div class="col-md-5 hidden-sm"></div>
+										<div class="col-md-6 col-sm-12">
+											<span class="pull-right col-sm-pull-left">
+												<button type="submit" id="save_gazette_vessel" class="btn btn-sm btn-success"><i class="glyphicon glyphicon-check"></i> Submit</button>
+												<button type="reset" class="btn btn-sm btn-danger"><i class="glyphicon glyphicon-refresh"></i> Reset</button>
+											</span>
+										</div>
+									</div>
+								</div>
+							</form>
+						</div><!-- /.box -->
+					</div>
+				</div>
+			</section>
+		</div>
+
+		<footer class="main-footer">
+			<% include ../partials/footer %>
+		</footer>
+	</div>
+
+	<% include ../partials/tail %>
+
+	<script type="text/javascript" src="../../jquery-validation/js/jquery.validate.js"></script>
+	<script type="text/javascript" src="../../jquery-validation/js/additional-methods.min.js"></script>
+	<script src="../../jquery_ui/js/jquery-ui.min.js"></script>
+	<script type="text/javascript">
+		$(document).ready(function() {
+
+			$(document).on('change', '#file', function() {
+				var formData = new FormData($("#gazette_vessel_form")[0]);
+				var table = `<div class="table-responsive"><table class="table table-bordered">
+								<thead>
+									<tr>
+										<th>Item</th>
+										<th>Desc One</th>
+										<th>Desc Two</th>
+										<th>Service Id</th>
+										<th>Order</th>
+									</tr>
+								</thead><tbody>`;
+
+            	$.ajax({
+                    url: "/gazette_vessels/view_gazette_vessels",
+                    type: "POST",
+                    data:  formData,
+                    contentType: false,
+                    cache: false,
+                    processData:false,
+                    success: function(data)
+                    {
+                        data.map(function(gazette_vessel, ind) {
+                        	if(ind != 0) {
+                        		table += `<tr>
+                        					<td><div class="form-group"><input type="text" value="${gazette_vessel[0]}" name="item[]" class="form-control" required=""></div></td>
+                        					<td><div class="form-group"><input type="text" value="${gazette_vessel[1]}" name="desc_one[]" class="form-control" required=""></div></td>
+                        					<td><div class="form-group"><input type="text" value="${gazette_vessel[2]}" name="desc_two[]" class="form-control" required=""></div></td>
+                        					<td><div class="form-group"><input type="text" value="${gazette_vessel[3]}" name="service_id[]" class="form-control" required=""></div></td>
+                        					<td><div class="form-group"><input type="text" value="${gazette_vessel[4]}" name="order[]" class="form-control" required=""></div></td>
+                        				<tr>`;
+                        	}
+                        });
+                        table += `</tbody></table></div>`;
+                        $('#gazette_vessels_data').html('');
+                        $('#gazette_vessels_data').append(table);
+                    }
+	            });
+        	});
+
+			$(document).on('click', '#save_gazette_vessel', function() {
+	            var myForm = $('#gazette_vessel_form');
+	            var errorMsgDiv = $('.alert-danger');
+	            var successMsgDiv = $('.alert-success');
+
+	            myForm.validate({
+	                errorElement: 'span', //default input error message container
+	                errorClass: 'help-block help-block-error', // default input error message class
+	                focusInvalid: false, // do not focus the last invalid input
+	                ignore: "",  // validate all fields including form hidden input
+	                rules: {
+	                    "file": {
+	                        required: true
+	                    },
+	                    "date": {
+	                        required: true
+	                    },
+	                    "item[]": {
+	                        required: true
+	                    },
+	                    "desc_one[]": {
+	                        required: true
+	                    },
+	                    "desc_two[]": {
+	                        required: true
+	                    },
+	                    "service_id[]": {
+	                        required: true
+	                    },
+	                    "order[]": {
+	                    	required: true
+	                    }
+	                },
+	                invalidHandler: function (event, validator) { //display error alert on form submit     
+	                    successMsgDiv.hide();
+	                    $("html, body").animate({ scrollTop: 0 }, "slow");
+	                    errorMsgDiv.show();
+	                    errorMsgDiv.delay(3000).fadeOut();
+	                },
+
+	                highlight: function (element) { // hightlight error inputs
+	                	// console.log(element);
+	                    $(element)
+	                        .closest('.form-group').addClass('has-error'); // set error class to the control group
+	                },
+
+	                unhighlight: function (element) { // revert the change done by hightlight
+	                    $(element)
+	                        .closest('.form-group').removeClass('has-error'); // set error class to the control group
+	                },
+
+	                success: function (label) {
+	                    label
+	                        .closest('.form-group').removeClass('has-error'); // set success class to the control group
+	                },
+
+	                submitHandler: function (form) {
+	                    // var formData = new FormData($("#vessel_form")[0]);
+
+	                    $.ajax({
+	                        url: "/gazette_vessels/store",
+	                        type: "POST",
+	                        data:  $('#gazette_vessel_form').serialize(),
+	                        /*contentType: false,
+	                        cache: false,
+	                        processData:false,*/
+	                        success: function(data)
+	                        {
+	                            var res = data.split("|"); 
+	                            if(res[0]=='error')
+	                            {
+	                                $('#errorMsg').html(res[1]);
+	                                successMsgDiv.hide();
+	                                $("html, body").animate({ scrollTop: 0 }, "slow");
+	                                errorMsgDiv.show();  
+	                                errorMsgDiv.delay(3000).fadeOut();
+	                            }
+	                            else if(res[0]=='success')
+	                            {
+	                                $('#successMsg').html(res[1]);
+	                                errorMsgDiv.hide();
+	                                $("html, body").animate({ scrollTop: 0 }, "slow");
+	                                successMsgDiv.show();
+	                                successMsgDiv.delay(3000).fadeOut();
+	                                setTimeout(function() {
+	                                window.location.href = "/gazette_vessels/list";
+	                                }, 1500);
+	                            }
+	                        }
+	                    });
+	                }
+	            });
+	        });
+
+			$( "#date" ).datepicker({
+                changeMonth: true,
+                changeYear: true,
+                dateFormat: 'yy-mm-dd'
+            });
+    	});
+	</script>
+	</body>
+</html>
+
+

@@ -1,0 +1,27 @@
+/* 1 */
+{
+    "_id" : ObjectId("5d039463f8a4ee781ae13c0f"),
+    "updatedAt" : ISODate("2019-06-14T12:34:43.011Z"),
+    "createdAt" : ISODate("2019-06-14T12:34:43.011Z"),
+    "main_news" : 1,
+    "description" : "TestTestTestTestTest",
+    "link_url" : "Test",
+    "headline" : "Test",
+    "date" : ISODate("2019-06-14T00:00:00.000Z"),
+    "category_id" : 1,
+    "__v" : 0
+}
+
+/* 2 */
+{
+    "_id" : ObjectId("5d0394a3f8a4ee781ae13c10"),
+    "updatedAt" : ISODate("2019-06-14T12:35:47.718Z"),
+    "createdAt" : ISODate("2019-06-14T12:35:47.718Z"),
+    "main_news" : 1,
+    "description" : "Test2Test2Test2Test2",
+    "link_url" : "Test2",
+    "headline" : "Test2",
+    "date" : ISODate("2019-06-15T00:00:00.000Z"),
+    "category_id" : 1,
+    "__v" : 0
+}

@@ -1,0 +1,240 @@
+<% include ../partials/head %>
+</head>
+<body class="hold-transition skin-blue sidebar-mini">
+	<div class="wrapper">
+
+		<header class="main-header">
+			<% include ../partials/header %>
+		</header>
+
+		<aside class="main-sidebar">
+			<% include ../partials/aside %>
+		</aside>
+
+		<div class="content-wrapper">
+			<section class="content-header">
+				<h1>
+					Manage Users
+				</h1>
+			</section>
+			<section class="content">
+				<!-- for main content of the page -->
+				<div class="row">
+					<div class="col-md-12">
+						<!-- general form elements -->
+						<div class="box box-info">
+							<div class="box-header">
+								<h3 class="box-title">Edit User</h3>
+							</div><!-- /.box-header -->
+							<!-- form start -->
+							<form id="user_form" method="PATCH" class="form-horizontal" role="form">
+								<div class="box-body">
+									<div id="AlertInfo">                            
+										<div class="alert alert-danger" style="display: none">
+											<i class="fa fa-warning"></i>
+											<button class="close" data-dismiss="alert">×</button>
+											<span id="errorMsg">You have some form errors. Please check below.</span>
+										</div>
+
+										<div class="alert alert-success " style="display: none">
+											<i class="fa fa-check"></i>
+											<button class="close" data-dismiss="alert">×</button>
+											<span id="successMsg">Your form validation is successful!</span>
+										</div>
+									</div>
+
+									<div class="row">
+										<div class="col-md-12">
+											<div class="col-md-6">
+												<div class="col-md-12">
+													<div class="form-group">
+														<label class="col-md-4 control-label">Name <span style="color:red;">*</span></label>
+														<div class="col-md-6">
+															<input type="hidden" id="user_id" value="<%= userr._id %>">
+															<input type="text" class="form-control input-sm" id="name" name="name" placeholder="Name" value="<%= userr.name %>">
+														</div>
+													</div>
+												</div>
+
+												<div class="col-md-12">
+													<div class="form-group">
+														<label class="col-md-4 control-label">Email <span style="color:red;">*</span></label>
+														<div class="col-md-6">
+															<input type="text" class="form-control input-sm" id="email" name="email" placeholder="Email" value="<%= userr.email %>">
+														</div>
+													</div>
+												</div>
+
+												<div class="col-md-12">
+													<div class="form-group">
+														<label class="col-md-4 control-label">Password <span style="color:red;">*</span></label>
+														<div class="col-md-6">
+															<input type="password" class="form-control input-sm" id="password" name="password" placeholder="Password" value="<%= userr.password %>">
+														</div>
+													</div>
+												</div>
+											</div>   
+
+											<div class="col-md-6">
+												<div class="col-md-12">
+													<div class="form-group">
+														<label class="col-md-4 control-label">Confirm Password <span style="color:red;">*</span></label>
+														<div class="col-md-6">
+															<input type="password" class="form-control input-sm" id="conf_password" name="conf_password" placeholder="Confirm Password" value="<%= userr.password %>">
+														</div>
+													</div>
+												</div>
+												<div class="col-md-12">
+													<div class="form-group">
+														<label class="col-md-4 control-label">Role <span style="color:red;">*</span></label>
+														<div class="col-md-6">
+															<select class="form-control" id="role" name="role">
+																<option value="">Select Role</option>
+																<option value="admin" <%=(userr.role == 'admin') ? 'selected' : '' %>>Admin</option>
+																<option value="news_appointment_user" <%=(userr.role == 'news_appointment_user') ? 'selected' : '' %>>News Appointment User</option>
+																<option value="vessel_user" <%=(userr.role == 'vessel_user') ? 'selected' : '' %>>Vessel User</option>
+															</select>
+														</div>
+													</div>
+												</div>
+
+												<div class="col-md-12">
+													<div class="form-group">
+														<label class="col-md-4 control-label">Status <span style="color:red;">*</span></label>
+														<div class="col-md-6">
+															<select class="form-control" id="status" name="status">
+																<option value="">Select Status</option>
+																<option value="active" <%=(userr.status == 'active') ? 'selected' : '' %>>Active</option>
+																<option value="inactive" <%=(userr.status == 'inactive') ? 'selected' : '' %>>In Active</option>
+															</select>
+														</div>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>        
+
+								<div class="box-footer">
+									<div class="row">
+										<div class="col-md-5 hidden-sm"></div>
+										<div class="col-md-6 col-sm-12">
+											<span class="pull-right col-sm-pull-left">
+												<button type="submit" id="save_user" class="btn btn-sm btn-success"><i class="glyphicon glyphicon-check"></i> Submit</button>
+												<button type="reset" class="btn btn-sm btn-danger"><i class="glyphicon glyphicon-refresh"></i> Reset</button>
+											</span>
+										</div>
+									</div>
+								</div>
+							</form>
+						</div><!-- /.box -->
+					</div>
+				</div>
+			</section>
+		</div>
+
+		<footer class="main-footer">
+			<% include ../partials/footer %>
+		</footer>
+	</div>
+
+	<% include ../partials/tail %>
+
+	<script type="text/javascript" src="../../jquery-validation/js/jquery.validate.min.js"></script>
+	<script type="text/javascript" src="../../jquery-validation/js/additional-methods.min.js"></script>
+	<script type="text/javascript">
+		$(document).ready(function() {
+			$(document).on('click', '#save_user', function() {
+	            var myForm = $('#user_form');
+	            var errorMsgDiv = $('.alert-danger');
+	            var successMsgDiv = $('.alert-success');
+
+	            myForm.validate({
+	                errorElement: 'span', //default input error message container
+	                errorClass: 'help-block help-block-error', // default input error message class
+	                focusInvalid: false, // do not focus the last invalid input
+	                ignore: "",  // validate all fields including form hidden input
+	                rules: {
+	                    "name": {
+	                        required: true
+	                    },
+	                    "email": {
+	                        required: true,
+	                        email: true
+	                    },
+	                    "role": {
+	                        required: true
+	                    },
+	                    "password": {
+	                        required: true
+	                    },
+	                    "conf_password": {
+	                        equalTo: '#password'
+	                    },
+	                    "status": {
+	                        required: true
+	                    }
+	                },
+
+	                invalidHandler: function (event, validator) { //display error alert on form submit     
+	                    successMsgDiv.hide();
+	                    errorMsgDiv.show();
+	                    errorMsgDiv.delay(3000).fadeOut();
+	                },
+
+	                highlight: function (element) { // hightlight error inputs
+	                    $(element)
+	                        .closest('.form-group').addClass('has-error'); // set error class to the control group
+	                },
+
+	                unhighlight: function (element) { // revert the change done by hightlight
+	                    $(element)
+	                        .closest('.form-group').removeClass('has-error'); // set error class to the control group
+	                },
+
+	                success: function (label) {
+	                    label
+	                        .closest('.form-group').removeClass('has-error'); // set success class to the control group
+	                },
+
+	                submitHandler: function (form) {
+	                    // var formData = new FormData($("#user_form")[0]);
+	                    var id = $('#user_id').val();
+	                    $.ajax({
+	                        url: "/users/update/"+id,
+	                        type: "PUT",
+	                        data:  $('#user_form').serialize(),
+	                        /*contentType: false,
+	                        cache: false,
+	                        processData:false,*/
+	                        success: function(data)
+	                        {
+	                            var res = data.split("|"); 
+	                            if(res[0]=='error')
+	                            {
+	                                $('#errorMsg').html(res[1]);
+	                                errorMsgDiv.show();  
+	                                successMsgDiv.hide();
+	                                errorMsgDiv.delay(3000).fadeOut();
+	                            }
+	                            else if(res[0]=='success')
+	                            {
+	                                $('#successMsg').html(res[1]);
+	                                successMsgDiv.show();
+	                                errorMsgDiv.hide();
+	                                successMsgDiv.delay(3000).fadeOut();
+	                                setTimeout(function() {
+	                                window.location.href = "/users/list";
+	                                }, 1000);
+	                            }
+	                        }
+	                    });
+	                }
+	            });
+	        });
+    	});
+	</script>
+	</body>
+</html>
+
+

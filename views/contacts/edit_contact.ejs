@@ -1,0 +1,336 @@
+<% include ../partials/head %>
+</head>
+<body class="hold-transition skin-blue sidebar-mini">
+	<div class="wrapper">
+
+		<header class="main-header">
+			<% include ../partials/header %>
+		</header>
+
+		<aside class="main-sidebar">
+			<% include ../partials/aside %>
+		</aside>
+
+		<div class="content-wrapper">
+			<section class="content-header">
+				<h1>
+					Manage Contacts
+				</h1>
+			</section>
+			<section class="content">
+				<!-- for main content of the page -->
+				<div class="row">
+					<div class="col-md-12">
+						<!-- general form elements -->
+						<div class="box box-info">
+							<div class="box-header">
+								<h3 class="box-title">Edit Contact</h3>
+							</div><!-- /.box-header -->
+							<!-- form start -->
+							<form id="contact_form" method="PATCH" class="form-horizontal" role="form">
+								<div class="box-body">
+									<div id="AlertInfo">                            
+										<div class="alert alert-danger" style="display: none">
+											<i class="fa fa-warning"></i>
+											<button class="close" data-dismiss="alert">×</button>
+											<span id="errorMsg">You have some form errors. Please check below.</span>
+										</div>
+
+										<div class="alert alert-success " style="display: none">
+											<i class="fa fa-check"></i>
+											<button class="close" data-dismiss="alert">×</button>
+											<span id="successMsg">Your form validation is successful!</span>
+										</div>
+									</div>
+
+									<div class="row">
+										<div class="col-md-12">
+											<div class="col-md-6">
+												<div class="col-md-12">
+													<div class="form-group">
+														<label class="col-md-4 control-label">Office <span style="color:red;">*</span></label>
+														<div class="col-md-6">
+															<input type="hidden" id="contact_id" name="contact_id" value="<%= contact._id %>">
+															<select class="form-control" id="office" name="office">
+																<option value="">Select Office</option>
+	                                                            <option value="1" <%= (contact.office == '1') ? 'selected' : '' %>>AGRA</option>
+	                                                            <option value="2" <%= (contact.office == '2') ? 'selected' : '' %>>AHMEDABAD</option>
+	                                                            <option value="3" <%= (contact.office == '3') ? 'selected' : '' %>>BANGALORE</option>
+	                                                            <option value="4" <%= (contact.office == '4') ? 'selected' : '' %>>BHADOHI</option>
+	                                                            <option value="5" <%= (contact.office == '5') ? 'selected' : '' %>>CHENNAI</option>
+	                                                            <option value="6" <%= (contact.office == '6') ? 'selected' : '' %>>GANDHIDHAM</option>
+	                                                            <option value="7" <%= (contact.office == '7') ? 'selected' : '' %>>JAIPUR</option>
+	                                                            <option value="8" <%= (contact.office == '8') ? 'selected' : '' %>>JAMNAGAR</option>
+	                                                            <option value="9" <%= (contact.office == '9') ? 'selected' : '' %>>JODHPUR</option>
+	                                                            <option value="10" <%= (contact.office == '10') ? 'selected' : '' %>>KANPUR</option>
+	                                                            <option value="11" <%= (contact.office == '11') ? 'selected' : '' %>>KOCHI</option>
+	                                                            <option value="12" <%= (contact.office == '12') ? 'selected' : '' %>>KOLKATA</option>
+	                                                            <option value="13" <%= (contact.office == '13') ? 'selected' : '' %>>LUDHIANA</option>
+	                                                            <option value="14" <%= (contact.office == '14') ? 'selected' : '' %>>MUMBAI (Branch)</option>
+	                                                            <option value="15" <%= (contact.office == '15') ? 'selected' : '' %>>NEW DELHI</option>
+	                                                            <option value="16" <%= (contact.office == '16') ? 'selected' : '' %>>PUNE</option>
+	                                                            <option value="17" <%= (contact.office == '17') ? 'selected' : '' %>>TUTICORIN</option>
+	                                                            <option value="18" <%= (contact.office == '18') ? 'selected' : '' %>>VADODARA</option>
+	                                                            <option value="19" <%= (contact.office == '19') ? 'selected' : '' %>>VISAKHAPATNAM</option>
+	                                                            <option value="100" <%= (contact.office == '100') ? 'selected' : '' %>>MUMBAI (Head)</option>
+															</select>
+														</div>
+													</div>
+												</div>
+
+												<div class="col-md-12">
+													<div class="form-group">
+														<label class="col-md-4 control-label">Type <span style="color:red;">*</span></label>
+														<div class="col-md-6">
+															<select class="form-control input-sm" id="type" name="type">
+																<option value="">Select Office</option>
+	                                                            <option value="head_office"  <%= (contact.type == 'head_office') ? 'selected' : '' %>>Head Office</option>
+	                                                            <option value="branch_office" <%= (contact.type == 'branch_office') ? 'selected' : '' %>>Branch Office</option>
+	                                                        </select>
+														</div>
+													</div>
+												</div>
+											</div>
+
+											<div class="col-md-6">
+												<div class="col-md-12">
+													<div class="form-group">
+														<label class="col-md-4 control-label">Telephone <!-- <span style="color:red;">*</span> --></label>
+														<div class="col-md-6">
+															<input type="text" class="form-control input-sm" id="telephone" name="telephone" placeholder="Telephone" value="<%= contact.telephone %>">
+														</div>
+													</div>
+												</div>
+
+												<div class="col-md-12">
+													<div class="form-group">
+														<label class="col-md-4 control-label">Fax <!-- <span style="color:red;">*</span> --></label>
+														<div class="col-md-6">
+															<input type="text" class="form-control" id="fax" name="fax" placeholder="Fax" value="<%= contact.fax %>">
+														</div>
+													</div>
+												</div>
+											</div>   											
+										</div>
+
+										<div class="col-md-12">
+											<div class="form-group">
+												<label class="col-md-2 control-label">Address <!-- <span style="color:red;">*</span> --></label>
+												<div class="col-md-10">
+													<textarea rows="5" class="form-control" id="address" name="address" placeholder="Address"><%= contact.address %></textarea>
+												</div>
+											</div>
+										</div>
+
+										<div class="col-md-12" id="emails">
+											<% if(contact.emails != '') { %>
+											<% contact.emails.map(function(email, ind) { %>
+											<div class="form-group">
+												<% if(ind == 0) { %>
+												<label class="col-md-2 control-label">Emails <!-- <span style="color:red;">*</span> --></label>
+												<% } else { %>
+												<label class="col-md-2 control-label"></label>
+												<% } %>
+												<div class="col-md-5">
+													<input type="email" class="form-control" placeholder="Email" value="<%= email.email %>">
+												</div>
+												<div class="col-md-2">
+													<button type="button" data-id="<%= email._id %>" class="btn btn-danger btn-xs remove"><i class="fa fa-trash"></i></button>
+												</div>
+											</div>
+											<% }) } %>
+											<div class="form-group">
+												<label class="col-md-2 control-label">Emails <!-- <span style="color:red;">*</span> --></label>
+												<div class="col-md-5">
+													<input type="email" name="email[]" class="form-control" id="email" placeholder="Email">
+												</div>
+												<div class="col-md-2">
+													<button type="button" id="add" class="btn btn-primary btn-xs"><i class="fa fa-plus"></i></button>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>        
+
+								<div class="box-footer">
+									<div class="row">
+										<div class="col-md-5 hidden-sm"></div>
+										<div class="col-md-6 col-sm-12">
+											<span class="pull-right col-sm-pull-left">
+												<button type="submit" id="save_contact" class="btn btn-sm btn-success"><i class="glyphicon glyphicon-check"></i> Submit</button>
+												<button type="reset" class="btn btn-sm btn-danger"><i class="glyphicon glyphicon-refresh"></i> Reset</button>
+											</span>
+										</div>
+									</div>
+								</div>
+							</form>
+						</div><!-- /.box -->
+					</div>
+				</div>
+			</section>
+		</div>
+
+		<footer class="main-footer">
+			<% include ../partials/footer %>
+		</footer>
+	</div>
+
+	<% include ../partials/tail %>
+
+	<script type="text/javascript" src="../../jquery-validation/js/jquery.validate.min.js"></script>
+	<script type="text/javascript" src="../../jquery-validation/js/additional-methods.min.js"></script>
+	<script src="../../bootbox/bootbox.min.js" type="text/javascript"></script>
+	<script type="text/javascript">
+		$(document).ready(function() {
+
+			$(document).on('click', '#add', function() {
+				$('#emails').append(`
+									<div class="form-group">
+										<label class="col-md-2 control-label"></label>
+										<div class="col-md-5">
+											<input type="email" name="email[]" class="form-control" id="email" placeholder="Email">
+										</div>
+										<div class="col-md-2">
+											<button data-id="" type="button" class="btn btn-danger btn-xs remove"><i class="fa fa-trash"></i></button>
+										</div>
+									</div>
+								`)
+			});
+
+			$(document).on('click', '.remove', function() {
+                var email_id = $(this).attr('data-id');
+                var contact_id = $('#contact_id').val();
+				if(email_id != '') {
+            	var errorMsgDiv = $('.alert-danger');
+            	var successMsgDiv = $('.alert-success');
+
+            	bootbox.confirm("Are you sure?", function(result) {
+                if(result)
+                {
+                    $.ajax({
+                        url: '/contacts/email_delete/'+contact_id+'/'+email_id,
+                        type:'DELETE',
+                        success: function(data) {
+
+                            var res = data.split("|"); 
+                            if(res[0]=='error')
+                            {
+                                $('#errorMsg').html(res[1]);
+
+                                errorMsgDiv.show();  
+
+                                successMsgDiv.hide();
+
+                                errorMsgDiv.delay(3000).fadeOut();
+                            }
+                            else if(res[0]=='success')
+                            {
+                                $('#successMsg').html(res[1]);
+
+                                successMsgDiv.show();
+
+                                errorMsgDiv.hide();
+
+                                successMsgDiv.delay(3000).fadeOut();
+
+                                window.location.href = "/contacts/edit/"+contact_id;
+                            }
+
+                        },
+
+                        error: function() {
+
+                            $('#errorMsg').html('There Is Some Form Error!');
+
+                            errorMsgDiv.show();  
+
+                            successMsgDiv.hide();
+
+                            errorMsgDiv.delay(3000).fadeOut();
+                        }
+                    });
+                }
+            	});
+				}
+				else {
+					$(this).parent().parent().remove();
+				}
+			});
+
+			$(document).on('click', '#save_contact', function() {
+	            var myForm = $('#contact_form');
+	            var errorMsgDiv = $('.alert-danger');
+	            var successMsgDiv = $('.alert-success');
+
+	            myForm.validate({
+	                errorElement: 'span', //default input error message container
+	                errorClass: 'help-block help-block-error', // default input error message class
+	                focusInvalid: false, // do not focus the last invalid input
+	                ignore: "",  // validate all fields including form hidden input
+	                rules: {
+	                    "office": {
+	                        required: true
+	                    },
+	                    "type": {
+	                        required: true
+	                    }
+	                },
+
+	                invalidHandler: function (event, validator) { //display error alert on form submit     
+	                    successMsgDiv.hide();
+	                    errorMsgDiv.show();
+	                    errorMsgDiv.delay(3000).fadeOut();
+	                },
+
+	                highlight: function (element) { // hightlight error inputs
+	                    $(element)
+	                        .closest('.form-group').addClass('has-error'); // set error class to the control group
+	                },
+
+	                unhighlight: function (element) { // revert the change done by hightlight
+	                    $(element)
+	                        .closest('.form-group').removeClass('has-error'); // set error class to the control group
+	                },
+
+	                success: function (label) {
+	                    label
+	                        .closest('.form-group').removeClass('has-error'); // set success class to the control group
+	                },
+
+	                submitHandler: function (form) {
+	                	var id = $('#contact_id').val();
+	                    $.ajax({
+	                        url: "/contacts/update/"+id,
+	                        type: "PUT",
+	                        data:  $('#contact_form').serialize(),
+	                        success: function(data)
+	                        {
+	                            var res = data.split("|"); 
+	                            if(res[0]=='error')
+	                            {
+	                                $('#errorMsg').html(res[1]);
+	                                errorMsgDiv.show();  
+	                                successMsgDiv.hide();
+	                                errorMsgDiv.delay(3000).fadeOut();
+	                            }
+	                            else if(res[0]=='success')
+	                            {
+	                                $('#successMsg').html(res[1]);
+	                                successMsgDiv.show();
+	                                errorMsgDiv.hide();
+	                                successMsgDiv.delay(3000).fadeOut();
+	                                setTimeout(function() {
+	                                window.location.href = "/contacts/list";
+	                                }, 1000);
+	                            }
+	                        }
+	                    });
+	                }
+	            });
+	        });
+    	});
+	</script>
+	</body>
+</html>
+
+

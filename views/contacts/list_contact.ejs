@@ -1,0 +1,292 @@
+<% include ../partials/head %>
+<link href="../../datatables/jquery.dataTables.min.css" rel="stylesheet" type="text/css" />
+<link href="../../datatables/dataTables.bootstrap.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body class="hold-transition skin-blue sidebar-mini">
+	<div class="wrapper">
+
+		<header class="main-header">
+			<% include ../partials/header %>
+		</header>
+
+		<aside class="main-sidebar">
+			<% include ../partials/aside %>
+		</aside>
+
+		<div class="content-wrapper">
+			<section class="content-header">
+				<h1>
+					Manage Contacts
+				</h1>
+			</section>
+			<section class="content">
+				<!-- for main content of the page -->
+				<div class="row">
+					<div class="col-md-12">
+						<!-- general form elements -->
+						<div class="box box-info">
+							<div class="box-header">
+								<h3 class="box-title">List Contacts</h3>
+							</div><!-- /.box-header -->
+							<div id="AlertInfo">                            
+								<div class="alert alert-danger" style="display: none">
+									<i class="fa fa-warning"></i>
+									<button class="close" data-dismiss="alert">×</button>
+									<span id="errorMsg">You have some form errors. Please check below.</span>
+								</div>
+
+								<div class="alert alert-success " style="display: none">
+									<i class="fa fa-check"></i>
+									<button class="close" data-dismiss="alert">×</button>
+									<span id="successMsg">Your form validation is successful!</span>
+								</div>
+							</div>
+							<div class="table-responsive">
+								<table class="display compact" id="contacts_table">
+	                                <thead>
+	                                    <tr>
+	                                        <th>Sr. No.</th>
+                                            <th>Office</th>
+                                            <th>Type</th>
+	                                        <th>Address</th>
+	                                        <th>Telephone</th>
+                                            <th>Fax</th>
+	                                        <th>Action</th>
+	                                    </tr>
+	                                </thead>
+	                                <tbody></tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <th></th>
+                                            <th id="office"></th>
+                                            <th></th>
+                                            <th></th>
+                                            <th></th>
+                                            <th></th>
+                                            <th></th>
+                                        </tr>
+                                    </tfoot>
+	                            </table>
+                        	</div>
+						</div><!-- /.box -->
+					</div>
+				</div>
+			</section>
+		</div>
+
+		<footer class="main-footer">
+			<% include ../partials/footer %>
+		</footer>
+	</div>
+
+	<% include ../partials/tail %>
+
+	<script src="../../datatables/jquery.dataTables.js" type="text/javascript"></script>
+	<script src="../../bootbox/bootbox.min.js" type="text/javascript"></script>
+	<script type="text/javascript">
+		var ajax_contacts_table;
+    	$(document).ready(function() {
+
+            // $('').each( function () {
+                $('#contacts_table tfoot th#office').html( `<select class="form-control">
+                                                            <option value="">Select Office</option>
+                                                            <option value="1">AGRA</option>
+                                                            <option value="2">AHMEDABAD</option>
+                                                            <option value="3">BANGALORE</option>
+                                                            <option value="4">BHADOHI</option>
+                                                            <option value="5">CHENNAI</option>
+                                                            <option value="6">GANDHIDHAM</option>
+                                                            <option value="7">JAIPUR</option>
+                                                            <option value="8">JAMNAGAR</option>
+                                                            <option value="9">JODHPUR</option>
+                                                            <option value="10">KANPUR</option>
+                                                            <option value="11">KOCHI</option>
+                                                            <option value="12">KOLKATA</option>
+                                                            <option value="13">LUDHIANA</option>
+                                                            <option value="14">MUMBAI (Branch)</option>
+                                                            <option value="15">NEW DELHI</option>
+                                                            <option value="16">PUNE</option>
+                                                            <option value="17">TUTICORIN</option>
+                                                            <option value="18">VADODARA</option>
+                                                            <option value="19">VISAKHAPATNAM</option>
+                                                            <option value="100">MUMBAI (Head)</option>
+                                                        </select>` );
+            // });
+
+        	ajax_contacts_table = $('#contacts_table').DataTable({
+            processing: true,
+            serverSide: true,
+            ajax: {
+            	type: 'POST',
+                url : "/contacts/get_contacts",
+            },
+            // language: {searchPlaceholder: "Search Headline, Link Url and Four Lnes"},
+            columns: [
+                {data: null},
+                {data: 'office', name: 'office',
+                    'render': function( data, type, row, meta) {
+                        if(data === '1') {
+                            return 'AGRA';
+                        } else if(data === '2') {
+                            return 'AHMEDABAD';
+                        } else if(data === '3') {
+                            return 'BANGALORE';
+                        } else if(data === '4') {
+                            return 'BHADOHI';
+                        } else if(data === '5') {
+                            return 'CHENNAI';
+                        } else if(data === '6') {
+                            return 'GANDHIDHAM';
+                        } else if(data === '7') {
+                            return 'JAIPUR';
+                        } else if(data === '8') {
+                            return 'JAMNAGAR';
+                        } else if(data === '9') {
+                            return 'JODHPUR';
+                        } else if(data === '10') {
+                            return 'KANPUR';
+                        } else if(data === '11') {
+                            return 'KOCHI';
+                        } else if(data === '12') {
+                            return 'KOLKATA';
+                        } else if(data === '13') {
+                            return 'LUDHIANA';
+                        } else if(data === '14') {
+                            return 'MUMBAI (Branch)';
+                        } else if(data === '15') {
+                            return 'NEW DELHI';
+                        } else if(data === '16') {
+                            return 'PUNE';
+                        } else if(data === '17') {
+                            return 'TUTICORIN';
+                        } else if(data === '18') {
+                            return 'VADODARA';
+                        } else if(data === '19') {
+                            return 'VISAKHAPATNAM';
+                        } else if(data === '100') {
+                            return 'MUMBAI (Head)';
+                        } else {
+                            return data;
+                        }
+                    }, orderable: false
+                },
+                {data: 'type', name: 'type'},
+                {data: 'address', name: 'address'},
+                {data: 'telephone', name: 'telephone'},
+                {data: 'fax', name: 'fax'},
+                {defaultContent: '<a href="#" class="edit btn btn-primary btn-xs"><i class="fa fa-pencil-square-o"></i> Edit</a>&nbsp;<button type="button" class="delete btn btn-danger btn-xs"><i class="fa fa-trash"></i> Delete</button>'},
+                {data: '_id', name: '_id', searchable: false, visible: false}
+            ],
+            "order": [
+                [7, "desc"]
+            ],
+            "columnDefs": [
+                {
+                    "searchable": false,
+                    "orderable": false,
+                    "targets": [0, 6]
+                }
+            ],
+            "pageLength": 25,
+            lengthMenu: [
+                    [ 25, 50, 100, 200, -1 ],
+                    [ 25, 50, 100, 200, 'All' ]
+            ],
+            'fnCreatedRow': function (nRow, aData, iDataIndex) {
+            	// console.log(aData._id);
+		        $(nRow).attr('id', aData._id); // or whatever you choose to set as the id
+		         // $('td', nRow).eq(0).html(iDataIndex + 1);
+		    },
+		    "fnRowCallback" : function(nRow, aData, iDisplayIndex) {
+                $("td:first", nRow).html(iDisplayIndex +1);
+               return nRow;
+            }
+        	});
+
+            ajax_contacts_table.columns([1]).every( function () {        
+                var that = this;
+                $( 'select', this.footer() ).on( 'change', function () {
+                    if ( that.search() !== this.value ) {
+                        that
+                        .search( this.value )
+                        .draw();
+                    }
+                });
+            });
+
+
+        	$('#contacts_table tbody').on('click', '.edit', function (e) {
+        		e.preventDefault();
+                var row = $(this).closest('tr');
+                // console.log(row[0].attributes[0].value);
+                var id = row[0].attributes[0].value;
+                window.location.href="/contacts/edit/"+id;
+            });
+
+            $('#contacts_table tbody').on('click', '.delete', function (e) {
+                var row = $(this).closest('tr');
+                // console.log(row[0].attributes[0].value);
+                var id = row[0].attributes[0].value;
+            	var errorMsgDiv = $('.alert-danger');
+            	var successMsgDiv = $('.alert-success');
+
+            	bootbox.confirm("Are you sure?", function(result) {
+                if(result)
+                {
+                    $.ajax({
+                        url: '/contacts/delete/'+id,
+                        type:'DELETE',
+                        data:id,
+                        success: function(data) {
+
+                            var res = data.split("|"); 
+                            if(res[0]=='error')
+                            {
+                                $('#errorMsg').html(res[1]);
+
+                                errorMsgDiv.show();  
+
+                                successMsgDiv.hide();
+
+                                errorMsgDiv.delay(3000).fadeOut();
+                            }
+                            else if(res[0]=='success')
+                            {
+                                $('#successMsg').html(res[1]);
+
+                                successMsgDiv.show();
+
+                                errorMsgDiv.hide();
+
+                                successMsgDiv.delay(3000).fadeOut();
+
+                                filterData();
+                            }
+
+                        },
+
+                        error: function() {
+
+                            $('#errorMsg').html('There Is Some Form Error!');
+
+                            errorMsgDiv.show();  
+
+                            successMsgDiv.hide();
+
+                            errorMsgDiv.delay(3000).fadeOut();
+                        }
+                    });
+                }
+            	});
+            });
+
+        	function filterData() {
+            	ajax_contacts_table.ajax.reload();
+        	}
+    	});
+	</script>
+	</body>
+</html>
+
+

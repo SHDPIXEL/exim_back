@@ -1,0 +1,225 @@
+<% include ../partials/head %>
+<link href="../../datatables/jquery.dataTables.min.css" rel="stylesheet" type="text/css" />
+<link href="../../datatables/dataTables.bootstrap.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body class="hold-transition skin-blue sidebar-mini">
+	<div class="wrapper">
+
+		<header class="main-header">
+			<% include ../partials/header %>
+		</header>
+
+		<aside class="main-sidebar">
+			<% include ../partials/aside %>
+		</aside>
+
+		<div class="content-wrapper">
+			<section class="content-header">
+				<h1>
+					Manage Editions
+				</h1>
+			</section>
+			<section class="content">
+				<!-- for main content of the page -->
+				<div class="row">
+					<div class="col-md-12">
+						<!-- general form elements -->
+						<div class="box box-info">
+							<div class="box-header">
+								<h3 class="box-title">List Edition</h3>
+							</div><!-- /.box-header -->
+							<div id="AlertInfo">                            
+								<div class="alert alert-danger" style="display: none">
+									<i class="fa fa-warning"></i>
+									<button class="close" data-dismiss="alert">×</button>
+									<span id="errorMsg">You have some form errors. Please check below.</span>
+								</div>
+
+								<div class="alert alert-success " style="display: none">
+									<i class="fa fa-check"></i>
+									<button class="close" data-dismiss="alert">×</button>
+									<span id="successMsg">Your form validation is successful!</span>
+								</div>
+							</div>
+							<div class="table-responsive">
+								<table class="display compact" id="editions_table">
+	                                <thead>
+	                                    <tr>
+	                                        <th>Sr. No.</th>
+                                            <th>Edition</th>
+	                                        <th>Status</th>
+	                                        <th>Action</th>
+	                                    </tr>
+	                                </thead>
+	                                <tbody></tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <th></th>
+                                            <th></th>
+                                            <th id="status"></th>
+                                            <th></th>
+                                        </tr>
+                                    </tfoot>
+	                            </table>
+                        	</div>
+						</div><!-- /.box -->
+					</div>
+				</div>
+			</section>
+		</div>
+
+		<footer class="main-footer">
+			<% include ../partials/footer %>
+		</footer>
+	</div>
+
+	<% include ../partials/tail %>
+
+	<script src="../../datatables/jquery.dataTables.js" type="text/javascript"></script>
+	<script src="../../bootbox/bootbox.min.js" type="text/javascript"></script>
+	<script type="text/javascript">
+		var ajax_editions_table;
+    	$(document).ready(function() {
+
+            $('#editions_table tfoot th#status').html( `<select class="form-control">
+                                    <option value="">Select Status</option>
+                                    <option value="1">Active</option>
+                                    <option value="0">Inactive</option>
+                                </select>` );
+
+        	ajax_editions_table = $('#editions_table').DataTable({
+            processing: true,
+            serverSide: true,
+            ajax: {
+            	type: 'POST',
+                url : "/editions/get_editions",
+            },
+            columns: [
+                {data: null},
+                {data: 'edition', name: 'edition'},
+                {data: 'status', name: 'status',
+                    'render': function( data, type, row, meta) {
+                        if(data == '1') {
+                            return 'Active';
+                        } else if(data == '0') {
+                            return 'Inactive';
+                        } else {
+                            return data;
+                        }
+                    }
+                },
+                {defaultContent: '<a href="#" class="edit btn btn-primary btn-xs"><i class="fa fa-pencil-square-o"></i> Edit</a>&nbsp;<button type="button" class="delete btn btn-danger btn-xs"><i class="fa fa-trash"></i> Delete</button>'},
+                {data: '_id', name: '_id', searchable: false, visible: false}
+            ],
+            "order": [
+                [4, "desc"]
+            ],
+            "columnDefs": [
+                {
+                    "searchable": false,
+                    "orderable": false,
+                    "targets": [0, 3]
+                }
+            ],
+            "pageLength": 25,
+            lengthMenu: [
+                    [ 25, 50, 100, 200, -1 ],
+                    [ 25, 50, 100, 200, 'All' ]
+            ],
+            'fnCreatedRow': function (nRow, aData, iDataIndex) {
+            	// console.log(aData._id);
+		        $(nRow).attr('id', aData._id); // or whatever you choose to set as the id
+		         // $('td', nRow).eq(0).html(iDataIndex + 1);
+		    },
+		    "fnRowCallback" : function(nRow, aData, iDisplayIndex) {
+                $("td:first", nRow).html(iDisplayIndex +1);
+               return nRow;
+            }
+        	});
+
+            ajax_editions_table.columns([2]).every( function () {     
+                var that = this;
+                $( 'select', this.footer() ).on( 'change', function () {
+                    if ( that.search() !== this.value ) {
+                        that
+                        .search( this.value )
+                        .draw();
+                    }
+                });
+            });
+
+        	$('#editions_table tbody').on('click', '.edit', function (e) {
+        		e.preventDefault();
+                var row = $(this).closest('tr');
+                // console.log(row[0].attributes[0].value);
+                var id = row[0].attributes[0].value;
+                window.location.href="/editions/edit/"+id;
+            });
+
+            $('#editions_table tbody').on('click', '.delete', function (e) {
+                var row = $(this).closest('tr');
+                // console.log(row[0].attributes[0].value);
+                var id = row[0].attributes[0].value;
+            	var errorMsgDiv = $('.alert-danger');
+            	var successMsgDiv = $('.alert-success');
+
+            	bootbox.confirm("Are you sure?", function(result) {
+                if(result)
+                {
+                    $.ajax({
+                        url: '/editions/delete/'+id,
+                        type:'DELETE',
+                        data:id,
+                        success: function(data) {
+
+                            var res = data.split("|"); 
+                            if(res[0]=='error')
+                            {
+                                $('#errorMsg').html(res[1]);
+
+                                errorMsgDiv.show();  
+
+                                successMsgDiv.hide();
+
+                                errorMsgDiv.delay(3000).fadeOut();
+                            }
+                            else if(res[0]=='success')
+                            {
+                                $('#successMsg').html(res[1]);
+
+                                successMsgDiv.show();
+
+                                errorMsgDiv.hide();
+
+                                successMsgDiv.delay(3000).fadeOut();
+
+                                filterData();
+                            }
+
+                        },
+
+                        error: function() {
+
+                            $('#errorMsg').html('There Is Some Form Error!');
+
+                            errorMsgDiv.show();  
+
+                            successMsgDiv.hide();
+
+                            errorMsgDiv.delay(3000).fadeOut();
+                        }
+                    });
+                }
+            	});
+            });
+
+        	function filterData() {
+            	ajax_editions_table.ajax.reload();
+        	}
+    	});
+	</script>
+	</body>
+</html>
+
+

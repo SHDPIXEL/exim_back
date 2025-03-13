@@ -1,0 +1,401 @@
+<% include ../partials/head %>
+<link href="../../datatables/jquery.dataTables.min.css" rel="stylesheet" type="text/css" />
+<link href="../../datatables/dataTables.bootstrap.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body class="hold-transition skin-blue sidebar-mini">
+	<div class="wrapper">
+
+		<header class="main-header">
+			<% include ../partials/header %>
+		</header>
+
+		<aside class="main-sidebar">
+			<% include ../partials/aside %>
+		</aside>
+
+		<div class="content-wrapper">
+			<section class="content-header">
+				<h1>
+					Manage Gazette Line Agents
+				</h1>
+			</section>
+			<section class="content">
+				<!-- for main content of the page -->
+				<div class="row">
+					<div class="col-md-12">
+						<!-- general form elements -->
+						<div class="box box-info">
+							<div class="box-header">
+								<h3 class="box-title">List Gazette Line Agents</h3>
+							</div><!-- /.box-header -->
+							<div id="AlertInfo">                            
+								<div class="alert alert-danger" style="display: none">
+									<i class="fa fa-warning"></i>
+									<button class="close" data-dismiss="alert">×</button>
+									<span id="errorMsg">You have some form errors. Please check below.</span>
+								</div>
+
+								<div class="alert alert-success " style="display: none">
+									<i class="fa fa-check"></i>
+									<button class="close" data-dismiss="alert">×</button>
+									<span id="successMsg">Your form validation is successful!</span>
+								</div>
+							</div>
+							<div class="table-responsive">
+
+								<table class="display compact" id="gazette_line_agent_table">
+	                                <thead>
+	                                    <tr>
+	                                        <th>Sr. No.</th>
+                                            <th>Sector</th>
+	                                        <th>Terminal</th>
+                                            <th>Service</th>
+                                            <th>Ref. Id</th>
+                                            <th>Line</th>
+	                                        <th>Agent</th>
+                                            <th>Action</th>
+	                                    </tr>
+	                                </thead>
+	                                <tbody></tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <th></th>
+                                            <th id="sector"></th>
+                                            <th id="terminal"></th>
+                                            <th id="service"></th>
+                                            <th></th>
+                                            <th></th>
+                                            <th></th>
+                                            <th></th>
+                                        </tr>
+                                    </tfoot>
+	                            </table>
+                        	</div>
+						</div><!-- /.box -->
+					</div>
+				</div>
+			</section>
+		</div>
+
+		<footer class="main-footer">
+			<% include ../partials/footer %>
+		</footer>
+	</div>
+
+	<% include ../partials/tail %>
+
+	<script src="../../datatables/jquery.dataTables.js" type="text/javascript"></script>
+	<script src="../../bootbox/bootbox.min.js" type="text/javascript"></script>
+	<script type="text/javascript">
+		var ajax_gazette_line_agent_table;
+
+    	$(document).ready(function() {
+
+            $('#gazette_line_agent_table tfoot th#sector').html( `<select class="form-control" id="s">
+                                                            <option value="">Select Gazette Sector</option>
+                                                            <option value="1">EUROPE/GULF</option>
+                                                            <option value="2">USA/EUROPE</option>
+                                                            <option value="3">GULF/AFRICA</option>
+                                                            <option value="4">FAR EAST/INDIAN SUB CONTINENT</option>
+                                                            <option value="5">GULF/FAR EAST</option>
+                                                            <option value="6">GULF</option>
+                                                        </select>` );
+
+            $('#gazette_line_agent_table tfoot th#service').html( `<select class="form-control" id="se">
+                                                            <option value="">Select Service</option>
+                                                            <option value="1">HIMALAYA EXP</option>
+                                                            <option value="2">ME1</option>
+                                                            <option value="3">IMED-GEM2</option>
+                                                            <option value="4">IPAK-EPIC1</option>
+                                                            <option value="5">EPIC2-IPAK-2</option>
+                                                            <option value="6">IMEX</option>
+                                                            <option value="7">ME3</option>
+                                                            <option value="8">INDUS EXP</option>
+                                                            <option value="9">MECL1</option>
+                                                            <option value="10">INDAMEX</option>
+                                                            <option value="11">MIDAS LOOP2</option>
+                                                            <option value="12">MESAWA LOOP1</option>
+                                                            <option value="13">MWE</option>
+                                                            <option value="14">SWAX</option>
+                                                            <option value="15">INGWE</option>
+                                                            <option value="16">CIX2-CISC-NCI</option>
+                                                            <option value="17">CI2</option>
+                                                            <option value="18">AIS</option>
+                                                            <option value="19">CIX</option>
+                                                            <option value="20">CI1-AS6-CIX1</option>
+                                                            <option value="21">SCIX</option>
+                                                            <option value="22">CIX3</option>
+                                                            <option value="23">AIS3-CIX3</option>
+                                                            <option value="24">FM3</option>
+                                                            <option value="25">HLS-TIP</option>
+                                                            <option value="26">PS3</option>
+                                                            <option value="27">GALEX</option>
+                                                            <option value="28">NDX</option>
+                                                            <option value="29">NEW IIX SERVICE</option>
+                                                            <option value="30">NMG</option>
+                                                            <option value="31">ASX</option>
+                                                        </select>` );
+
+        	ajax_gazette_line_agent_table = $('#gazette_line_agent_table').DataTable({
+            processing: true,
+            serverSide: true,
+            ajax: {
+            	type: 'POST',
+                url : "/gazette_line_agents/get_gazette_line_agents",
+            },
+            columns: [
+                {data: null},
+                {data: 'gazette_sector_id', name: 'gazette_sector_id',
+                    'render': function( data, type, row, meta) {
+                        if(type === 'display') {
+                            if(data == 1) {
+                                return 'EUROPE/GULF';
+                            } else if(data == 2) {
+                                return 'USA/EUROPE';
+                            } else if(data == 3) {
+                                return 'GULF AFRICA';
+                            } else if(data == 4) {
+                                return 'FAR EAST INDIAN SUB CONTINENT';
+                            } else if(data == 5) {
+                                return 'GULF FAR EAST';
+                            } else if(data == 6) {
+                                return 'GULF';
+                            }
+                        } else {
+                            return data;
+                        }
+                    }
+                },
+                {data: 'port_id.name', name: 'port_id.name', orderable: false},
+                {data: 'service_id', name: 'service_id',
+                    'render': function( data, type, row, meta) {
+                        if(type === 'display') {
+                            if(data == 1) {
+                                return 'HIMALAYA EXP';
+                            } else if(data == 2) {
+                                return 'ME1';
+                            } else if(data == 3) {
+                                return 'IMED-GEM2';
+                            } else if(data == 4) {
+                                return 'IPAK-EPIC1';
+                            } else if(data == 5) {
+                                return 'EPIC2-IPAK-2';
+                            } else if(data == 6) {
+                                return 'IMEX';
+                            } else if(data == 7) {
+                                return 'ME3';
+                            } else if(data == 8) {
+                                return 'INDUS EXP';
+                            } else if(data == 9) {
+                                return 'MECL1';
+                            } else if(data == 10) {
+                                return 'INDAMEX';
+                            } else if(data == 11) {
+                                return 'MIDAS LOOP2';
+                            } else if(data == 12) {
+                                return 'MESAWA LOOP1';
+                            } else if(data == 13) {
+                                return 'MWE';
+                            } else if(data == 14) {
+                                return 'SWAX';
+                            } else if(data == 15) {
+                                return 'INGWE';
+                            } else if(data == 16) {
+                                return 'CIX2-CISC-NCI';
+                            } else if(data == 17) {
+                                return 'CI2';
+                            } else if(data == 18) {
+                                return 'AIS';
+                            } else if(data == 19) {
+                                return 'CIX';
+                            } else if(data == 20) {
+                                return 'CI1-AS6-CIX1';
+                            } else if(data == 21) {
+                                return 'SCIX';
+                            } else if(data == 22) {
+                                return 'CIX3';
+                            } else if(data == 23) {
+                                return 'AIS3-CIX3';
+                            } else if(data == 24) {
+                                return 'FM3';
+                            } else if(data == 25) {
+                                return 'HLS-TIP';
+                            } else if(data == 26) {
+                                return 'PS3';
+                            } else if(data == 27) {
+                                return 'GALEX';
+                            } else if(data == 28) {
+                                return 'NDX';
+                            } else if(data == 29) {
+                                return 'NEW IIX SERVICE';
+                            } else if(data == 30) {
+                                return 'NMG';
+                            } else if(data == 31) {
+                                return 'ASX';
+                            }
+                        } else {
+                            return data;
+                        }
+                    }
+                },
+                {data: 'service_id', name: 'service_id'},
+                {data: 'line', name: 'line'},
+                {data: 'agent', name: 'agent'},
+                {defaultContent: '<a href="#" class="edit btn btn-primary btn-xs"><i class="fa fa-pencil-square-o"></i> Edit</a>&nbsp;<button type="button" class="delete btn btn-danger btn-xs"><i class="fa fa-trash"></i> Delete</button>'},
+                {data: '_id', name: '_id', searchable: false, visible: false}
+            ],
+            "order": [
+                [8, "desc"]
+            ],
+            "columnDefs": [
+                {
+                    "searchable": false,
+                    "orderable": false,
+                    "targets": [0, 7]
+                }
+            ],
+            "pageLength": 25,
+            lengthMenu: [
+                    [ 25, 50, 100, 200, -1 ],
+                    [ 25, 50, 100, 200, 'All' ]
+            ],
+            'fnCreatedRow': function (nRow, aData, iDataIndex) {
+            	// console.log(aData._id);
+		        $(nRow).attr('id', aData._id); // or whatever you choose to set as the id
+		         // $('td', nRow).eq(0).html(iDataIndex + 1);
+		    },
+		    "fnRowCallback" : function(nRow, aData, iDisplayIndex) {
+                $("td:first", nRow).html(iDisplayIndex +1);
+               return nRow;
+            }
+        	});
+
+
+            ajax_gazette_line_agent_table.columns([1]).every( function () {
+                var that = this;
+                $( 'select#s', this.footer() ).on( 'change', function () {
+                    if ( that.search() !== this.value ) {
+                        that
+                        .search( this.value )
+                        .draw();
+                    }
+                });
+            });
+
+            ajax_gazette_line_agent_table.columns([3]).every( function () {
+                var that = this;
+                $( 'select#se', this.footer() ).on( 'change', function () {
+                    if ( that.search() !== this.value ) {
+                        that
+                        .search( this.value )
+                        .draw();
+                    }
+                });
+            });
+
+            var terminals = '<select id="t" class="form-control"><option value="">Select Terminal</option>';
+
+            $.ajax({
+                url: '/terminals/fetch_terminals',
+                method: 'GET',
+                success: function(data) {
+                if(!$.isEmptyObject(data)) {
+                    data.map(function(terminal, ind) {
+                        terminals += `<option value="${terminal._id}">${terminal.name}</option>`;
+                    });
+                    $('#gazette_line_agent_table tfoot th#terminal').html('');
+                    $('#gazette_line_agent_table tfoot th#terminal').append(terminals);
+                }
+
+                ajax_gazette_line_agent_table.columns([2]).every( function () {
+                    var that = this;
+                    $( 'select#t', this.footer() ).on( 'change', function () {
+                        if ( that.search() !== this.value ) {
+                            that
+                            .search( this.value )
+                            .draw();
+                        }
+                    });
+                });
+
+                },
+                error: function(err) {
+
+                }
+            });
+
+            $('#gazette_line_agent_table tbody').on('click', '.edit', function (e) {
+                e.preventDefault();
+                var row = $(this).closest('tr');
+                // console.log(row[0].attributes[0].value);
+                var id = row[0].attributes[0].value;
+                window.location.href="/gazette_line_agents/edit/"+id;
+            });
+
+            $('#gazette_line_agent_table tbody').on('click', '.delete', function (e) {
+                var row = $(this).closest('tr');
+                // console.log(row[0].attributes[0].value);
+                var id = row[0].attributes[0].value;
+            	var errorMsgDiv = $('.alert-danger');
+            	var successMsgDiv = $('.alert-success');
+
+            	bootbox.confirm("Are you sure?", function(result) {
+                if(result)
+                {
+                    $.ajax({
+                        url: '/gazette_line_agents/delete/'+id,
+                        type:'DELETE',
+                        data:id,
+                        success: function(data) {
+
+                            var res = data.split("|"); 
+                            if(res[0]=='error')
+                            {
+                                $('#errorMsg').html(res[1]);
+
+                                errorMsgDiv.show();  
+
+                                successMsgDiv.hide();
+
+                                errorMsgDiv.delay(3000).fadeOut();
+                            }
+                            else if(res[0]=='success')
+                            {
+                                $('#successMsg').html(res[1]);
+
+                                successMsgDiv.show();
+
+                                errorMsgDiv.hide();
+
+                                successMsgDiv.delay(3000).fadeOut();
+
+                                filterData();
+                            }
+
+                        },
+
+                        error: function() {
+
+                            $('#errorMsg').html('There Is Some Form Error!');
+
+                            errorMsgDiv.show();  
+
+                            successMsgDiv.hide();
+
+                            errorMsgDiv.delay(3000).fadeOut();
+                        }
+                    });
+                }
+            	});
+            });
+
+        	function filterData() {
+            	ajax_gazette_line_agent_table.ajax.reload();
+        	}
+    	});
+	</script>
+	</body>
+</html>
+
+

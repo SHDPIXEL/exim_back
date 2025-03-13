@@ -1,0 +1,345 @@
+<% include ../partials/head %>
+<link rel="stylesheet" href="../../jquery_ui/css/jquery-ui.min.css">
+
+	<style type="text/css">
+	    #image_preview img {
+	      width: 200px;
+	      padding: 5px;
+	      border: 1px solid #ddd;
+	      border-radius: 4px;
+	    }
+
+	    img:hover {
+	        box-shadow: 0 0 2px 1px rgba(0, 140, 186, 0.5);
+	    }
+
+	    .img-wrap {
+	        position: relative;
+	        display: inline-block;
+	    }
+
+	    .img-wrap .close {
+	        position: absolute;
+	        top: 2px;
+	        right: 2px;
+	        z-index: 100;
+	        background-color: #FFF;
+	        padding: 5px 2px 2px;
+	        color: #000;
+	        font-weight: bold;
+	        cursor: pointer;
+	        opacity: .2;
+	        text-align: center;
+	        font-size: 22px;
+	        line-height: 10px;
+	        border-radius: 50%;
+	    }
+
+	    .img-wrap:hover .close {
+	        opacity: 1;
+	    }
+
+	    .btn-file { 
+	        width: 30% !important;
+	    }
+
+	    .btn-file input[type=file] {
+	        position: absolute;
+	        top: 0;
+	        right: 0;
+	        min-width: 100%;
+	        min-height: 100%;
+	        font-size: 100px;
+	        text-align: right;
+	        filter: alpha(opacity=0);
+	        opacity: 0;
+	        outline: none;
+	        background: white;
+	        cursor: inherit;
+	        display: block;
+	    }
+    </style>
+</head>
+<body class="hold-transition skin-blue sidebar-mini">
+	<div class="wrapper">
+
+		<header class="main-header">
+			<% include ../partials/header %>
+		</header>
+
+		<aside class="main-sidebar">
+			<% include ../partials/aside %>
+		</aside>
+
+		<div class="content-wrapper">
+			<section class="content-header">
+				<h1>
+					Manage News
+				</h1>
+			</section>
+			<section class="content">
+				<!-- for main content of the page -->
+				<div class="row">
+					<div class="col-md-12">
+						<!-- general form elements -->
+						<div class="box box-info">
+							<div class="box-header">
+								<h3 class="box-title">Add News</h3>
+							</div><!-- /.box-header -->
+							<!-- form start -->
+							<form id="news_form" method="POST" class="form-horizontal" role="form" enctype="multipart/form-data">
+								<div class="box-body">
+									<div id="AlertInfo">                            
+										<div class="alert alert-danger" style="display: none">
+											<i class="fa fa-warning"></i>
+											<button class="close" data-dismiss="alert">×</button>
+											<span id="errorMsg">You have some form errors. Please check below.</span>
+										</div>
+
+										<div class="alert alert-success " style="display: none">
+											<i class="fa fa-check"></i>
+											<button class="close" data-dismiss="alert">×</button>
+											<span id="successMsg">Your form validation is successful!</span>
+										</div>
+									</div>
+
+									<div class="row">
+										<div class="col-md-12">
+											<div class="col-md-6">
+												<div class="col-md-12">
+													<div class="form-group">
+														<label class="col-md-4 control-label">News Category <span style="color:red;">*</span></label>
+														<div class="col-md-6">
+															<select class="form-control" id="category_id" name="category_id">
+																<option value="">Select News Category</option>
+																<option value="1">Shipping News</option>
+																<option value="2">Trade News</option>
+																<option value="3">Port News</option>
+																<option value="4">Transport News</option>
+																<option value="5">Indian Economy</option>
+																<option value="6">Special Report</option>
+																<option value="7">International</option>
+																<option value="8">Aviation Cargo Express</option>
+															</select>
+														</div>
+													</div>
+												</div>
+
+												<div class="col-md-12">
+                                    				<div class="form-group">
+                                        				<label class="col-md-4 control-label">Image <!-- <span style="color:red;">*</span> --></label>
+                                        				<label class="col-md-offset-1 btn btn-primary btn-file"><i class="fa fa-folder-open" aria-hidden="true"></i> Browse <input type="file" id="image" name="image" style="display: none;">
+                                        				</label>
+                                    				</div>
+                                				</div>
+											</div>   
+
+											<div class="col-md-6">
+												<div class="col-md-12">
+													<div class="form-group">
+														<label class="col-md-4 control-label">News Date <span style="color:red;">*</span></label>
+														<div class="col-md-6">
+															<input type="text" class="form-control input-sm" id="date" name="date" placeholder="News Date">
+														</div>
+													</div>
+												</div>
+
+												<div class="col-md-12 col-md-offset-2" id="image_preview"></div>
+											</div>
+										</div>
+
+										<div class="col-md-12">
+											<div class="form-group">
+												<label class="col-md-2 control-label">News <span style="color:red;">*</span></label>
+												<div class="col-md-10">
+													<input type="text" class="form-control input-sm" id="headline" name="headline" placeholder="News">
+												</div>
+											</div>
+										</div>
+
+										<div class="col-md-12">
+											<div class="form-group">
+												<label class="col-md-2 control-label">Breaking News <!-- <span style="color:red;">*</span> --></label>
+												<div class="col-md-10">
+													<input type="text" class="form-control input-sm" id="breaking_news" name="breaking_news" placeholder="Breaking News">
+												</div>
+											</div>
+										</div>
+
+										<!-- <div class="col-md-12">
+											<div class="form-group">
+												<label class="col-md-2 control-label">News Link Url <span style="color:red;">*</span></label>
+												<div class="col-md-10">
+													<input type="text" class="form-control input-sm" id="link_url" name="link_url" placeholder="News Link Url">
+												</div>
+											</div>
+										</div> -->
+
+										<div class="col-md-12">
+											<div class="form-group">
+												<label class="col-md-2 control-label">News Four Lines <!-- <span style="color:red;">*</span> --></label>
+												<div class="col-md-10">
+													<textarea rows="5" class="form-control input-sm" id="four_lines" name="four_lines" placeholder="News Four Lines"></textarea>
+												</div>
+											</div>
+										</div>
+
+										<div class="col-md-12">
+											<div class="form-group">
+												<label class="col-md-2 control-label">News Description <span style="color:red;">*</span></label>
+												<div class="col-md-10">
+													<textarea class="form-control input-sm" id="description" name="description" placeholder="News Description"></textarea>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>        
+
+								<div class="box-footer">
+									<div class="row">
+										<div class="col-md-5 hidden-sm"></div>
+										<div class="col-md-6 col-sm-12">
+											<span class="pull-right col-sm-pull-left">
+												<button type="submit" id="save_news" class="btn btn-sm btn-success"><i class="glyphicon glyphicon-check"></i> Submit</button>
+												<button type="reset" class="btn btn-sm btn-danger"><i class="glyphicon glyphicon-refresh"></i> Reset</button>
+											</span>
+										</div>
+									</div>
+								</div>
+							</form>
+						</div><!-- /.box -->
+					</div>
+				</div>
+			</section>
+		</div>
+
+		<footer class="main-footer">
+			<% include ../partials/footer %>
+		</footer>
+	</div>
+
+	<% include ../partials/tail %>
+
+	<script type="text/javascript" src="../../jquery-validation/js/jquery.validate.min.js"></script>
+	<script type="text/javascript" src="../../jquery-validation/js/additional-methods.min.js"></script>
+	<script src="../../jquery_ui/js/jquery-ui.min.js"></script>
+	<!-- <script src="../../ckeditor/js/ckeditor.js"></script> -->
+	<script type="text/javascript" src="https://ckeditor.com/docs/vendors/4.12.1/ckeditor/ckeditor.js"></script>
+	<script type="text/javascript">
+		$(document).ready(function() {
+
+			$(document).on('change','#image',function(event) {
+            	var total_file=document.getElementById("image").files.length;
+            	for(var i=0;i<total_file;i++)
+            	{
+                	$('#image_preview').append(`<div class="img-wrap">
+                                    <i class="fa fa-times close" aria-hidden="true"></i>
+                                    <img src="${URL.createObjectURL(event.target.files[i])}"'>
+                                  </div>`);
+            	}
+        	});
+
+			$(document).on('click',".close",function() {
+			    $(this).parent().remove();
+			});
+
+			CKEDITOR.replace( 'description', {
+				extraPlugins: 'colorbutton, colordialog, justify, font'
+			} );
+
+			$(document).on('click', '#save_news', function() {
+	            var myForm = $('#news_form');
+	            var errorMsgDiv = $('.alert-danger');
+	            var successMsgDiv = $('.alert-success');
+
+	            myForm.validate({
+	                errorElement: 'span', //default input error message container
+	                errorClass: 'help-block help-block-error', // default input error message class
+	                focusInvalid: false, // do not focus the last invalid input
+	                ignore: "",  // validate all fields including form hidden input
+	                rules: {
+	                    "category_id": {
+	                        required: true
+	                    },
+	                    "date": {
+	                        required: true
+	                    },
+	                    "headline": {
+	                        required: true
+	                    },
+	                    /*"link_url": {
+	                        required: true
+	                    },*/
+	                    "description": {
+	                        required: true
+	                    }
+	                },
+
+	                invalidHandler: function (event, validator) { //display error alert on form submit     
+	                    successMsgDiv.hide();
+	                    errorMsgDiv.show();
+	                    errorMsgDiv.delay(3000).fadeOut();
+	                },
+
+	                highlight: function (element) { // hightlight error inputs
+	                    $(element)
+	                        .closest('.form-group').addClass('has-error'); // set error class to the control group
+	                },
+
+	                unhighlight: function (element) { // revert the change done by hightlight
+	                    $(element)
+	                        .closest('.form-group').removeClass('has-error'); // set error class to the control group
+	                },
+
+	                success: function (label) {
+	                    label
+	                        .closest('.form-group').removeClass('has-error'); // set success class to the control group
+	                },
+
+	                submitHandler: function (form) {
+	                    var formData = new FormData($("#news_form")[0]);
+
+	                    $.ajax({
+	                        url: "/news/store",
+	                        type: "POST",
+	                        data:  formData,
+	                        contentType: false,
+	                        cache: false,
+	                        processData:false,
+	                        success: function(data)
+	                        {
+	                            var res = data.split("|"); 
+	                            if(res[0]=='error')
+	                            {
+	                                $('#errorMsg').html(res[1]);
+	                                errorMsgDiv.show();  
+	                                successMsgDiv.hide();
+	                                errorMsgDiv.delay(3000).fadeOut();
+	                            }
+	                            else if(res[0]=='success')
+	                            {
+	                                $('#successMsg').html(res[1]);
+	                                successMsgDiv.show();
+	                                errorMsgDiv.hide();
+	                                successMsgDiv.delay(3000).fadeOut();
+	                                setTimeout(function() {
+	                                window.location.href = "/news/add";
+	                                }, 1000);
+	                            }
+	                        }
+	                    });
+	                }
+	            });
+	        });
+
+	        $( "#date" ).datepicker({
+                changeMonth: true,
+                changeYear: true,
+                dateFormat: 'yy-mm-dd'
+            });
+    	});
+	</script>
+	</body>
+</html>
+
+
