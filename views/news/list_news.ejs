@@ -164,7 +164,7 @@
                         return '<img src="'+data+'" width="100" height="100" alt="No Image"/>';
                     }
                 },
-                {defaultContent: '<a href="#" class="edit btn btn-primary btn-xs"><i class="fa fa-pencil-square-o"></i> Edit</a>&nbsp;<button type="button" class="delete btn btn-danger btn-xs"><i class="fa fa-trash"></i> Delete</button>&nbsp;<br><input type="checkbox" id="inFocus"><label for="inFocus"> In Focus</label>'},
+                {defaultContent: '<a href="#" class="edit btn btn-primary btn-xs"><i class="fa fa-pencil-square-o"></i> Edit</a>&nbsp;<button type="button" class="delete btn btn-danger btn-xs"><i class="fa fa-trash"></i> Delete</button>&nbsp;<br><input type="checkbox" class="inFocus" data-id="{_id}"><label for="inFocus"> In Focus</label>'},
                 {data: '_id', name: '_id', searchable: false, visible: false},
                 
             ],
@@ -313,6 +313,25 @@
                     });
                 }
             	});
+            });
+
+            $('#news_table tbody').on('change', '#inFocus', function () {
+                var row = $(this).closest('tr');
+                var newsId = row.attr('data-id'); // Ensure this contains a valid ObjectId
+                var inFocus = $(this).is(':checked') ? 1 : 0; 
+            
+                $.ajax({
+                    url: '/news/update-inFocus',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ id: newsId, inFocus: inFocus }),
+                    success: function (response) {
+                        console.log(response.message);
+                    },
+                    error: function (xhr) {
+                        console.error('Error updating inFocus:', xhr.responseText);
+                    }
+                });
             });
 
         	function filterData() {

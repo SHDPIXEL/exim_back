@@ -64,13 +64,16 @@ module.exports = {
   // News List End
   new_update_inFocus: async function(req,res){
     try {
-      const { id, inFocus } = req.body;
+      let { id, inFocus } = req.body;
 
-      if (!id) {
-          return res.status(400).json({ error: "News ID is required" });
+      // Validate MongoDB ObjectId
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+          return res.status(400).json({ error: "Invalid News ID" });
       }
 
+      console.log("news",id, inFocus)
       const updatedNews = await News.findByIdAndUpdate(id, { inFocus }, { new: true });
+      console.log("uptd",updatedNews)
 
       if (!updatedNews) {
           return res.status(404).json({ error: "News item not found" });

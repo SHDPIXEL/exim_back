@@ -90,6 +90,8 @@ app.use('*', function(req, res, next){
   next()
 });
 
+
+
 // Passport Config
 require('./config/passport')(passport);
 // Passport Middleware
@@ -123,6 +125,16 @@ app.get('/dashboard', is_authenticated, function(req, res) {
   res.render('dashboard');
 });
 
+app.get('/polls/add', (req, res) => {
+  console.log("User in request:", req.user);
+  res.render('polls/add_poll', { user: req.user || null, url: req.originalUrl });
+});
+
+app.get('/polls/list', (req, res) => {
+  console.log("User in request:", req.user);
+  res.render('polls/list_polls', { user: req.user || null, url: req.originalUrl });
+});
+
 let users = require('./routes/users');
 let app_users = require('./routes/app_users');
 let about = require('./routes/about');
@@ -153,6 +165,7 @@ let question_answers = require('./routes/question_answers');
 let gazette_vessels = require('./routes/gazette_vessels');
 let logs = require('./routes/logs');
 let services = require('./routes/services');
+let polls = require('./routes/polls')
  
 
 app.use('/users', users);
@@ -185,6 +198,7 @@ app.use('/question_answers', question_answers);
 app.use('/gazette_vessels', gazette_vessels);
 app.use('/logs', logs);
 app.use('/services', services);
+app.use('/polls',polls);
 // Start Server
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`Server is running on http://127.0.0.1:${PORT}`);

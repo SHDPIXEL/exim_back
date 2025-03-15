@@ -10,6 +10,7 @@ router.get('/list', is_authenticated, app_users.list);
 
 // Get App Users Route Start
 router.post('/get_app_users', app_users.get_app_users);
+// router.get('/feilds', app_users.addfeilds);
 // Get App Users Route End
 
 // App User Delete Route Start

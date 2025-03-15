@@ -45,6 +45,12 @@ let services = require('../controllers/services');
 router.post('/register', services.register);
 // Store Register Route End
 
+router.post('/login', services.login);
+
+router.post("/order", services.orders);
+router.post("/order-success", services.orderSuccess);
+router.post("/get_payments", services.get_payments);
+
 // Get Registered User Route Start
 /*router.get('/register', function(req, res) {
   AppUser.find({}, function(err, appUsers) {

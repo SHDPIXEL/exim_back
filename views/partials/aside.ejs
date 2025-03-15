@@ -1,339 +1,721 @@
-  <!-- sidebar: style can be found in sidebar.less -->
-    <section class="sidebar">
-      <!-- Sidebar user panel -->
-      <div class="user-panel">
-        <div class="pull-left image">
-          <img src="../../AdminLTE/dist/img/avatar5.png" class="img-circle" alt="User Image">
-        </div>
-        <div class="pull-left info">
-          <p><% if(user) { %><%= user.name %><% } %></p>
-          <a href="#"><i class="fa fa-circle text-success"></i> Online</a>
-        </div>
-      </div>
+<!-- sidebar: style can be found in sidebar.less -->
+<section class="sidebar">
+  <!-- Sidebar user panel -->
+  <div class="user-panel">
+    <div class="pull-left image">
+      <img
+        src="../../AdminLTE/dist/img/avatar5.png"
+        class="img-circle"
+        alt="User Image"
+      />
+    </div>
+    <div class="pull-left info">
+      <p><% if(user) { %><%= user.name %><% } %></p>
+      <a href="#"><i class="fa fa-circle text-success"></i> Online</a>
+    </div>
+  </div>
 
-      <!-- sidebar menu: : style can be found in sidebar.less -->
-      <ul class="sidebar-menu">
-        <li class="header">MAIN NAVIGATION</li>
-        <li class="<%= (url == '/dashboard') ? 'active' : '' %>">
-          <a href="/dashboard">
-            <i class="fa fa-dashboard"></i> <span>Dashboard</span>
-          </a>
+  <!-- sidebar menu: : style can be found in sidebar.less -->
+  <ul class="sidebar-menu">
+    <li class="header">MAIN NAVIGATION</li>
+    <li class="<%= (url == '/dashboard') ? 'active' : '' %>">
+      <a href="/dashboard">
+        <i class="fa fa-dashboard"></i> <span>Dashboard</span>
+      </a>
+    </li>
+
+    <% if (user?.role === 'admin') { %> <% if(url == '/users/list') { %>
+    <li class="treeview active"><% } else if(url == '/users/add') { %></li>
+
+    <li class="treeview active"><% } else { %></li>
+
+    <li class="treeview">
+      <% } %>
+      <a href="#">
+        <i class="fa fa-users"></i> <span>Users</span>
+        <i class="fa fa-angle-left pull-right"></i>
+      </a>
+      <ul class="treeview-menu">
+        <li class="<%= (url == '/users/list') ? 'active' : '' %>">
+          <a href="/users/list"><i class="fa fa-circle-o"></i> list Users </a>
         </li>
-
-        <% if(user.role == 'admin') { %>
-
-        <% if(url == '/users/list') { %>
-        <li class="treeview active">
-        <% } else if(url == '/users/add') { %>
-        <li class="treeview active">
-        <% } else { %>
-        <li class="treeview">
-        <% } %>
-          <a href="#">
-            <i class="fa fa-users"></i> <span>Users</span> <i class="fa fa-angle-left pull-right"></i>
-          </a>
-          <ul class="treeview-menu">
-            <li class="<%= (url == '/users/list') ? 'active' : '' %>"><a href="/users/list"><i class="fa fa-circle-o"></i> list Users </a></li>
-            <li class="<%= (url == '/users/add') ? 'active' : '' %>"><a href="/users/add"><i class="fa fa-circle-o"></i> Add User </a></li>
-          </ul>
+        <li class="<%= (url == '/users/add') ? 'active' : '' %>">
+          <a href="/users/add"><i class="fa fa-circle-o"></i> Add User </a>
         </li>
-
-        <% if(url == '/app_users/list') { %>
-        <li class="treeview active">
-        <% } else { %>
-        <li class="treeview">
-        <% } %>
-          <a href="#">
-            <i class="fa fa-envelope"></i> <span>Subscribe Email Ids</span> <i class="fa fa-angle-left pull-right"></i>
-          </a>
-          <ul class="treeview-menu">
-            <li class="<%= (url == '/app_users/list') ? 'active' : '' %>"><a href="/app_users/list"><i class="fa fa-circle-o"></i> list Subscribe Email Ids </a></li>
-          </ul>
-        </li>
-
-        <% if(url == '/news/list' || url == '/forexes/list' || url == '/customs/list' || url == '/currencies/list' || url == '/question_answers/list') { %>
-        <li class="treeview active">
-        <% } else if(url == '/news/add' || url == '/forexes/add' || url == '/customs/add' || url == '/currencies/add' || url == '/meet_expert/add_edit' || url == '/question_answers/add') { %>
-        <li class="treeview active">
-        <% } else { %>
-        <li class="treeview">
-        <% } %>
-          <a href="#">
-            <i class="fa fa-newspaper-o"></i> <span>News</span> <i class="fa fa-angle-left pull-right"></i>
-          </a>
-          <ul class="treeview-menu">
-            <li class="<%= (url == '/news/list') ? 'active' : '' %>"><a href="/news/list"><i class="fa fa-circle-o"></i> list News </a></li>
-            <li class="<%= (url == '/news/add') ? 'active' : '' %>"><a href="/news/add"><i class="fa fa-circle-o"></i> Add News </a></li>
-
-            <li class="<%= (url == '/currencies/list') ? 'active' : '' %>"><a href="/currencies/list"><i class="fa fa-circle-o"></i> list Currencies </a></li>
-            <li class="<%= (url == '/currencies/add') ? 'active' : '' %>"><a href="/currencies/add"><i class="fa fa-circle-o"></i> Add Currency </a></li>
-
-            <li class="<%= (url == '/customs/list') ? 'active' : '' %>"><a href="/customs/list"><i class="fa fa-circle-o"></i> list Customs </a></li>
-            <li class="<%= (url == '/customs/add') ? 'active' : '' %>"><a href="/customs/add"><i class="fa fa-circle-o"></i> Add Customs </a></li>
-            <li class="<%= (url == '/forexes/list') ? 'active' : '' %>"><a href="/forexes/list"><i class="fa fa-circle-o"></i> list Forex </a></li>
-            <li class="<%= (url == '/forexes/add') ? 'active' : '' %>"><a href="/forexes/add"><i class="fa fa-circle-o"></i> Add Forex </a></li>
-            <li class="<%= (url == '/meet_expert/add_edit') ? 'active' : '' %>"><a href="/meet_expert/add_edit"><i class="fa fa-circle-o"></i>Meet Our Expert</a></li>
-
-            <% if(url == '/question_answers/list') { %>
-            <li class="treeview active">
-            <% } else if(url == '/question_answers/add') { %>
-            <li class="treeview active">
-            <% } else { %>
-            <li class="treeview">
-            <% } %>
-              <a href="#"><i class="fa fa-question-circle"></i><span>Question Answers</span><i class="fa fa-angle-left pull-right"></i></a>
-              <ul class="treeview-menu">
-                <li class="<%= (url == '/question_answers/list') ? 'active' : '' %>"><a href="/question_answers/list"><i class="fa fa-circle-o"></i> list Question Answers </a></li>
-                <li class="<%= (url == '/question_answers/add') ? 'active' : '' %>"><a href="/question_answers/add"><i class="fa fa-circle-o"></i> Add Question Answers </a></li>
-              </ul>
-            </li>
-          </ul>
-        </li>
-
-        <% if(url == '/vessels/list' || url == '/sectors/list' || url == '/terminals/list' || url == '/line_agents/list' || url == '/break_bulk_vessels/list' || url == '/break_bulk_sectors/list' || url == '/gazette_line_agents/list' || url == '/gazette_vessels/list') { %>
-        <li class="treeview active">
-        <% } else if(url == '/vessels/add' || url == '/sectors/add' || url == '/terminals/add' || url == '/line_agents/add' || url == '/break_bulk_vessels/add' || url == '/break_bulk_sectors/add' || url == '/gazette_line_agents/add' || url == '/gazette_vessels/add') { %>
-        <li class="treeview active">
-        <% } else { %>
-        <li class="treeview">
-        <% } %>
-          <a href="#">
-            <i class="fa fa-ship"></i> <span>Vessel Schedules</span> <i class="fa fa-angle-left pull-right"></i>
-          </a>
-          <ul class="treeview-menu">
-            <li class="<%= (url == '/sectors/list') ? 'active' : '' %>"><a href="/sectors/list"><i class="fa fa-circle-o"></i> list Sectors </a></li>
-            <li class="<%= (url == '/sectors/add') ? 'active' : '' %>"><a href="/sectors/add"><i class="fa fa-circle-o"></i> Add Sector </a></li>
-            <li class="<%= (url == '/break_bulk_sectors/list') ? 'active' : '' %>"><a href="/break_bulk_sectors/list"><i class="fa fa-circle-o"></i> list Break Bulk Sectors </a></li>
-            <li class="<%= (url == '/break_bulk_sectors/add') ? 'active' : '' %>"><a href="/break_bulk_sectors/add"><i class="fa fa-circle-o"></i> Add Break Bulk Sector </a></li>
-            <li class="<%= (url == '/terminals/list') ? 'active' : '' %>"><a href="/terminals/list"><i class="fa fa-circle-o"></i> list Terminals </a></li>
-            <li class="<%= (url == '/terminals/add') ? 'active' : '' %>"><a href="/terminals/add"><i class="fa fa-circle-o"></i> Add Terminals </a></li>
-            <li class="<%= (url == '/line_agents/list') ? 'active' : '' %>"><a href="/line_agents/list"><i class="fa fa-circle-o"></i> list Line Agents </a></li>
-            <li class="<%= (url == '/line_agents/add') ? 'active' : '' %>"><a href="/line_agents/add"><i class="fa fa-circle-o"></i> Add Line Agents </a></li>
-            <li class="<%= (url == '/vessels/list') ? 'active' : '' %>"><a href="/vessels/list"><i class="fa fa-circle-o"></i> list Vessels </a></li>
-            <li class="<%= (url == '/vessels/add') ? 'active' : '' %>"><a href="/vessels/add"><i class="fa fa-circle-o"></i> Upload Vessels </a></li>
-            <li class="<%= (url == '/break_bulk_vessels/list') ? 'active' : '' %>"><a href="/break_bulk_vessels/list"><i class="fa fa-circle-o"></i> list Break Bulk Vessels </a></li>
-            <li class="<%= (url == '/break_bulk_vessels/add') ? 'active' : '' %>"><a href="/break_bulk_vessels/add"><i class="fa fa-circle-o"></i> Upload Break Bulk Vessels </a></li>
-            <li class="<%= (url == '/gazette_line_agents/list') ? 'active' : '' %>"><a href="/gazette_line_agents/list"><i class="fa fa-circle-o"></i> list Gazette Line Agents</a></li>
-            <li class="<%= (url == '/gazette_line_agents/add') ? 'active' : '' %>"><a href="/gazette_line_agents/add"><i class="fa fa-circle-o"></i> Add Gazette Line Agents </a></li>
-            <li class="<%= (url == '/gazette_vessels/list') ? 'active' : '' %>"><a href="/gazette_vessels/list"><i class="fa fa-circle-o"></i> list Gazette Vessels</a></li>
-            <li class="<%= (url == '/gazette_vessels/add') ? 'active' : '' %>"><a href="/gazette_vessels/add"><i class="fa fa-circle-o"></i> Add Gazette Vessels </a></li>
-          </ul>
-        </li>
-
-        <% if(url == '/appointments/list' || url == '/job_titles/list' || url == '/editions/list') { %>
-        <li class="treeview active">
-        <% } else if(url == '/appointments/add' || url == '/job_titles/add' || url == '/editions/add') { %>
-        <li class="treeview active">
-        <% } else { %>
-        <li class="treeview">
-        <% } %>
-          <a href="#">
-            <i class="fa fa-calendar"></i> <span>Appointments</span> <i class="fa fa-angle-left pull-right"></i>
-          </a>
-          <ul class="treeview-menu">
-            <li class="<%= (url == '/job_titles/list') ? 'active' : '' %>"><a href="/job_titles/list"><i class="fa fa-circle-o"></i> list Job Titles </a></li>
-            <li class="<%= (url == '/job_titles/add') ? 'active' : '' %>"><a href="/job_titles/add"><i class="fa fa-circle-o"></i> Add Job Title </a></li>
-             <li class="<%= (url == '/editions/list') ? 'active' : '' %>"><a href="/editions/list"><i class="fa fa-circle-o"></i> list Editions </a></li>
-            <li class="<%= (url == '/editions/add') ? 'active' : '' %>"><a href="/editions/add"><i class="fa fa-circle-o"></i> Add Edition </a></li>
-            <li class="<%= (url == '/appointments/list') ? 'active' : '' %>"><a href="/appointments/list"><i class="fa fa-circle-o"></i> list Appointments </a></li>
-            <li class="<%= (url == '/appointments/add') ? 'active' : '' %>"><a href="/appointments/add"><i class="fa fa-circle-o"></i> Add Appointment </a></li>
-          </ul>
-        </li>
-
-        <% if(url == '/events/list' || url == '/testimonials/list' || url == '/event_categories/list') { %>
-        <li class="treeview active">
-        <% } else if(url == '/events/add' || url == '/testimonials/add' || url == '/event_categories/add') { %>
-        <li class="treeview active">
-        <% } else { %>
-        <li class="treeview">
-        <% } %>
-          <a href="#">
-            <i class="fa fa-calendar-check-o"></i> <span>Events</span> <i class="fa fa-angle-left pull-right"></i>
-          </a>
-          <ul class="treeview-menu">
-
-            <li class="<%= (url == '/event_categories/list') ? 'active' : '' %>"><a href="/event_categories/list"><i class="fa fa-circle-o"></i> list Event Categories </a></li>
-            <li class="<%= (url == '/event_categories/add') ? 'active' : '' %>"><a href="/event_categories/add"><i class="fa fa-circle-o"></i> Add Event Category</a></li>
-
-            <li class="<%= (url == '/events/list') ? 'active' : '' %>"><a href="/events/list"><i class="fa fa-circle-o"></i> list Events </a></li>
-            <li class="<%= (url == '/events/add') ? 'active' : '' %>"><a href="/events/add"><i class="fa fa-circle-o"></i> Add Event </a></li>
-            <li class="<%= (url == '/testimonials/list') ? 'active' : '' %>"><a href="/testimonials/list"><i class="fa fa-circle-o"></i> list Testimonials </a></li>
-            <li class="<%= (url == '/testimonials/add') ? 'active' : '' %>"><a href="/testimonials/add"><i class="fa fa-circle-o"></i> Add Testimonial </a></li>
-          </ul>
-        </li>
-
-        <% if(url == '/digital_copies/list' || url == '/year_books/list') { %>
-        <li class="treeview active">
-        <% } else if(url == '/digital_copies/add' || url == '/year_books/add') { %>
-        <li class="treeview active">
-        <% } else { %>
-        <li class="treeview">
-        <% } %>
-          <a href="#">
-            <i class="fa fa-cubes"></i> <span>Exim Products</span> <i class="fa fa-angle-left pull-right"></i>
-          </a>
-          <ul class="treeview-menu">
-            <li class="<%= (url == '/digital_copies/list') ? 'active' : '' %>">
-              <a href="/digital_copies/list"><i class="fa fa-circle-o"></i> list Digital Copies </a>
-            </li>
-            <li class="<%= (url == '/digital_copies/add') ? 'active' : '' %>">
-              <a href="/digital_copies/add"><i class="fa fa-circle-o"></i> Add Digital Copy </a>
-            </li>
-            <li class="<%= (url == '/year_books/list') ? 'active' : '' %>">
-              <a href="/year_books/list"><i class="fa fa-circle-o"></i> list Year Books </a>
-            </li>
-            <li class="<%= (url == '/year_books/add') ? 'active' : '' %>">
-              <a href="/year_books/add"><i class="fa fa-circle-o"></i> Add Year Book </a>
-            </li>
-          </ul>
-        </li>
-
-        <% if(url == '/contacts/list') { %>
-        <li class="treeview active">
-        <% } else if(url == '/contacts/add' || url == '/about/add_edit') { %>
-        <li class="treeview active">
-        <% } else { %>
-        <li class="treeview">
-        <% } %>
-          <a href="#">
-            <i class="fa fa-info-circle"></i> <span>Exim Info</span> <i class="fa fa-angle-left pull-right"></i>
-          </a>
-          <ul class="treeview-menu">
-            <li class="<%= (url == '/about/add_edit') ? 'active' : '' %>"><a href="/about/add_edit"><i class="fa fa-circle-o"></i>About Us</a></li>
-            <li class="<%= (url == '/contacts/list') ? 'active' : '' %>"><a href="/contacts/list"><i class="fa fa-circle-o"></i> list Contacts </a></li>
-            <li class="<%= (url == '/contacts/add') ? 'active' : '' %>"><a href="/contacts/add"><i class="fa fa-circle-o"></i> Add Contact </a></li>
-          </ul>
-        </li>
-
-        <% if(url == '/advertisements/list') { %>
-        <li class="treeview active">
-        <% } else if(url == '/advertisements/add') { %>
-        <li class="treeview active">
-        <% } else { %>
-        <li class="treeview">
-        <% } %>
-          <a href="#">
-            <i class="fa fa-bullhorn"></i> <span>Advertisements</span> <i class="fa fa-angle-left pull-right"></i>
-          </a>
-          <ul class="treeview-menu">
-            <li class="<%= (url == '/advertisements/list') ? 'active' : '' %>"><a href="/advertisements/list"><i class="fa fa-circle-o"></i> list Advertisements </a></li>
-            <li class="<%= (url == '/advertisements/add') ? 'active' : '' %>"><a href="/advertisements/add"><i class="fa fa-circle-o"></i> Add Advertisement </a></li>
-          </ul>
-        </li>
-
-        <li class="<%= (url == '/newsletter') ? 'active' : '' %>">
-          <a href="/newsletter">
-            <i class="fa fa-envelope"></i> <span>Newsletter</span>
-          </a>
-        </li>
-
-        <li class="<%= (url == '/logs/list') ? 'active' : '' %>">
-          <a href="/logs/list">
-            <i class="fa fa-history"></i> <span>Logs</span>
-          </a>
-        </li>
-
-        <% } else if(user.role == 'news_appointment_user') { %>
-
-         <% if(url == '/appointments/list' || url == '/job_titles/list' || url == '/editions/list') { %>
-        <li class="treeview active">
-        <% } else if(url == '/appointments/add' || url == '/job_titles/add' || url == '/editions/add') { %>
-        <li class="treeview active">
-        <% } else { %>
-        <li class="treeview">
-        <% } %>
-          <a href="#">
-            <i class="fa fa-calendar"></i> <span>Appointments</span> <i class="fa fa-angle-left pull-right"></i>
-          </a>
-          <ul class="treeview-menu">
-            <li class="<%= (url == '/job_titles/list') ? 'active' : '' %>"><a href="/job_titles/list"><i class="fa fa-circle-o"></i> list Job Titles </a></li>
-            <li class="<%= (url == '/job_titles/add') ? 'active' : '' %>"><a href="/job_titles/add"><i class="fa fa-circle-o"></i> Add Job Title </a></li>
-             <li class="<%= (url == '/editions/list') ? 'active' : '' %>"><a href="/editions/list"><i class="fa fa-circle-o"></i> list Editions </a></li>
-            <li class="<%= (url == '/editions/add') ? 'active' : '' %>"><a href="/editions/add"><i class="fa fa-circle-o"></i> Add Edition </a></li>
-            <li class="<%= (url == '/appointments/list') ? 'active' : '' %>"><a href="/appointments/list"><i class="fa fa-circle-o"></i> list Appointments </a></li>
-            <li class="<%= (url == '/appointments/add') ? 'active' : '' %>"><a href="/appointments/add"><i class="fa fa-circle-o"></i> Add Appointment </a></li>
-          </ul>
-        </li>
-
-        <% if(url == '/news/list' || url == '/forexes/list' || url == '/customs/list' || url == '/currencies/list' || url == '/question_answers/list') { %>
-        <li class="treeview active">
-        <% } else if(url == '/news/add' || url == '/forexes/add' || url == '/customs/add' || url == '/currencies/add' || url == '/meet_expert/add' || url == '/question_answers/add' ) { %>
-        <li class="treeview active">
-        <% } else { %>
-        <li class="treeview">
-        <% } %>
-          <a href="#">
-            <i class="fa fa-newspaper-o"></i> <span>News</span> <i class="fa fa-angle-left pull-right"></i>
-          </a>
-          <ul class="treeview-menu">
-            <li class="<%= (url == '/news/list') ? 'active' : '' %>"><a href="/news/list"><i class="fa fa-circle-o"></i> list News </a></li>
-            <li class="<%= (url == '/news/add') ? 'active' : '' %>"><a href="/news/add"><i class="fa fa-circle-o"></i> Add News </a></li>
-
-            <li class="<%= (url == '/currencies/list') ? 'active' : '' %>"><a href="/currencies/list"><i class="fa fa-circle-o"></i> list Currencies </a></li>
-            <li class="<%= (url == '/currencies/add') ? 'active' : '' %>"><a href="/currencies/add"><i class="fa fa-circle-o"></i> Add Currency </a></li>
-
-            <li class="<%= (url == '/customs/list') ? 'active' : '' %>"><a href="/customs/list"><i class="fa fa-circle-o"></i> list Customs </a></li>
-            <li class="<%= (url == '/customs/add') ? 'active' : '' %>"><a href="/customs/add"><i class="fa fa-circle-o"></i> Add Customs </a></li>
-            <li class="<%= (url == '/forexes/list') ? 'active' : '' %>"><a href="/forexes/list"><i class="fa fa-circle-o"></i> list Forex </a></li>
-            <li class="<%= (url == '/forexes/add') ? 'active' : '' %>"><a href="/forexes/add"><i class="fa fa-circle-o"></i> Add Forex </a></li>
-            <li class="<%= (url == '/meet_expert/add_edit') ? 'active' : '' %>"><a href="/meet_expert/add_edit"><i class="fa fa-circle-o"></i>Meet Our Expert</a></li>
-
-            <% if(url == '/question_answers/list') { %>
-            <li class="treeview active">
-            <% } else if(url == '/question_answers/add') { %>
-            <li class="treeview active">
-            <% } else { %>
-            <li class="treeview">
-            <% } %>
-              <a href="#"><i class="fa fa-question-circle"></i><span>Question Answers</span><i class="fa fa-angle-left pull-right"></i></a>
-              <ul class="treeview-menu">
-                <li class="<%= (url == '/question_answers/list') ? 'active' : '' %>"><a href="/question_answers/list"><i class="fa fa-circle-o"></i> list Question Answers </a></li>
-                <li class="<%= (url == '/question_answers/add') ? 'active' : '' %>"><a href="/question_answers/add"><i class="fa fa-circle-o"></i> Add Question Answers </a></li>
-              </ul>
-            </li>
-          </ul>
-        </li>
-
-        <li class="<%= (url == '/newsletter') ? 'active' : '' %>">
-          <a href="/newsletter">
-            <i class="fa fa-envelope"></i> <span>Newsletter</span>
-          </a>
-        </li>
-
-        <% } else if(user.role == 'vessel_user') { %>
-
-        <% if(url == '/vessels/list' || url == '/sectors/list' || url == '/terminals/list' || url == '/line_agents/list' || url == '/break_bulk_vessels/list' || url == '/break_bulk_sectors/list' || url == '/gazette_line_agents/list' || url == '/gazette_vessels/list') { %>
-        <li class="treeview active">
-        <% } else if(url == '/vessels/add' || url == '/sectors/add' || url == '/terminals/add' || url == '/line_agents/add' || url == '/break_bulk_vessels/add' || url == '/break_bulk_sectors/add' || url == '/gazette_line_agents/add' || url == '/gazette_vessels/add') { %>
-        <li class="treeview active">
-        <% } else { %>
-        <li class="treeview">
-        <% } %>
-          <a href="#">
-            <i class="fa fa-ship"></i> <span>Vessel Schedules</span> <i class="fa fa-angle-left pull-right"></i>
-          </a>
-          <ul class="treeview-menu">
-            <li class="<%= (url == '/sectors/list') ? 'active' : '' %>"><a href="/sectors/list"><i class="fa fa-circle-o"></i> list Sectors </a></li>
-            <li class="<%= (url == '/sectors/add') ? 'active' : '' %>"><a href="/sectors/add"><i class="fa fa-circle-o"></i> Add Sector </a></li>
-            <li class="<%= (url == '/break_bulk_sectors/list') ? 'active' : '' %>"><a href="/break_bulk_sectors/list"><i class="fa fa-circle-o"></i> list Break Bulk Sectors </a></li>
-            <li class="<%= (url == '/break_bulk_sectors/add') ? 'active' : '' %>"><a href="/break_bulk_sectors/add"><i class="fa fa-circle-o"></i> Add Break Bulk Sector </a></li>
-             <li class="<%= (url == '/terminals/list') ? 'active' : '' %>"><a href="/terminals/list"><i class="fa fa-circle-o"></i> list Terminals </a></li>
-            <li class="<%= (url == '/terminals/add') ? 'active' : '' %>"><a href="/terminals/add"><i class="fa fa-circle-o"></i> Add Terminals </a></li>
-             <li class="<%= (url == '/line_agents/list') ? 'active' : '' %>"><a href="/line_agents/list"><i class="fa fa-circle-o"></i> list Line Agents </a></li>
-            <li class="<%= (url == '/line_agents/add') ? 'active' : '' %>"><a href="/line_agents/add"><i class="fa fa-circle-o"></i> Add Line Agent </a></li>
-            <li class="<%= (url == '/vessels/list') ? 'active' : '' %>"><a href="/vessels/list"><i class="fa fa-circle-o"></i> list Vessels </a></li>
-            <li class="<%= (url == '/vessels/add') ? 'active' : '' %>"><a href="/vessels/add"><i class="fa fa-circle-o"></i> Upload Vessels </a></li>
-            <li class="<%= (url == '/break_bulk_vessels/list') ? 'active' : '' %>"><a href="/break_bulk_vessels/list"><i class="fa fa-circle-o"></i> list Break Bulk Vessels </a></li>
-            <li class="<%= (url == '/break_bulk_vessels/add') ? 'active' : '' %>"><a href="/break_bulk_vessels/add"><i class="fa fa-circle-o"></i> Upload Break Bulk Vessels </a></li>
-            <li class="<%= (url == '/gazette_line_agents/list') ? 'active' : '' %>"><a href="/gazette_line_agents/list"><i class="fa fa-circle-o"></i> list Gazette Line Agents</a></li>
-            <li class="<%= (url == '/gazette_line_agents/add') ? 'active' : '' %>"><a href="/gazette_line_agents/add"><i class="fa fa-circle-o"></i> Add Gazette Line Agents </a></li>
-            <li class="<%= (url == '/gazette_vessels/list') ? 'active' : '' %>"><a href="/gazette_vessels/list"><i class="fa fa-circle-o"></i> list Gazette Vessels</a></li>
-            <li class="<%= (url == '/gazette_vessels/add') ? 'active' : '' %>"><a href="/gazette_vessels/add"><i class="fa fa-circle-o"></i> Add Gazette Vessels </a></li>
-          </ul>
-        </li>
-
-        <% } %>
       </ul>
-    </section>
-    <!-- /.sidebar -->
-    
+    </li>
+
+    <% if(url == '/app_users/list') { %>
+    <li class="treeview active"><% } else { %></li>
+
+    <li class="treeview">
+      <% } %>
+      <a href="#">
+        <i class="fa fa-envelope"></i> <span>Subscribe Email Ids</span>
+        <i class="fa fa-angle-left pull-right"></i>
+      </a>
+      <ul class="treeview-menu">
+        <li class="<%= (url == '/app_users/list') ? 'active' : '' %>">
+          <a href="/app_users/list"
+            ><i class="fa fa-circle-o"></i> list Subscribe Email Ids
+          </a>
+        </li>
+      </ul>
+    </li>
+
+    <% if(url == '/news/list' || url == '/forexes/list' || url ==
+    '/customs/list' || url == '/currencies/list' || url ==
+    '/question_answers/list') { %>
+    <li class="treeview active">
+      <% } else if(url == '/news/add' || url == '/forexes/add' || url ==
+      '/customs/add' || url == '/currencies/add' || url ==
+      '/meet_expert/add_edit' || url == '/question_answers/add') { %>
+    </li>
+
+    <li class="treeview active"><% } else { %></li>
+
+    <li class="treeview">
+      <% } %>
+      <a href="#">
+        <i class="fa fa-newspaper-o"></i> <span>News</span>
+        <i class="fa fa-angle-left pull-right"></i>
+      </a>
+      <ul class="treeview-menu">
+        <li class="<%= (url == '/news/list') ? 'active' : '' %>">
+          <a href="/news/list"><i class="fa fa-circle-o"></i> list News </a>
+        </li>
+        <li class="<%= (url == '/news/add') ? 'active' : '' %>">
+          <a href="/news/add"><i class="fa fa-circle-o"></i> Add News </a>
+        </li>
+
+        <li class="<%= (url == '/currencies/list') ? 'active' : '' %>">
+          <a href="/currencies/list"
+            ><i class="fa fa-circle-o"></i> list Currencies
+          </a>
+        </li>
+        <li class="<%= (url == '/currencies/add') ? 'active' : '' %>">
+          <a href="/currencies/add"
+            ><i class="fa fa-circle-o"></i> Add Currency
+          </a>
+        </li>
+
+        <li class="<%= (url == '/customs/list') ? 'active' : '' %>">
+          <a href="/customs/list"
+            ><i class="fa fa-circle-o"></i> list Customs
+          </a>
+        </li>
+        <li class="<%= (url == '/customs/add') ? 'active' : '' %>">
+          <a href="/customs/add"><i class="fa fa-circle-o"></i> Add Customs </a>
+        </li>
+        <li class="<%= (url == '/forexes/list') ? 'active' : '' %>">
+          <a href="/forexes/list"><i class="fa fa-circle-o"></i> list Forex </a>
+        </li>
+        <li class="<%= (url == '/forexes/add') ? 'active' : '' %>">
+          <a href="/forexes/add"><i class="fa fa-circle-o"></i> Add Forex </a>
+        </li>
+        <li class="<%= (url == '/meet_expert/add_edit') ? 'active' : '' %>">
+          <a href="/meet_expert/add_edit"
+            ><i class="fa fa-circle-o"></i>Meet Our Expert</a
+          >
+        </li>
+
+        <% if(url == '/question_answers/list') { %>
+        <li class="treeview active">
+          <% } else if(url == '/question_answers/add') { %>
+        </li>
+
+        <li class="treeview active"><% } else { %></li>
+
+        <li class="treeview">
+          <% } %>
+          <a href="#"
+            ><i class="fa fa-question-circle"></i><span>Question Answers</span
+            ><i class="fa fa-angle-left pull-right"></i
+          ></a>
+          <ul class="treeview-menu">
+            <li
+              class="<%= (url == '/question_answers/list') ? 'active' : '' %>"
+            >
+              <a href="/question_answers/list"
+                ><i class="fa fa-circle-o"></i> list Question Answers
+              </a>
+            </li>
+            <li class="<%= (url == '/question_answers/add') ? 'active' : '' %>">
+              <a href="/question_answers/add"
+                ><i class="fa fa-circle-o"></i> Add Question Answers
+              </a>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+
+    <% if (url == '/polls/list' || url == '/polls/add') { %>
+      <li class="treeview active">
+    <% } else { %>
+      <li class="treeview">
+    <% } %>
+        <a href="#">
+          <i class="fa fa-bar-chart"></i> <span>Polls</span>
+          <i class="fa fa-angle-left pull-right"></i>
+        </a>
+        <ul class="treeview-menu">
+          <li class="<%= (url == '/polls/list') ? 'active' : '' %>">
+            <a href="/polls/list"><i class="fa fa-circle-o"></i> List Polls </a>
+          </li>
+          <li class="<%= (url == '/polls/add') ? 'active' : '' %>">
+            <a href="/polls/add"><i class="fa fa-circle-o"></i> Add Poll </a>
+          </li>
+        </ul>
+    </li>    
+
+    <% if(url == '/vessels/list' || url == '/sectors/list' || url ==
+    '/terminals/list' || url == '/line_agents/list' || url ==
+    '/break_bulk_vessels/list' || url == '/break_bulk_sectors/list' || url ==
+    '/gazette_line_agents/list' || url == '/gazette_vessels/list') { %>
+    <li class="treeview active">
+      <% } else if(url == '/vessels/add' || url == '/sectors/add' || url ==
+      '/terminals/add' || url == '/line_agents/add' || url ==
+      '/break_bulk_vessels/add' || url == '/break_bulk_sectors/add' || url ==
+      '/gazette_line_agents/add' || url == '/gazette_vessels/add') { %>
+    </li>
+
+    <li class="treeview active"><% } else { %></li>
+
+    <li class="treeview">
+      <% } %>
+      <a href="#">
+        <i class="fa fa-ship"></i> <span>Vessel Schedules</span>
+        <i class="fa fa-angle-left pull-right"></i>
+      </a>
+      <ul class="treeview-menu">
+        <li class="<%= (url == '/sectors/list') ? 'active' : '' %>">
+          <a href="/sectors/list"
+            ><i class="fa fa-circle-o"></i> list Sectors
+          </a>
+        </li>
+        <li class="<%= (url == '/sectors/add') ? 'active' : '' %>">
+          <a href="/sectors/add"><i class="fa fa-circle-o"></i> Add Sector </a>
+        </li>
+        <li class="<%= (url == '/break_bulk_sectors/list') ? 'active' : '' %>">
+          <a href="/break_bulk_sectors/list"
+            ><i class="fa fa-circle-o"></i> list Break Bulk Sectors
+          </a>
+        </li>
+        <li class="<%= (url == '/break_bulk_sectors/add') ? 'active' : '' %>">
+          <a href="/break_bulk_sectors/add"
+            ><i class="fa fa-circle-o"></i> Add Break Bulk Sector
+          </a>
+        </li>
+        <li class="<%= (url == '/terminals/list') ? 'active' : '' %>">
+          <a href="/terminals/list"
+            ><i class="fa fa-circle-o"></i> list Terminals
+          </a>
+        </li>
+        <li class="<%= (url == '/terminals/add') ? 'active' : '' %>">
+          <a href="/terminals/add"
+            ><i class="fa fa-circle-o"></i> Add Terminals
+          </a>
+        </li>
+        <li class="<%= (url == '/line_agents/list') ? 'active' : '' %>">
+          <a href="/line_agents/list"
+            ><i class="fa fa-circle-o"></i> list Line Agents
+          </a>
+        </li>
+        <li class="<%= (url == '/line_agents/add') ? 'active' : '' %>">
+          <a href="/line_agents/add"
+            ><i class="fa fa-circle-o"></i> Add Line Agents
+          </a>
+        </li>
+        <li class="<%= (url == '/vessels/list') ? 'active' : '' %>">
+          <a href="/vessels/list"
+            ><i class="fa fa-circle-o"></i> list Vessels
+          </a>
+        </li>
+        <li class="<%= (url == '/vessels/add') ? 'active' : '' %>">
+          <a href="/vessels/add"
+            ><i class="fa fa-circle-o"></i> Upload Vessels
+          </a>
+        </li>
+        <li class="<%= (url == '/break_bulk_vessels/list') ? 'active' : '' %>">
+          <a href="/break_bulk_vessels/list"
+            ><i class="fa fa-circle-o"></i> list Break Bulk Vessels
+          </a>
+        </li>
+        <li class="<%= (url == '/break_bulk_vessels/add') ? 'active' : '' %>">
+          <a href="/break_bulk_vessels/add"
+            ><i class="fa fa-circle-o"></i> Upload Break Bulk Vessels
+          </a>
+        </li>
+        <li class="<%= (url == '/gazette_line_agents/list') ? 'active' : '' %>">
+          <a href="/gazette_line_agents/list"
+            ><i class="fa fa-circle-o"></i> list Gazette Line Agents</a
+          >
+        </li>
+        <li class="<%= (url == '/gazette_line_agents/add') ? 'active' : '' %>">
+          <a href="/gazette_line_agents/add"
+            ><i class="fa fa-circle-o"></i> Add Gazette Line Agents
+          </a>
+        </li>
+        <li class="<%= (url == '/gazette_vessels/list') ? 'active' : '' %>">
+          <a href="/gazette_vessels/list"
+            ><i class="fa fa-circle-o"></i> list Gazette Vessels</a
+          >
+        </li>
+        <li class="<%= (url == '/gazette_vessels/add') ? 'active' : '' %>">
+          <a href="/gazette_vessels/add"
+            ><i class="fa fa-circle-o"></i> Add Gazette Vessels
+          </a>
+        </li>
+      </ul>
+    </li>
+
+    <% if(url == '/appointments/list' || url == '/job_titles/list' || url ==
+    '/editions/list') { %>
+    <li class="treeview active">
+      <% } else if(url == '/appointments/add' || url == '/job_titles/add' || url
+      == '/editions/add') { %>
+    </li>
+
+    <li class="treeview active"><% } else { %></li>
+
+    <li class="treeview">
+      <% } %>
+      <a href="#">
+        <i class="fa fa-calendar"></i> <span>Appointments</span>
+        <i class="fa fa-angle-left pull-right"></i>
+      </a>
+      <ul class="treeview-menu">
+        <li class="<%= (url == '/job_titles/list') ? 'active' : '' %>">
+          <a href="/job_titles/list"
+            ><i class="fa fa-circle-o"></i> list Job Titles
+          </a>
+        </li>
+        <li class="<%= (url == '/job_titles/add') ? 'active' : '' %>">
+          <a href="/job_titles/add"
+            ><i class="fa fa-circle-o"></i> Add Job Title
+          </a>
+        </li>
+        <li class="<%= (url == '/editions/list') ? 'active' : '' %>">
+          <a href="/editions/list"
+            ><i class="fa fa-circle-o"></i> list Editions
+          </a>
+        </li>
+        <li class="<%= (url == '/editions/add') ? 'active' : '' %>">
+          <a href="/editions/add"
+            ><i class="fa fa-circle-o"></i> Add Edition
+          </a>
+        </li>
+        <li class="<%= (url == '/appointments/list') ? 'active' : '' %>">
+          <a href="/appointments/list"
+            ><i class="fa fa-circle-o"></i> list Appointments
+          </a>
+        </li>
+        <li class="<%= (url == '/appointments/add') ? 'active' : '' %>">
+          <a href="/appointments/add"
+            ><i class="fa fa-circle-o"></i> Add Appointment
+          </a>
+        </li>
+      </ul>
+    </li>
+
+    <% if(url == '/events/list' || url == '/testimonials/list' || url ==
+    '/event_categories/list') { %>
+    <li class="treeview active">
+      <% } else if(url == '/events/add' || url == '/testimonials/add' || url ==
+      '/event_categories/add') { %>
+    </li>
+
+    <li class="treeview active"><% } else { %></li>
+
+    <li class="treeview">
+      <% } %>
+      <a href="#">
+        <i class="fa fa-calendar-check-o"></i> <span>Events</span>
+        <i class="fa fa-angle-left pull-right"></i>
+      </a>
+      <ul class="treeview-menu">
+        <li class="<%= (url == '/event_categories/list') ? 'active' : '' %>">
+          <a href="/event_categories/list"
+            ><i class="fa fa-circle-o"></i> list Event Categories
+          </a>
+        </li>
+        <li class="<%= (url == '/event_categories/add') ? 'active' : '' %>">
+          <a href="/event_categories/add"
+            ><i class="fa fa-circle-o"></i> Add Event Category</a
+          >
+        </li>
+
+        <li class="<%= (url == '/events/list') ? 'active' : '' %>">
+          <a href="/events/list"><i class="fa fa-circle-o"></i> list Events </a>
+        </li>
+        <li class="<%= (url == '/events/add') ? 'active' : '' %>">
+          <a href="/events/add"><i class="fa fa-circle-o"></i> Add Event </a>
+        </li>
+        <li class="<%= (url == '/testimonials/list') ? 'active' : '' %>">
+          <a href="/testimonials/list"
+            ><i class="fa fa-circle-o"></i> list Testimonials
+          </a>
+        </li>
+        <li class="<%= (url == '/testimonials/add') ? 'active' : '' %>">
+          <a href="/testimonials/add"
+            ><i class="fa fa-circle-o"></i> Add Testimonial
+          </a>
+        </li>
+      </ul>
+    </li>
+
+    <% if(url == '/digital_copies/list' || url == '/year_books/list') { %>
+    <li class="treeview active">
+      <% } else if(url == '/digital_copies/add' || url == '/year_books/add') {
+      %>
+    </li>
+
+    <li class="treeview active"><% } else { %></li>
+
+    <li class="treeview">
+      <% } %>
+      <a href="#">
+        <i class="fa fa-cubes"></i> <span>Exim Products</span>
+        <i class="fa fa-angle-left pull-right"></i>
+      </a>
+      <ul class="treeview-menu">
+        <li class="<%= (url == '/digital_copies/list') ? 'active' : '' %>">
+          <a href="/digital_copies/list"
+            ><i class="fa fa-circle-o"></i> list Digital Copies
+          </a>
+        </li>
+        <li class="<%= (url == '/digital_copies/add') ? 'active' : '' %>">
+          <a href="/digital_copies/add"
+            ><i class="fa fa-circle-o"></i> Add Digital Copy
+          </a>
+        </li>
+        <li class="<%= (url == '/year_books/list') ? 'active' : '' %>">
+          <a href="/year_books/list"
+            ><i class="fa fa-circle-o"></i> list Year Books
+          </a>
+        </li>
+        <li class="<%= (url == '/year_books/add') ? 'active' : '' %>">
+          <a href="/year_books/add"
+            ><i class="fa fa-circle-o"></i> Add Year Book
+          </a>
+        </li>
+      </ul>
+    </li>
+
+    <% if(url == '/contacts/list') { %>
+    <li class="treeview active">
+      <% } else if(url == '/contacts/add' || url == '/about/add_edit') { %>
+    </li>
+
+    <li class="treeview active"><% } else { %></li>
+
+    <li class="treeview">
+      <% } %>
+      <a href="#">
+        <i class="fa fa-info-circle"></i> <span>Exim Info</span>
+        <i class="fa fa-angle-left pull-right"></i>
+      </a>
+      <ul class="treeview-menu">
+        <li class="<%= (url == '/about/add_edit') ? 'active' : '' %>">
+          <a href="/about/add_edit"><i class="fa fa-circle-o"></i>About Us</a>
+        </li>
+        <li class="<%= (url == '/contacts/list') ? 'active' : '' %>">
+          <a href="/contacts/list"
+            ><i class="fa fa-circle-o"></i> list Contacts
+          </a>
+        </li>
+        <li class="<%= (url == '/contacts/add') ? 'active' : '' %>">
+          <a href="/contacts/add"
+            ><i class="fa fa-circle-o"></i> Add Contact
+          </a>
+        </li>
+      </ul>
+    </li>
+
+    <% if(url == '/advertisements/list') { %>
+    <li class="treeview active">
+      <% } else if(url == '/advertisements/add') { %>
+    </li>
+
+    <li class="treeview active"><% } else { %></li>
+
+    <li class="treeview">
+      <% } %>
+      <a href="#">
+        <i class="fa fa-bullhorn"></i> <span>Advertisements</span>
+        <i class="fa fa-angle-left pull-right"></i>
+      </a>
+      <ul class="treeview-menu">
+        <li class="<%= (url == '/advertisements/list') ? 'active' : '' %>">
+          <a href="/advertisements/list"
+            ><i class="fa fa-circle-o"></i> list Advertisements
+          </a>
+        </li>
+        <li class="<%= (url == '/advertisements/add') ? 'active' : '' %>">
+          <a href="/advertisements/add"
+            ><i class="fa fa-circle-o"></i> Add Advertisement
+          </a>
+        </li>
+      </ul>
+    </li>
+
+    <li class="<%= (url == '/newsletter') ? 'active' : '' %>">
+      <a href="/newsletter">
+        <i class="fa fa-envelope"></i> <span>Newsletter</span>
+      </a>
+    </li>
+
+    <li class="<%= (url == '/logs/list') ? 'active' : '' %>">
+      <a href="/logs/list"> <i class="fa fa-history"></i> <span>Logs</span> </a>
+    </li>
+
+    <% } else if(user.role == 'news_appointment_user') { %> <% if(url ==
+    '/appointments/list' || url == '/job_titles/list' || url ==
+    '/editions/list') { %>
+    <li class="treeview active">
+      <% } else if(url == '/appointments/add' || url == '/job_titles/add' || url
+      == '/editions/add') { %>
+    </li>
+
+    <li class="treeview active"><% } else { %></li>
+
+    <li class="treeview">
+      <% } %>
+      <a href="#">
+        <i class="fa fa-calendar"></i> <span>Appointments</span>
+        <i class="fa fa-angle-left pull-right"></i>
+      </a>
+      <ul class="treeview-menu">
+        <li class="<%= (url == '/job_titles/list') ? 'active' : '' %>">
+          <a href="/job_titles/list"
+            ><i class="fa fa-circle-o"></i> list Job Titles
+          </a>
+        </li>
+        <li class="<%= (url == '/job_titles/add') ? 'active' : '' %>">
+          <a href="/job_titles/add"
+            ><i class="fa fa-circle-o"></i> Add Job Title
+          </a>
+        </li>
+        <li class="<%= (url == '/editions/list') ? 'active' : '' %>">
+          <a href="/editions/list"
+            ><i class="fa fa-circle-o"></i> list Editions
+          </a>
+        </li>
+        <li class="<%= (url == '/editions/add') ? 'active' : '' %>">
+          <a href="/editions/add"
+            ><i class="fa fa-circle-o"></i> Add Edition
+          </a>
+        </li>
+        <li class="<%= (url == '/appointments/list') ? 'active' : '' %>">
+          <a href="/appointments/list"
+            ><i class="fa fa-circle-o"></i> list Appointments
+          </a>
+        </li>
+        <li class="<%= (url == '/appointments/add') ? 'active' : '' %>">
+          <a href="/appointments/add"
+            ><i class="fa fa-circle-o"></i> Add Appointment
+          </a>
+        </li>
+      </ul>
+    </li>
+
+    <% if(url == '/news/list' || url == '/forexes/list' || url ==
+    '/customs/list' || url == '/currencies/list' || url ==
+    '/question_answers/list') { %>
+    <li class="treeview active">
+      <% } else if(url == '/news/add' || url == '/forexes/add' || url ==
+      '/customs/add' || url == '/currencies/add' || url == '/meet_expert/add' ||
+      url == '/question_answers/add' ) { %>
+    </li>
+
+    <li class="treeview active"><% } else { %></li>
+
+    <li class="treeview">
+      <% } %>
+      <a href="#">
+        <i class="fa fa-newspaper-o"></i> <span>News</span>
+        <i class="fa fa-angle-left pull-right"></i>
+      </a>
+      <ul class="treeview-menu">
+        <li class="<%= (url == '/news/list') ? 'active' : '' %>">
+          <a href="/news/list"><i class="fa fa-circle-o"></i> list News </a>
+        </li>
+        <li class="<%= (url == '/news/add') ? 'active' : '' %>">
+          <a href="/news/add"><i class="fa fa-circle-o"></i> Add News </a>
+        </li>
+
+        <li class="<%= (url == '/currencies/list') ? 'active' : '' %>">
+          <a href="/currencies/list"
+            ><i class="fa fa-circle-o"></i> list Currencies
+          </a>
+        </li>
+        <li class="<%= (url == '/currencies/add') ? 'active' : '' %>">
+          <a href="/currencies/add"
+            ><i class="fa fa-circle-o"></i> Add Currency
+          </a>
+        </li>
+
+        <li class="<%= (url == '/customs/list') ? 'active' : '' %>">
+          <a href="/customs/list"
+            ><i class="fa fa-circle-o"></i> list Customs
+          </a>
+        </li>
+        <li class="<%= (url == '/customs/add') ? 'active' : '' %>">
+          <a href="/customs/add"><i class="fa fa-circle-o"></i> Add Customs </a>
+        </li>
+        <li class="<%= (url == '/forexes/list') ? 'active' : '' %>">
+          <a href="/forexes/list"><i class="fa fa-circle-o"></i> list Forex </a>
+        </li>
+        <li class="<%= (url == '/forexes/add') ? 'active' : '' %>">
+          <a href="/forexes/add"><i class="fa fa-circle-o"></i> Add Forex </a>
+        </li>
+        <li class="<%= (url == '/meet_expert/add_edit') ? 'active' : '' %>">
+          <a href="/meet_expert/add_edit"
+            ><i class="fa fa-circle-o"></i>Meet Our Expert</a
+          >
+        </li>
+
+        <% if(url == '/question_answers/list') { %>
+        <li class="treeview active">
+          <% } else if(url == '/question_answers/add') { %>
+        </li>
+
+        <li class="treeview active"><% } else { %></li>
+
+        <li class="treeview">
+          <% } %>
+          <a href="#"
+            ><i class="fa fa-question-circle"></i><span>Question Answers</span
+            ><i class="fa fa-angle-left pull-right"></i
+          ></a>
+          <ul class="treeview-menu">
+            <li
+              class="<%= (url == '/question_answers/list') ? 'active' : '' %>"
+            >
+              <a href="/question_answers/list"
+                ><i class="fa fa-circle-o"></i> list Question Answers
+              </a>
+            </li>
+            <li class="<%= (url == '/question_answers/add') ? 'active' : '' %>">
+              <a href="/question_answers/add"
+                ><i class="fa fa-circle-o"></i> Add Question Answers
+              </a>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+
+    <li class="<%= (url == '/newsletter') ? 'active' : '' %>">
+      <a href="/newsletter">
+        <i class="fa fa-envelope"></i> <span>Newsletter</span>
+      </a>
+    </li>
+
+    <% } else if(user.role == 'vessel_user') { %> <% if(url == '/vessels/list'
+    || url == '/sectors/list' || url == '/terminals/list' || url ==
+    '/line_agents/list' || url == '/break_bulk_vessels/list' || url ==
+    '/break_bulk_sectors/list' || url == '/gazette_line_agents/list' || url ==
+    '/gazette_vessels/list') { %>
+    <li class="treeview active">
+      <% } else if(url == '/vessels/add' || url == '/sectors/add' || url ==
+      '/terminals/add' || url == '/line_agents/add' || url ==
+      '/break_bulk_vessels/add' || url == '/break_bulk_sectors/add' || url ==
+      '/gazette_line_agents/add' || url == '/gazette_vessels/add') { %>
+    </li>
+
+    <li class="treeview active"><% } else { %></li>
+
+    <li class="treeview">
+      <% } %>
+      <a href="#">
+        <i class="fa fa-ship"></i> <span>Vessel Schedules</span>
+        <i class="fa fa-angle-left pull-right"></i>
+      </a>
+      <ul class="treeview-menu">
+        <li class="<%= (url == '/sectors/list') ? 'active' : '' %>">
+          <a href="/sectors/list"
+            ><i class="fa fa-circle-o"></i> list Sectors
+          </a>
+        </li>
+        <li class="<%= (url == '/sectors/add') ? 'active' : '' %>">
+          <a href="/sectors/add"><i class="fa fa-circle-o"></i> Add Sector </a>
+        </li>
+        <li class="<%= (url == '/break_bulk_sectors/list') ? 'active' : '' %>">
+          <a href="/break_bulk_sectors/list"
+            ><i class="fa fa-circle-o"></i> list Break Bulk Sectors
+          </a>
+        </li>
+        <li class="<%= (url == '/break_bulk_sectors/add') ? 'active' : '' %>">
+          <a href="/break_bulk_sectors/add"
+            ><i class="fa fa-circle-o"></i> Add Break Bulk Sector
+          </a>
+        </li>
+        <li class="<%= (url == '/terminals/list') ? 'active' : '' %>">
+          <a href="/terminals/list"
+            ><i class="fa fa-circle-o"></i> list Terminals
+          </a>
+        </li>
+        <li class="<%= (url == '/terminals/add') ? 'active' : '' %>">
+          <a href="/terminals/add"
+            ><i class="fa fa-circle-o"></i> Add Terminals
+          </a>
+        </li>
+        <li class="<%= (url == '/line_agents/list') ? 'active' : '' %>">
+          <a href="/line_agents/list"
+            ><i class="fa fa-circle-o"></i> list Line Agents
+          </a>
+        </li>
+        <li class="<%= (url == '/line_agents/add') ? 'active' : '' %>">
+          <a href="/line_agents/add"
+            ><i class="fa fa-circle-o"></i> Add Line Agent
+          </a>
+        </li>
+        <li class="<%= (url == '/vessels/list') ? 'active' : '' %>">
+          <a href="/vessels/list"
+            ><i class="fa fa-circle-o"></i> list Vessels
+          </a>
+        </li>
+        <li class="<%= (url == '/vessels/add') ? 'active' : '' %>">
+          <a href="/vessels/add"
+            ><i class="fa fa-circle-o"></i> Upload Vessels
+          </a>
+        </li>
+        <li class="<%= (url == '/break_bulk_vessels/list') ? 'active' : '' %>">
+          <a href="/break_bulk_vessels/list"
+            ><i class="fa fa-circle-o"></i> list Break Bulk Vessels
+          </a>
+        </li>
+        <li class="<%= (url == '/break_bulk_vessels/add') ? 'active' : '' %>">
+          <a href="/break_bulk_vessels/add"
+            ><i class="fa fa-circle-o"></i> Upload Break Bulk Vessels
+          </a>
+        </li>
+        <li class="<%= (url == '/gazette_line_agents/list') ? 'active' : '' %>">
+          <a href="/gazette_line_agents/list"
+            ><i class="fa fa-circle-o"></i> list Gazette Line Agents</a
+          >
+        </li>
+        <li class="<%= (url == '/gazette_line_agents/add') ? 'active' : '' %>">
+          <a href="/gazette_line_agents/add"
+            ><i class="fa fa-circle-o"></i> Add Gazette Line Agents
+          </a>
+        </li>
+        <li class="<%= (url == '/gazette_vessels/list') ? 'active' : '' %>">
+          <a href="/gazette_vessels/list"
+            ><i class="fa fa-circle-o"></i> list Gazette Vessels</a
+          >
+        </li>
+        <li class="<%= (url == '/gazette_vessels/add') ? 'active' : '' %>">
+          <a href="/gazette_vessels/add"
+            ><i class="fa fa-circle-o"></i> Add Gazette Vessels
+          </a>
+        </li>
+      </ul>
+    </li>
+
+    <% } %>
+  </ul>
+</section>
+<!-- /.sidebar -->

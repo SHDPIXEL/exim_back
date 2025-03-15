@@ -28,6 +28,7 @@ router.post('/get_news_topstories', news.get_news_topstories);
 router.post('/get_news/:id', news.get_news_id);
 router.post('/get_news_category', news.get_category_news);
 router.post('/get_news_by_category', news.get_news_by_category_id);
+router.post('/update-inFocus',news.new_update_inFocus)
 
 // Get News Route End
 

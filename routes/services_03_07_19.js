@@ -80,80 +80,115 @@ let Vessel = require('../models/vessel');
 
 // Store Register Route Start
 router.post('/register', function(req, res) {
-  if(req.body.name != '' && req.body.company_name != '' && req.body.email != '' && req.body.mobile != '' && req.body.nature_business != '' && req.body.subscribe_newsletter != '') {
-    let app_user = new AppUser();
-    app_user.name = req.body.name;
-    app_user.company_name = req.body.company_name;
-    app_user.email = req.body.email;
-    app_user.mobile = req.body.mobile;
-    app_user.nature_business = req.body.nature_business;
-    app_user.subscribe_newsletter = req.body.subscribe_newsletter;
+  const {
+    name,
+    company_name,
+    email,
+    mobile,
+    nature_business,
+    subscribe_newsletter,
+    contact_person,
+    contact_person_designation,
+    company_address,
+    city,
+    pincode,
+    state,
+    country,
+    password,
+    confirm_password
+  } = req.body;
 
-    AppUser.findOne({$or: [{"email": req.body.email}, {"mobile": req.body.mobile}]}, function(err, data) {
-    if(err) {
-      let result = {};
-      result.message = "Something Went Wrong.";
-      result.error = err;
-      result.success = 0;
-      return res.status(500).json(result);
+  // Validate required fields
+  if (!name || !company_name || !email || !mobile || !nature_business || !subscribe_newsletter) {
+    return res.status(400).json({ success: 0, message: "Required Fields Missing." });
+  }
+
+  let app_user = new AppUser({
+    name,
+    company_name,
+    email,
+    mobile,
+    nature_business,
+    subscribe_newsletter,
+    contact_person: contact_person || "",
+    contact_person_designation: contact_person_designation || "",
+    company_address: company_address || "",
+    city: city || "",
+    pincode: pincode || "",
+    state: state || "",
+    country: country || "",
+    password: password || "",
+    confirm_password: confirm_password || ""
+  });
+
+  // Check if user already exists by email or mobile
+  AppUser.findOne({ $or: [{ email }, { mobile }] }, function(err, existingUser) {
+    if (err) {
+      return res.status(500).json({ success: 0, message: "Something Went Wrong.", error: err });
     }
-    if(data != '' && data !== null) {
-      // console.log('Update', app_user);return false;
-      let condition = {_id:data._id};
-      AppUser.findByIdAndUpdate(condition, req.body, { new: true }, function(err, obj) {
-        if(err){
-          let result = {};
-          result.message = "Something Went Wrong.";
-          result.error = err;
-          result.success = 0;
-          return res.status(201).json(result);
-        } else {
-          let result = {};
-          result.user_data = {};
-          result.user_data.id = obj._id;
-          result.user_data.name = obj.name;
-          result.user_data.company_name = obj.company_name;
-          result.user_data.email = obj.email;
-          result.user_data.mobile = obj.mobile;
-          result.user_data.nature_business = obj.nature_business;
-          result.user_data.subscribe_newsletter = obj.subscribe_newsletter;
 
-        result.message = "Registered Succesfully.";
-        result.success = 1;
-        return res.status(200).json(result);
+    if (existingUser) {
+      // If user exists, update the record
+      AppUser.findByIdAndUpdate(existingUser._id, req.body, { new: true }, function(err, updatedUser) {
+        if (err) {
+          return res.status(500).json({ success: 0, message: "Something Went Wrong.", error: err });
         }
+
+        return res.status(200).json({
+          success: 1,
+          message: "Updated Successfully.",
+          user_data: {
+            id: updatedUser._id,
+            name: updatedUser.name,
+            company_name: updatedUser.company_name,
+            email: updatedUser.email,
+            mobile: updatedUser.mobile,
+            nature_business: updatedUser.nature_business,
+            subscribe_newsletter: updatedUser.subscribe_newsletter,
+            contact_person: updatedUser.contact_person,
+            contact_person_designation: updatedUser.contact_person_designation,
+            company_address: updatedUser.company_address,
+            city: updatedUser.city,
+            pincode: updatedUser.pincode,
+            state: updatedUser.state,
+            country: updatedUser.country,
+            password: updatedUser.password,
+            confirm_password: updatedUser.confirm_password
+          }
+        });
       });
     } else {
-      // console.log('Insert');return false;
-      app_user.save(function(err, appUser) {
-      if(err) {
-        let result = {};
-        result.message = "Required Fields Missing.";
-        result.success = 0;
-        return res.status(201).json(result);
-      }
-        let result = {};
-        result.user_data = {};
-        result.user_data.id = appUser._id;
-        result.user_data.name = appUser.name;
-        result.user_data.company_name = appUser.company_name;
-        result.user_data.email = appUser.email;
-        result.user_data.mobile = appUser.mobile;
-        result.user_data.nature_business = appUser.nature_business;
-        result.user_data.subscribe_newsletter = appUser.subscribe_newsletter;
+      // If new user, save to database
+      app_user.save(function(err, savedUser) {
+        if (err) {
+          return res.status(500).json({ success: 0, message: "Something Went Wrong.", error: err });
+        }
 
-        result.message = "Registered Succesfully.";
-        result.success = 1;
-        return res.status(200).json(result);
-    }); 
+        return res.status(200).json({
+          success: 1,
+          message: "Registered Successfully.",
+          user_data: {
+            id: savedUser._id,
+            name: savedUser.name,
+            company_name: savedUser.company_name,
+            email: savedUser.email,
+            mobile: savedUser.mobile,
+            nature_business: savedUser.nature_business,
+            subscribe_newsletter: savedUser.subscribe_newsletter,
+            contact_person: savedUser.contact_person,
+            contact_person_designation: savedUser.contact_person_designation,
+            company_address: savedUser.company_address,
+            city: savedUser.city,
+            pincode: savedUser.pincode,
+            state: savedUser.state,
+            country: savedUser.country,
+            password: savedUser.password,
+            confirm_password: savedUser.confirm_password
+          }
+        });
+      });
     }
   });
-  } else {
-    let result = {};
-    result.message = "Required Fields Missing.";
-    result.success = 0;
-    return res.status(201).json(result);
-  }
 });
 // Store Register Route End
 
