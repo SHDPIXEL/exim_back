@@ -130,9 +130,19 @@ app.get('/polls/add', (req, res) => {
   res.render('polls/add_poll', { user: req.user || null, url: req.originalUrl });
 });
 
+app.get('/files/add', (req, res) => {
+  console.log("User in request:", req.user);
+  res.render('files/add_file', { user: req.user || null, url: req.originalUrl });
+});
+
 app.get('/polls/list', (req, res) => {
   console.log("User in request:", req.user);
   res.render('polls/list_polls', { user: req.user || null, url: req.originalUrl });
+});
+
+app.get('/files/list', (req, res) => {
+  console.log("User in request:", req.user);
+  res.render('files/list_files', { user: req.user || null, url: req.originalUrl });
 });
 
 let users = require('./routes/users');
@@ -166,7 +176,9 @@ let gazette_vessels = require('./routes/gazette_vessels');
 let logs = require('./routes/logs');
 let services = require('./routes/services');
 let polls = require('./routes/polls')
+let files = require('./routes/menu')
  
+app.use('/assets', express.static(path.join(__dirname, 'assets')));
 
 app.use('/users', users);
 app.use('/app_users', app_users);
@@ -199,6 +211,7 @@ app.use('/gazette_vessels', gazette_vessels);
 app.use('/logs', logs);
 app.use('/services', services);
 app.use('/polls',polls);
+app.use('/files',files)
 // Start Server
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`Server is running on http://127.0.0.1:${PORT}`);

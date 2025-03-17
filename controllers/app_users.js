@@ -1,10 +1,13 @@
 const express = require("express");
 const router = express.Router();
+const jwt = require("jsonwebtoken");
+const moment = require("moment");
 
 // Bring in App User Model
 let AppUser = require("../models/appUser");
 // Bring in Log Model
 let Log = require("../models/log");
+let Payments = require("../models/payments");
 
 module.exports = {
   // App Users List Start
@@ -130,6 +133,120 @@ module.exports = {
       });
     });
   },
+
+  getUserDetails: async function (req, res) {
+    try {
+      console.log("token users", req.headers.authorization?.split(" ")[1]);
+
+      // Extract token from headers
+      const token = req.headers.authorization?.split(" ")[1];
+      if (!token) {
+        return res
+          .status(401)
+          .json({ success: 0, message: "Unauthorized: Token missing." });
+      }
+
+      // Verify token
+      let decoded;
+      try {
+        decoded = jwt.verify(token, process.env.SECRET_KEY);
+      } catch (err) {
+        return res.status(401).json({ success: 0, message: "Invalid token." });
+      }
+
+      const userId = decoded.userId;
+
+      // Fetch user details
+      const user = await AppUser.findById(userId).select(
+        "-password -confirm_password"
+      );
+
+      if (!user) {
+        return res.status(404).json({ success: 0, message: "User not found." });
+      }
+
+      // ✅ Format login history in descending order (latest login first)
+      const formattedLoginHistory = user.login_history
+        .map((entry) => ({
+          timestamp: moment(entry.timestamp).format("MMMM D, YYYY, h:mm A"),
+          ip: entry.ip,
+          country: entry.country,
+        }))
+        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)); // Sort in descending order
+
+      // Fetch all payments with paymentStatus "success"
+      const payments = await Payments.find({
+        userId,
+        paymentStatus: "success",
+      });
+
+      // Extract subscription locations with expiry dates
+      const subscriptionLocations = payments.flatMap((payment) => {
+        if (
+          !payment.subscription_details ||
+          !Array.isArray(payment.subscription_details)
+        ) {
+          return [];
+        }
+
+        return payment.subscription_details
+          .map((sub) => {
+            if (!sub.location) return null;
+
+            let expiryDate = null;
+            if (sub.duration) {
+              const durationMatch = sub.duration.match(/(\d+)\s*year/);
+              if (durationMatch) {
+                const durationYears = parseInt(durationMatch[1], 10);
+                expiryDate = new Date(payment.createdAt);
+                expiryDate.setFullYear(
+                  expiryDate.getFullYear() + durationYears
+                );
+                expiryDate = expiryDate.toISOString().split("T")[0]; // Format as YYYY-MM-DD
+              }
+            }
+
+            return {
+              location: sub.location,
+              expiry_date: expiryDate,
+            };
+          })
+          .filter(Boolean); // Remove null values
+      });
+
+      return res.status(200).json({
+        success: 1,
+        message: "User details retrieved successfully.",
+        user: {
+          id: user._id,
+          name: user.name,
+          company_name: user.company_name,
+          email: user.email,
+          mobile: user.mobile,
+          nature_business: user.nature_business,
+          subscribe_newsletter: user.subscribe_newsletter,
+          contact_person: user.contact_person,
+          contact_person_designation: user.contact_person_designation,
+          company_address: user.company_address,
+          city: user.city,
+          pincode: user.pincode,
+          state: user.state,
+          country: user.country,
+          createdAt: user.createdAt,
+          login_history: formattedLoginHistory, // ✅ Include formatted login history
+        },
+        subscription_locations: subscriptionLocations, // Send locations with expiry dates
+      });
+    } catch (error) {
+      console.error("Error in getUserDetails:", error);
+      return res.status(500).json({
+        success: 0,
+        message: "Internal server error",
+        error: error.message,
+      });
+    }
+  },
+
   // Get App Users Data End
 
   // App User Delete Data Start

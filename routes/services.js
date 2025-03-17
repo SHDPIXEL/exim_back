@@ -49,6 +49,7 @@ router.post('/login', services.login);
 
 router.post("/order", services.orders);
 router.post("/order-success", services.orderSuccess);
+router.post("/change_password", services.changePassword);
 router.post("/get_payments", services.get_payments);
 
 // Get Registered User Route Start

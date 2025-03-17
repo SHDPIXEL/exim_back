@@ -7,14 +7,14 @@ const FileUploadSchema = new mongoose.Schema(
       required: true,
     },
     files: [
-      {
+      { 
         fileType: {
           type: String,
-          enum: ["image", "video", "pdf", "word", "excel","ppt", "other"],
+          enum: ["image", "video", "pdf", "word", "excel", "ppt", "zip", "other"],
           required: true,
         },
-        fileData: {
-          type: Buffer, // Stores the actual file as binary data
+        filePath: {
+          type: String, // Stores the file path instead of binary data
           required: true,
         },
         fileName: {
@@ -34,7 +34,7 @@ const FileUploadSchema = new mongoose.Schema(
     ],
     status: {
       type: String,
-      enum: ["active", "inactive"],
+      enum: ["Active", "Inactive"],
       default: "active",
     },
   },

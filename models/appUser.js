@@ -64,6 +64,15 @@ const AppUserSchema = mongoose.Schema(
       type: String,
       required: false,
     },
+    // ✅ Store all login timestamps
+    // ✅ Store login history with timestamps & IP addresses
+    login_history: [
+      {
+        timestamp: { type: Date, default: Date.now },
+        ip: { type: String, required: true },
+        country: { type: String }, // ✅ Store only country
+      },
+    ],    
   },
   { timestamps: true }
 );

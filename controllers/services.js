@@ -4,6 +4,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const Razorpay = require("razorpay"); // For order creation
 const crypto = require("crypto"); // For verifying Razorpay payment signature
+const axios = require("axios");
 
 const moment = require("moment");
 
@@ -118,12 +119,10 @@ module.exports = {
         $or: [{ email }, { mobile }],
       });
       if (existingUser) {
-        return res
-          .status(400)
-          .json({
-            success: 0,
-            message: "User with the same email or mobile already exists.",
-          });
+        return res.status(400).json({
+          success: 0,
+          message: "User with the same email or mobile already exists.",
+        });
       }
 
       // Hash password
@@ -190,15 +189,16 @@ module.exports = {
 
   login: async function (req, res) {
     try {
-      const { email, password } = req.body;
-
+      console.log("required", req.body);
+      const { email, password, ip } = req.body; // ✅ Get IP from request body
+  
       // Validate required fields
-      if (!email || !password) {
+      if (!email || !password || !ip) {
         return res
           .status(400)
-          .json({ success: 0, message: "Email and password are required." });
+          .json({ success: 0, message: "Email, password, and IP address are required." });
       }
-
+  
       // Find user by email
       const user = await AppUser.findOne({ email });
       if (!user) {
@@ -206,7 +206,7 @@ module.exports = {
           .status(400)
           .json({ success: 0, message: "Invalid email or password." });
       }
-
+  
       // Compare hashed password
       const isMatch = await bcrypt.compare(password, user.password);
       if (!isMatch) {
@@ -214,14 +214,51 @@ module.exports = {
           .status(400)
           .json({ success: 0, message: "Invalid email or password." });
       }
-
+  
+      // ✅ Fetch country from IP
+      let country = "Unknown"; // Default if API fails
+      try {
+        const { data } = await axios.get(`http://ip-api.com/json/${ip}`);
+        if (data.status === "success") {
+          country = data.country; // ✅ Store only country
+        }
+      } catch (error) {
+        console.error("IP Location Fetch Error:", error.message);
+      }
+  
+      // Update login history (limit to last 10 logins)
+      await AppUser.findByIdAndUpdate(
+        user._id,
+        {
+          $push: {
+            login_history: {
+              $each: [{ timestamp: new Date(), ip, country }], // ✅ Store IP & country
+              $slice: -10, // Keep only the last 10 logins
+            },
+          },
+        },
+        { new: true }
+      );
+  
+      // Fetch updated user details
+      const updatedUser = await AppUser.findById(user._id).select("-password -confirm_password");
+  
+      // Format login history for response
+      const formattedLoginHistory = updatedUser.login_history.map((entry) => ({
+        timestamp: moment(entry.timestamp).format("MMMM D, YYYY, h:mm A"),
+        ip: entry.ip,
+        country: entry.country, // ✅ Include only country in response
+      }));
+  
+      console.log("his", formattedLoginHistory);
+  
       // Generate JWT token
       const token = jwt.sign(
         { userId: user._id, email: user.email },
         process.env.SECRET_KEY,
         { expiresIn: "1h" }
       );
-
+  
       return res.status(200).json({
         success: 1,
         message: "Login Successful.",
@@ -241,6 +278,7 @@ module.exports = {
           pincode: user.pincode,
           state: user.state,
           country: user.country,
+          login_history: formattedLoginHistory, // ✅ Send login timestamps with IP & country only
         },
       });
     } catch (err) {
@@ -248,19 +286,93 @@ module.exports = {
       return res
         .status(500)
         .json({ success: 0, message: "Something went wrong.", error: err });
-    }
+    }  
   },
-
-  orders: async function(req, res) {
+  
+  changePassword: async function (req, res) {
     try {
-      // Extract token from headers
+      const { oldPassword, newPassword, confirmPassword } = req.body;
+  
+      // Check if all fields are provided
+      if (!oldPassword || !newPassword || !confirmPassword) {
+        return res.status(400).json({
+          success: 0,
+          message: "All fields (oldPassword, newPassword, confirmPassword) are required.",
+        });
+      }
+  
+      // Check if new password and confirm password match
+      if (newPassword !== confirmPassword) {
+        return res.status(400).json({
+          success: 0,
+          message: "New password and confirm password do not match.",
+        });
+      }
+  
+      // Extract userId from token
       const token = req.headers.authorization?.split(" ")[1];
       if (!token) {
         return res.status(401).json({ success: 0, message: "Unauthorized: Token missing." });
       }
-
-      console.log("token",token)
   
+      let decoded;
+      try {
+        decoded = jwt.verify(token, process.env.SECRET_KEY);
+      } catch (err) {
+        return res.status(401).json({ success: 0, message: "Invalid token." });
+      }
+  
+      const userId = decoded.userId;
+  
+      // Find user by ID
+      const user = await AppUser.findById(userId);
+      if (!user) {
+        return res.status(404).json({ success: 0, message: "User not found." });
+      }
+  
+      // Check if old password matches the stored hashed password
+      const isMatch = await bcrypt.compare(oldPassword, user.password);
+      if (!isMatch) {
+        return res.status(400).json({ success: 0, message: "Old password is incorrect." });
+      }
+  
+      // Hash the new password
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(newPassword, salt);
+  
+      // Update the password
+      user.password = hashedPassword;
+  
+      // ✅ Save user without validating `login_history`
+      await user.save({ validateBeforeSave: false });
+  
+      return res.status(200).json({
+        success: 1,
+        message: "Password changed successfully.",
+      });
+    } catch (error) {
+      console.error("Error in changePassword:", error);
+      return res.status(500).json({
+        success: 0,
+        message: "Internal server error",
+        error: error.message,
+      });
+    }
+  },
+  
+
+  orders: async function (req, res) {
+    try {
+      // Extract token from headers
+      const token = req.headers.authorization?.split(" ")[1];
+      if (!token) {
+        return res
+          .status(401)
+          .json({ success: 0, message: "Unauthorized: Token missing." });
+      }
+
+      console.log("token", token);
+
       // Decode token
       let decoded;
       try {
@@ -268,57 +380,83 @@ module.exports = {
       } catch (err) {
         return res.status(401).json({ success: 0, message: "Invalid token." });
       }
-      console.log("decoded",decoded)
-  
-      const userId = decoded.userId;
+      console.log("decoded", decoded);
 
-      console.log("userId",userId)
-  
-      console.log("required",req.body)
+      const userId = decoded.userId;
+      console.log("userId", userId);
+
+      console.log("required", req.body);
+
       // Extract request body
       const { amount, subscription_details, type } = req.body;
       if (!amount || isNaN(amount) || amount <= 0) {
-        return res.status(400).json({ success: 0, message: "Invalid amount provided." });
+        return res
+          .status(400)
+          .json({ success: 0, message: "Invalid amount provided." });
       }
-  
+
       // Fetch user details
       const user = await AppUser.findById(userId);
       if (!user) {
         return res.status(404).json({ success: 0, message: "User not found." });
       }
-  
+
       // Extract user details
       const username = user.name;
       const designation = user.contact_person_designation;
-  
+
       // Razorpay instance setup
       const instance = new Razorpay({
         key_id: process.env.RAZORPAY_KEY_ID,
         key_secret: process.env.RAZORPAY_KEY_SECRET,
       });
-  
-      const receiptId = generateReceiptId();;
-  
+
+      const receiptId = generateReceiptId();
+
       // Order options
       const options = {
         amount: amount * 100, // Convert to smallest currency unit (paise)
         currency: "INR",
         receipt: receiptId,
       };
-  
+
       // Create Razorpay order
       const razorpayOrder = await instance.orders.create(options);
-      console.log("rzp",razorpayOrder)
+      console.log("rzp", razorpayOrder);
       if (!razorpayOrder) {
-        return res.status(500).json({ success: 0, message: "Error creating Razorpay order." });
+        return res
+          .status(500)
+          .json({ success: 0, message: "Error creating Razorpay order." });
       }
-  
+
+      console.log("Type of subscription_details:", typeof subscription_details);
+      console.log("Subscription Details:", subscription_details);
+
+      // ✅ Calculate expiry date for each subscription before saving
+      const updatedSubscriptions = subscription_details.map((sub) => {
+        let expiryDate = null;
+
+        if (sub.duration) {
+          const durationMatch = sub.duration.match(/(\d+)\s*year/);
+          if (durationMatch) {
+            const durationYears = parseInt(durationMatch[1], 10);
+            expiryDate = new Date(); // Current date
+            expiryDate.setFullYear(expiryDate.getFullYear() + durationYears);
+          }
+        }
+
+        return {
+          ...sub,
+          expiryDate, // Add calculated expiry date
+        };
+      });
+
       // Save payment details in database
       const newPayment = await Payments.create({
         userId,
         username,
         designation,
-        subscription_details,
+        subscription_details: updatedSubscriptions, // ✅ Updated with expiry dates
         type,
         amount,
         paymentStatus: "pending",
@@ -326,8 +464,8 @@ module.exports = {
         razorpayOrderId: razorpayOrder.id,
       });
 
-      console.log("payment",newPayment)
-  
+      console.log("payment", newPayment);
+
       // Success response
       return res.status(201).json({
         success: 1,
@@ -335,16 +473,19 @@ module.exports = {
         razorpayOrder,
         paymentDetails: newPayment,
       });
-  
     } catch (error) {
       console.error("Error in orders:", error);
-      return res.status(500).json({ success: 0, message: "Internal server error", error: error.message });
+      return res.status(500).json({
+        success: 0,
+        message: "Internal server error",
+        error: error.message,
+      });
     }
   },
 
   orderSuccess: async function (req, res) {
     try {
-      console.log("requiredsuccess",req.body)
+      console.log("requiredsuccess", req.body);
       const { razorpayOrderId, razorpayPaymentId, razorpaySignature } =
         req.body;
 
@@ -384,7 +525,7 @@ module.exports = {
       payment.status = "completed"; // Mark as completed
       await payment.save();
 
-      console.log("paymentsuccess",payment)
+      console.log("paymentsuccess", payment);
 
       return res.status(200).json({
         success: 1,
@@ -393,53 +534,80 @@ module.exports = {
       });
     } catch (error) {
       console.error("Error verifying payment:", error);
-      return res
-        .status(500)
-        .json({
-          success: 0,
-          message: "An error occurred.",
-          error: error.message,
-        });
+      return res.status(500).json({
+        success: 0,
+        message: "An error occurred.",
+        error: error.message,
+      });
     }
   },
 
-  get_payments: async function (req,res) {
+  get_payments: async function (req, res) {
     try {
-      // Extract token from headers
+      console.log("reqtoken", req.headers.authorization?.split(" ")[1]);
       const token = req.headers.authorization?.split(" ")[1];
       if (!token) {
-        return res.status(401).json({ success: 0, message: "Unauthorized: Token missing." });
+        return res
+          .status(401)
+          .json({ success: 0, message: "Unauthorized: Token missing." });
       }
-      console.log("token",token)
-  
-      // Decode token to get userId
+      console.log("tokenpayments", token);
+
       let decoded;
       try {
         decoded = jwt.verify(token, process.env.SECRET_KEY);
       } catch (err) {
         return res.status(401).json({ success: 0, message: "Invalid token." });
       }
-  
-      console.log("decoded",decoded)
+      console.log("decoded", decoded);
+
       const userId = decoded.userId;
-  
+
       // Fetch payments for the user
       const payments = await Payments.find({ userId }).sort({ createdAt: -1 });
-  
+
       if (!payments.length) {
-        return res.status(404).json({ success: 0, message: "No payments found for this user." });
+        return res
+          .status(404)
+          .json({ success: 0, message: "No payments found for this user." });
       }
-  
-      // Success response
+
+      // ✅ Convert payments and extract expiry_date
+      const formattedPayments = payments.map((payment) => {
+        let expiryDate = null;
+
+        if (payment.subscription_details.length > 0) {
+          const sub = payment.subscription_details[0]; // Assuming first subscription is the relevant one
+
+          if (sub && sub.duration) {
+            const durationMatch = sub.duration.match(/(\d+)\s*year/);
+            if (durationMatch) {
+              const durationYears = parseInt(durationMatch[1], 10);
+              expiryDate = new Date(payment.createdAt);
+              expiryDate.setFullYear(expiryDate.getFullYear() + durationYears);
+              expiryDate = expiryDate.toISOString().split("T")[0]; // Format as YYYY-MM-DD
+            }
+          }
+        }
+
+        return {
+          ...payment.toObject(),
+          expiry_date: expiryDate, // Expiry date at root level
+        };
+      });
+
       return res.status(200).json({
         success: 1,
         message: "Payments retrieved successfully",
-        payments,
+        payments: formattedPayments,
       });
-  
     } catch (error) {
       console.error("Error in getPayments:", error);
-      return res.status(500).json({ success: 0, message: "Internal server error", error: error.message });
+      return res.status(500).json({
+        success: 0,
+        message: "Internal server error",
+        error: error.message,
+      });
     }
   },
 
