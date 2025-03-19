@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <% include ../partials/head %>
+</head>
+<body class="hold-transition skin-blue sidebar-mini">
+    <div class="wrapper">
+        <header class="main-header">
+            <% include ../partials/header %>
+        </header>
+
+        <aside class="main-sidebar">
+            <% include ../partials/aside %>
+        </aside>
+
+        <div class="content-wrapper">
+            <section class="content-header">
+                <h1>Manage Selected Ads</h1>
+            </section>
+            
+            <section class="content">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="box box-info">
+                            <div class="box-header">
+                                <h3 class="box-title">Select Advertisement</h3>
+                            </div>
+
+                            <form id="ads_form" action="/adds/media/select" method="POST" class="form-horizontal">
+                                <div class="box-body">
+                                    <div class="alert alert-danger" style="display: none">
+                                        <i class="fa fa-warning"></i>
+                                        <button class="close" data-dismiss="alert">×</button>
+                                        <span id="errorMsg">Please check your inputs.</span>
+                                    </div>
+                                    <div class="alert alert-success" style="display: none">
+                                        <i class="fa fa-check"></i>
+                                        <button class="close" data-dismiss="alert">×</button>
+                                        <span id="successMsg">Advertisement added successfully!</span>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="col-md-3 control-label">Position <span style="color:red;">*</span></label>
+                                        <div class="col-md-6">
+                                            <select class="form-control" id="position" name="position" required>
+                                                <option value="top-left">Top Left</option>
+                                                <option value="top-right">Top Right</option>
+                                                <option value="bottom-left">Bottom Left</option>
+                                                <option value="bottom-right">Bottom Right</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="col-md-3 control-label">Select Media <span style="color:red;">*</span></label>
+                                        <div class="col-md-6">
+                                            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#imagesModal">Show Images</button>
+                                            <button type="button" class="btn btn-info" data-toggle="modal" data-target="#videosModal">Show Videos</button>
+                                        </div>
+                                    </div>
+
+                                    <input type="hidden" name="mediaType" id="mediaType">
+                                    <input type="hidden" name="mediaUrls" id="mediaUrls">
+                                </div>
+
+                                <div class="box-footer text-right">
+                                    <button type="submit" id="save_ads" class="btn btn-success">
+                                        <i class="glyphicon glyphicon-check"></i> Save Selection
+                                    </button>
+                                    <button type="reset" class="btn btn-danger">
+                                        <i class="glyphicon glyphicon-refresh"></i> Reset
+                                    </button>
+                                </div>                                
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <footer class="main-footer">
+            <% include ../partials/footer %>
+        </footer>
+    </div>
+
+    <% include ../partials/tail %>
+
+    <!-- Images Modal -->
+    <div id="imagesModal" class="modal fade" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Select Images</h5>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body" id="imagesContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Videos Modal -->
+    <div id="videosModal" class="modal fade" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Select Videos</h5>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body" id="videosContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function () {
+            $.get("/adds/media", function (response) {
+                if (response.success) {
+                    let imagesContainer = $("#imagesContainer");
+                    let videosContainer = $("#videosContainer");
+                    imagesContainer.empty();
+                    videosContainer.empty();
+                    
+                    let ads = response.ads;
+                    if (ads.length === 0) {
+                        imagesContainer.html("<p>No images available.</p>");
+                        videosContainer.html("<p>No videos available.</p>");
+                        return;
+                    }
+                    
+                    ads.forEach(ad => {
+                        ad.images.forEach(image => {
+                            imagesContainer.append(`
+                                <label>
+                                    <input type="checkbox" name="media" value="${image.filePath}" data-type="image">
+                                    <img src="${image.filePath}" width="100">
+                                </label>
+                            `);
+                        });
+
+                        ad.videos.forEach(video => {
+                            videosContainer.append(`
+                                <label>
+                                    <input type="checkbox" name="media" value="${video.filePath}" data-type="video">
+                                    <video src="${video.filePath}" width="100" controls></video>
+                                </label>
+                            `);
+                        });
+                    });
+                }
+            });
+
+            $("#imagesContainer, #videosContainer").on("change", "input[name='media']", function () {
+                let selectedMedia = [];
+                let mediaType = "mixed";
+                $("input[name='media']:checked").each(function () {
+                    selectedMedia.push($(this).val());
+                });
+                if (selectedMedia.length > 0) {
+                    $('#mediaUrls').val(selectedMedia.join(","));
+                }
+            });
+
+            // Form submission logic
+            $('#ads_form').submit(function(e) {
+                e.preventDefault();
+
+                $('#save_ads').prop('disabled', true).text('Saving...');
+
+                let selectedMedia = $('#mediaUrls').val();
+                if (!selectedMedia) {
+                    $('#errorMsg').text('Please select at least one image or video.');
+                    $('.alert-danger').show().delay(3000).fadeOut();
+                    $('#save_ads').prop('disabled', false).text('Save Selection');
+                    return;
+                }
+
+                let formData = $('#ads_form').serialize();
+
+                $.post('/adds/media/select', formData, function(response) {
+                    if (!response.success) {
+                        $('#errorMsg').text(response.message);
+                        $('.alert-danger').show().delay(3000).fadeOut();
+                    } else {
+                        $('#successMsg').text('Selection saved successfully!');
+                        $('.alert-success').show().delay(3000).fadeOut();
+                    }
+                }).fail(function() {
+                    $('#errorMsg').text('Something went wrong. Try again.');
+                    $('.alert-danger').show().delay(3000).fadeOut();
+                }).always(function() {
+                    $('#save_ads').prop('disabled', false).text('Save Selection');
+                });
+            });
+        });
+    </script>
+</body>
+</html>

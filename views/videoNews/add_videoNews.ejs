@@ -1,0 +1,214 @@
+<% include ../partials/head %>
+<link href="../../jquery_ui/css/jquery-ui.min.css" rel="stylesheet" type="text/css" />
+</head>
+<body class="hold-transition skin-blue sidebar-mini">
+    <div class="wrapper">
+        <header class="main-header">
+            <% include ../partials/header %>
+        </header>
+
+        <aside class="main-sidebar">
+            <% include ../partials/aside %>
+        </aside>
+
+        <div class="content-wrapper">
+            <section class="content-header">
+                <h1><%= videoNews ? 'Edit' : 'Add' %> Video News</h1>
+            </section>
+            <section class="content">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="box box-info">
+                            <div class="box-header">
+                                <h3 class="box-title"><%= videoNews ? 'Edit' : 'Add' %> Video News</h3>
+                            </div>
+                            <form id="video_news_form">
+                                <input type="hidden" name="id" id="news_id" value="<%= videoNews ? videoNews._id : '' %>">
+                                <div class="box-body">
+                                    <div class="row">
+                                        <!-- Category (Left) & Date (Right) -->
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label>Category</label>
+                                                <select class="form-control" name="category_id" id="category_id" required>
+                                                    <option value="">Select Category</option>
+                                                    <% ["Shipping News", "Trade News", "Port News", "Transport News", "Indian Economy", "Special Report", "International", "Aviation Cargo Express"].forEach((category, index) => { %>
+                                                        <option value="<%= index + 1 %>" <%= videoNews && videoNews.category_id == index + 1 ? 'selected' : '' %>><%= category %></option>
+                                                    <% }); %>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label>Date</label>
+                                                <input type="text" class="form-control" name="date" id="date" 
+                                                    value="<%= videoNews ? new Date(videoNews.date).toLocaleDateString('en-GB') : '' %>" required>
+                                            </div>
+                                        </div>
+                                    </div>
+                                
+                                    <div class="row">
+                                        <!-- Video Upload (Left) & URL (Right) -->
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label>Video</label>
+                                                <div class="custom-file-upload">
+                                                    <input type="file" class="form-control" name="video" id="video" accept="video/mp4, video/avi, video/mkv, video/mov" style="position: absolute; left: -9999px;">
+                                                    <button type="button" class="btn btn-primary" id="customFileBtn">Choose Video</button>
+                                                    <span id="file-chosen">No file selected</span>
+                                                </div>
+                                                <div id="video_preview">
+                                                    <% if (videoNews && videoNews.videos) { %>
+                                                        <div class="img-wrap">
+                                                            <i class="fa fa-times close" aria-hidden="true"></i>
+                                                            <video controls src="<%= videoNews.videos %>" width="200"></video>
+                                                        </div>
+                                                    <% } %>
+                                                </div>
+                                            </div>
+                                        </div>
+                                
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label>Video URL</label>
+                                                <input type="text" class="form-control" name="urls" id="urls" placeholder="Enter video URL" value="<%= videoNews ? videoNews.urls : '' %>">
+                                            </div>
+                                        </div>
+                                    </div>
+                                
+                                    <!-- Headline -->
+                                    <div class="form-group">
+                                        <label>Headline <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="headline" name="headline" placeholder="News Headline" value="<%= videoNews ? videoNews.headline : '' %>" required>
+                                    </div>
+                                
+                                    <!-- Breaking News -->
+                                    <div class="form-group">
+                                        <label>Breaking News <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="breaking_news" name="breaking_news" placeholder="Breaking News" value="<%= videoNews ? videoNews.breaking_news : '' %>" required>
+                                    </div>
+                                
+                                    <!-- Four Lines -->
+                                    <div class="form-group">
+                                        <label>Four Lines <span class="text-danger">*</span></label>
+                                        <textarea class="form-control" id="four_lines" name="four_lines" placeholder="Enter Four Lines" required><%= videoNews ? videoNews.four_lines : '' %></textarea>
+                                    </div>
+                                
+                                    <!-- Description -->
+                                    <div class="form-group">
+                                        <label>Description</label>
+                                        <textarea class="form-control" name="description" id="description"><%= videoNews ? videoNews.description : '' %></textarea>
+                                    </div>
+                                
+                                    <!-- In Focus Checkbox -->
+                                    <div class="form-group">
+                                        <input type="checkbox" name="inFocus" id="inFocus" <%= videoNews && videoNews.inFocus ? 'checked' : '' %>>
+                                        <label for="inFocus">In Focus</label>
+                                    </div>
+                                
+                                    <!-- Submit & Reset Buttons -->
+                                    <div class="form-group text-right">
+                                        <button type="reset" class="btn btn-danger">Reset</button>
+                                        <button type="submit" class="btn btn-success"><%= videoNews ? 'Update' : 'Submit' %></button>
+                                    </div>
+                                </div>
+                                
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <footer class="main-footer">
+            <% include ../partials/footer %>
+        </footer>
+    </div>
+
+    <% include ../partials/tail %>
+
+    <script src="../../jquery-2.1.4.min.js"></script>
+    <script src="../../jquery_ui/js/jquery-ui.min.js"></script>
+    <script src="../../jquery-validation/js/jquery.validate.min.js"></script>
+	<script type="text/javascript" src="https://ckeditor.com/docs/vendors/4.12.1/ckeditor/ckeditor.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            CKEDITOR.replace('description');
+
+            // Custom file input button
+            $('#customFileBtn').click(function() {
+                $('#video').click();
+            });
+
+            $('#video').change(function(event) {
+                let file = event.target.files[0];
+
+                if (file) {
+                    let allowedTypes = ["video/mp4", "video/avi", "video/mkv", "video/quicktime"];
+                    if (!allowedTypes.includes(file.type)) {
+                        alert("Only MP4, AVI, MKV, and MOV video files are allowed!");
+                        $(this).val('');
+                        return;
+                    }
+                    
+                    $('#file-chosen').text(file.name);
+                    $('#video_preview').html(`
+                        <div class="img-wrap">
+                            <i class="fa fa-times close" aria-hidden="true"></i>
+                            <video controls src="${URL.createObjectURL(file)}" width="200"></video>
+                        </div>
+                    `);
+                }
+            });
+
+            // Remove video preview
+            $(document).on('click', ".close", function() {
+                $('#video').val('');
+                $('#file-chosen').text('No file selected');
+                $(this).parent().remove();
+            });
+
+            // Datepicker
+            $("#date").datepicker({
+                changeMonth: true,
+                changeYear: true,
+                dateFormat: 'dd-mm-yy'
+            });
+
+            // Form submission
+            $('#video_news_form').submit(function(e) {
+                e.preventDefault();
+                let formData = new FormData(this);
+                let isUpdate = $('#news_id').val() !== "";
+            
+                // Convert date from 'dd-mm-yyyy' to 'yyyy-mm-dd'
+                let dateValue = $('#date').val();
+                if (dateValue) {
+                    let parts = dateValue.split('-');
+                    if (parts.length === 3) {
+                        let formattedDate = `${parts[2]}-${parts[1]}-${parts[0]}`; // yyyy-mm-dd
+                        formData.set('date', formattedDate);
+                    }
+                }
+
+                $.ajax({
+                    url: isUpdate ? `/videoNews/update/${$('#news_id').val()}` : "/videoNews/store",
+                    type: isUpdate ? "PUT" : "POST",
+                    data: formData,
+                    contentType: false,
+                    cache: false,
+                    processData: false,
+                    success: function(response) {
+                        alert(response.message);
+                        window.location.href = "/videoNews/list";
+                    },
+                    error: function(xhr) {
+                        alert("Error: " + xhr.responseJSON.message);
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

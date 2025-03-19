@@ -1,6 +1,7 @@
 const express = require("express");
 
 const router = express.Router();
+const mongoose = require("mongoose");
 
 const fs = require("fs");
 
@@ -44,7 +45,6 @@ let News = require("../models/news");
 
 let Log = require("../models/log");
 
-
 module.exports = {
   // News List Start
 
@@ -62,29 +62,36 @@ module.exports = {
   // },
 
   // News List End
-  new_update_inFocus: async function(req,res){
-    try {
-      let { id, inFocus } = req.body;
-
-      // Validate MongoDB ObjectId
-      if (!mongoose.Types.ObjectId.isValid(id)) {
+    new_update_inFocus: async function (req, res) {
+      try {
+        let { id } = req.body;
+        console.log("Received ID:", id); // Debugging log
+    
+        // Validate MongoDB ObjectId
+        if (!mongoose.Types.ObjectId.isValid(id)) {
           return res.status(400).json({ error: "Invalid News ID" });
-      }
-
-      console.log("news",id, inFocus)
-      const updatedNews = await News.findByIdAndUpdate(id, { inFocus }, { new: true });
-      console.log("uptd",updatedNews)
-
-      if (!updatedNews) {
+        }
+    
+        // Find the news item
+        const newsItem = await News.findById(id);
+        if (!newsItem) {
           return res.status(404).json({ error: "News item not found" });
+        }
+    
+        // Toggle inFocus
+        newsItem.inFocus = !newsItem.inFocus;
+        await newsItem.save();
+    
+        res.json({
+          success: true,
+          message: "In Focus status updated.",
+          inFocus: newsItem.inFocus,
+        });
+      } catch (error) {
+        console.error("Error updating inFocus:", error);
+        res.status(500).json({ error: "Internal server error" });
       }
-
-      res.json({ success: true, message: "In Focus status updated.", data: updatedNews });
-  } catch (error) {
-      console.error("Error updating inFocus:", error);
-      res.status(500).json({ error: "Internal server error" });
-  }
-  },
+    },
   // Get News Data Start
 
   get_news_recent: function (req, res) {
@@ -275,44 +282,47 @@ module.exports = {
         7: "International",
         8: "Aviation Cargo Express",
       };
-  
+
       // Validate and extract order
       var col =
-        req.body.columns?.[req.body.order?.[0]?.column]?.data || "default_column";
+        req.body.columns?.[req.body.order?.[0]?.column]?.data ||
+        "default_column";
       var order = req.body.order?.[0]?.dir === "asc" ? 1 : -1;
-  
+
       // Validate and extract search filters
       var date_search = req.body.columns?.[3]?.search?.value
         ? { date: req.body.columns[3].search.value }
         : {};
-  
+
       var common_search = req.body.search?.value
         ? {
             $or: [
               { headline: { $regex: req.body.search.value, $options: "i" } },
-              { breaking_news: { $regex: req.body.search.value, $options: "i" } },
+              {
+                breaking_news: { $regex: req.body.search.value, $options: "i" },
+              },
               { description: { $regex: req.body.search.value, $options: "i" } },
               { four_lines: { $regex: req.body.search.value, $options: "i" } },
               { sql_id: { $regex: req.body.search.value, $options: "i" } },
             ],
           }
         : {};
-  
+
       // Filter to include only category_id 2 (Trade News) and 5 (Indian Economy)
       var category_search = { category_id: { $in: [2, 5] } };
-  
+
       var searchStr = {
         $and: [common_search, category_search, date_search],
       };
-  
+
       // Count total records
       News.count({}, function (err, recordsTotal) {
         if (err) throw err;
-  
+
         // Count filtered records
         News.count(searchStr, function (err, recordsFiltered) {
           if (err) throw err;
-  
+
           // Fetch filtered records
           News.find(
             searchStr,
@@ -325,13 +335,14 @@ module.exports = {
             .sort({ [col]: order })
             .exec(function (err, results) {
               if (err) throw err;
-  
+
               // Map category_id to category name
               results = results.map((news) => ({
                 ...news._doc,
-                category_name: categoryMap[news.category_id] || "Unknown Category",
+                category_name:
+                  categoryMap[news.category_id] || "Unknown Category",
               }));
-  
+
               // Send response
               res.send({
                 draw: req.body.draw || 0,
@@ -347,17 +358,18 @@ module.exports = {
       res.status(500).send({ error: "Internal server error" });
     }
   },
-  
+
   get_news_id: function (req, res) {
     try {
       // Extract newsId from params
       var newsIdFilter = req.params.id ? { _id: req.params.id } : {};
-  
+
       // Validate and extract order
       var col =
-        req.body.columns?.[req.body.order?.[0]?.column]?.data || "default_column";
+        req.body.columns?.[req.body.order?.[0]?.column]?.data ||
+        "default_column";
       var order = req.body.order?.[0]?.dir === "asc" ? 1 : -1;
-  
+
       // Validate and extract search filters
       var category_search = req.body.columns?.[1]?.search?.value
         ? { category_id: req.body.columns[1].search.value }
@@ -365,12 +377,14 @@ module.exports = {
       var date_search = req.body.columns?.[3]?.search?.value
         ? { date: req.body.columns[3].search.value }
         : {};
-  
+
       var common_search = req.body.search?.value
         ? {
             $or: [
               { headline: { $regex: req.body.search.value, $options: "i" } },
-              { breaking_news: { $regex: req.body.search.value, $options: "i" } },
+              {
+                breaking_news: { $regex: req.body.search.value, $options: "i" },
+              },
               { description: { $regex: req.body.search.value, $options: "i" } },
               { image: { $regex: req.body.search.value, $options: "i" } },
               { four_lines: { $regex: req.body.search.value, $options: "i" } },
@@ -378,11 +392,11 @@ module.exports = {
             ],
           }
         : {};
-  
+
       var searchStr = {
         $and: [common_search, category_search, date_search, newsIdFilter],
       };
-  
+
       // Category mapping
       const categoryMap = {
         1: "Shipping News",
@@ -394,15 +408,15 @@ module.exports = {
         7: "International",
         8: "Aviation Cargo Express",
       };
-  
+
       // Count total records
       News.count({}, function (err, recordsTotal) {
         if (err) throw err;
-  
+
         // Count filtered records
-        News.count (searchStr, function (err, recordsFiltered) {
+        News.count(searchStr, function (err, recordsFiltered) {
           if (err) throw err;
-  
+
           // Fetch filtered records
           News.find(
             searchStr,
@@ -410,32 +424,36 @@ module.exports = {
             {
               skip: Number(req.body.start) || 0,
               limit:
-                req.body.length != -1 ? Number(req.body.length) : recordsFiltered,
+                req.body.length != -1
+                  ? Number(req.body.length)
+                  : recordsFiltered,
             }
           )
             .sort({ [col]: order })
             .exec(function (err, results) {
               if (err) throw err;
-  
+
               // Map category_id to category_name
               results = results.map((news) => ({
                 ...news._doc,
-                category_name: categoryMap[news.category_id] || "Unknown Category",
+                category_name:
+                  categoryMap[news.category_id] || "Unknown Category",
               }));
-  
+
               // Fetch the 4 most recent news articles
               News.find({})
                 .sort({ date: -1 })
                 .limit(4)
                 .exec(function (err, recentNews) {
                   if (err) throw err;
-  
+
                   // Map category_id to category_name for recent news
                   recentNews = recentNews.map((news) => ({
                     ...news._doc,
-                    category_name: categoryMap[news.category_id] || "Unknown Category",
+                    category_name:
+                      categoryMap[news.category_id] || "Unknown Category",
                   }));
-  
+
                   // Fetch top headlines (index 11 to 17)
                   News.find({})
                     .sort({ date: -1 })
@@ -443,14 +461,14 @@ module.exports = {
                     .limit(7) // Fetching 7 records from index 11 to 17
                     .exec(function (err, topHeadlines) {
                       if (err) throw err;
-  
+
                       // Map category_id to category_name for top headlines
                       topHeadlines = topHeadlines.map((news) => ({
                         ...news._doc,
                         category_name:
                           categoryMap[news.category_id] || "Unknown Category",
                       }));
-  
+
                       // Send response
                       res.send({
                         draw: req.body.draw || 0,
@@ -469,15 +487,16 @@ module.exports = {
       console.error("Error in get_news:", error);
       res.status(500).send({ error: "Internal server error" });
     }
-  },  
+  },
 
   get_category_news: function (req, res) {
     try {
       // Validate and extract order
       var col =
-        req.body.columns?.[req.body.order?.[0]?.column]?.data || "default_column";
+        req.body.columns?.[req.body.order?.[0]?.column]?.data ||
+        "default_column";
       var order = req.body.order?.[0]?.dir === "asc" ? 1 : -1;
-  
+
       // Validate and extract search filters
       var category_search = req.body.columns?.[1]?.search?.value
         ? { $or: [{ category_id: req.body.columns[1].search.value }] }
@@ -485,12 +504,14 @@ module.exports = {
       var date_search = req.body.columns?.[3]?.search?.value
         ? { $or: [{ date: req.body.columns[3].search.value }] }
         : {};
-  
+
       var common_search = req.body.search?.value
         ? {
             $or: [
               { headline: { $regex: req.body.search.value, $options: "i" } },
-              { breaking_news: { $regex: req.body.search.value, $options: "i" } },
+              {
+                breaking_news: { $regex: req.body.search.value, $options: "i" },
+              },
               { description: { $regex: req.body.search.value, $options: "i" } },
               { image: { $regex: req.body.search.value, $options: "i" } },
               { four_lines: { $regex: req.body.search.value, $options: "i" } },
@@ -498,11 +519,11 @@ module.exports = {
             ],
           }
         : {};
-  
+
       var searchStr = {
         $and: [common_search, category_search, date_search],
       };
-  
+
       // Category mapping
       const categoryMap = {
         1: "Shipping News",
@@ -514,15 +535,15 @@ module.exports = {
         7: "International",
         8: "Aviation Cargo Express",
       };
-  
+
       // Count total records
       News.count({}, function (err, recordsTotal) {
         if (err) throw err;
-  
+
         // Count filtered records
         News.count(searchStr, function (err, recordsFiltered) {
           if (err) throw err;
-  
+
           // Fetch one news per category (total 8 news)
           let newsPromises = Object.keys(categoryMap).map((categoryId) => {
             return News.findOne({ category_id: categoryId })
@@ -530,18 +551,19 @@ module.exports = {
               .lean()
               .exec();
           });
-  
+
           Promise.all(newsPromises)
             .then((newsByCategory) => {
               // Filter out null values (if no news exists for a category)
               let filteredNews = newsByCategory.filter((news) => news !== null);
-  
+
               // Add category name to each news item
               filteredNews = filteredNews.map((news) => ({
                 ...news,
-                category_name: categoryMap[news.category_id] || "Unknown Category",
+                category_name:
+                  categoryMap[news.category_id] || "Unknown Category",
               }));
-  
+
               // Send response
               res.send({
                 draw: req.body.draw || 0,
@@ -563,43 +585,42 @@ module.exports = {
   },
 
   get_news_by_category_id: function (req, res) {
-   
     try {
-      const categoryId = parseInt(req.body.categoryId); // Ensure it's a number   
+      const categoryId = parseInt(req.body.categoryId); // Ensure it's a number
       const page = parseInt(req.body.page) || 1; // Extract page number from query params
       const limit = 5; // 5 news per page
       const skip = (page - 1) * limit;
-  
-      console.log("Category ID:", categoryId);
-      console.log("page",page)
 
-     
+      console.log("Category ID:", categoryId);
+      console.log("page", page);
+
       // Validate and extract order
-      var col =
-        req.body.columns?.[req.body.order?.[0]?.column]?.data || "date";
+      var col = req.body.columns?.[req.body.order?.[0]?.column]?.data || "date";
       var order = req.body.order?.[0]?.dir === "asc" ? 1 : -1;
-  
+
       // Validate and extract search filters
       var date_search = req.body.columns?.[3]?.search?.value
         ? { date: req.body.columns[3].search.value }
         : {};
-  
-      var common_search = req.body.search?.value 
+
+      var common_search = req.body.search?.value
         ? {
             $or: [
               { headline: { $regex: req.body.search.value, $options: "i" } },
-              { breaking_news: { $regex: req.body.search.value, $options: "i" } },
+              {
+                breaking_news: { $regex: req.body.search.value, $options: "i" },
+              },
               { description: { $regex: req.body.search.value, $options: "i" } },
               { four_lines: { $regex: req.body.search.value, $options: "i" } },
               { sql_id: { $regex: req.body.search.value, $options: "i" } },
             ],
           }
         : {};
-  
+
       var searchStr = {
         $and: [{ category_id: categoryId }, common_search, date_search],
       };
-  
+
       // Category mapping
       const categoryMap = {
         1: "Shipping News",
@@ -611,14 +632,16 @@ module.exports = {
         7: "International",
         8: "Aviation Cargo Express",
       };
-  
+
       // Count total records for pagination
       News.count({ category_id: categoryId }, function (err, totalRecords) {
         if (err) {
           console.error("Database Error (countDocuments):", err);
-          return res.status(500).json({ error: "Database error while counting records." });
+          return res
+            .status(500)
+            .json({ error: "Database error while counting records." });
         }
-  
+
         // Fetch paginated news
         News.find(
           searchStr,
@@ -631,15 +654,18 @@ module.exports = {
           .exec(function (err, results) {
             if (err) {
               console.error("Database Error (find):", err);
-              return res.status(500).json({ error: "Database error while fetching records." });
+              return res
+                .status(500)
+                .json({ error: "Database error while fetching records." });
             }
-  
+
             // Add category name
             results = results.map((news) => ({
               ...news,
-              category_name: categoryMap[news.category_id] || "Unknown Category",
+              category_name:
+                categoryMap[news.category_id] || "Unknown Category",
             }));
-  
+
             // Send response
             res.json({
               page,
@@ -654,7 +680,7 @@ module.exports = {
       res.status(500).json({ error: "Internal server error" });
     }
   },
-  
+
   get_news: function (req, res) {
     try {
       // Validate and extract order
@@ -681,6 +707,7 @@ module.exports = {
               { description: { $regex: req.body.search.value, $options: "i" } },
               { four_lines: { $regex: req.body.search.value, $options: "i" } },
               { sql_id: { $regex: req.body.search.value, $options: "i" } },
+              { inFocus: { $regex: req.body.search.value, $options: "i" } },
             ],
           }
         : {};
@@ -700,7 +727,7 @@ module.exports = {
           // Fetch filtered records
           News.find(
             searchStr,
-            "_id category_id headline date breaking_news four_lines image sql_id description",
+            "_id category_id headline date breaking_news four_lines image sql_id description inFocus",
             {
               skip: Number(req.body.start) || 0,
               limit:

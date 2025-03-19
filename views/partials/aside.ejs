@@ -179,14 +179,55 @@
           <i class="fa fa-angle-left pull-right"></i>
         </a>
         <ul class="treeview-menu">
-          <li class="<%= (url == '/polls/list') ? 'active' : '' %>">
+          <li class="<%= (url == '/files/list') ? 'Active' : '' %>">
             <a href="/files/list"><i class="fa fa-circle-o"></i> List Files </a>
           </li>
-          <li class="<%= (url == '/polls/add') ? 'active' : '' %>">
+          <li class="<%= (url == '/files/add') ? 'Active' : '' %>">
             <a href="/files/add"><i class="fa fa-circle-o"></i> Add Files </a>
           </li>
         </ul>
     </li>    
+
+    <% if (url == '/videoNews/list' || url == '/VideoNews/add') { %>
+      <li class="treeview active">
+    <% } else { %>
+      <li class="treeview">
+    <% } %>
+        <a href="#">
+          <i class="fa fa-film"></i> <span>Video News</span>
+          <i class="fa fa-angle-left pull-right"></i>
+        </a>
+        <ul class="treeview-menu">
+          <li class="<%= (url == '/videoNews/list') ? 'Active' : '' %>">
+            <a href="/videoNews/list"><i class="fa fa-circle-o"></i> List Files </a>
+          </li>
+          <li class="<%= (url == '/videoNews/list') ? 'Active' : '' %>">
+            <a href="/VideoNews/add"><i class="fa fa-circle-o"></i> Add Files </a>
+          </li>
+        </ul>
+    </li>    
+
+    <% if (url == '/adds/list' || url == '/adds/add' || url == '/adds/link') { %>
+      <li class="treeview active">
+    <% } else { %>
+      <li class="treeview">
+    <% } %>
+        <a href="#">
+          <i class="fa fa-bullhorn"></i> <span>Ads</span>
+          <i class="fa fa-angle-left pull-right"></i>
+        </a>
+        <ul class="treeview-menu">
+          <li class="<%= (url == '/adds/list') ? 'Active' : '' %>">
+            <a href="/adds/list"><i class="fa fa-circle-o"></i> List Ads </a>
+          </li>
+          <li class="<%= (url == '/adds/add') ? 'Active' : '' %>">
+            <a href="/adds/add"><i class="fa fa-circle-o"></i> Add Ads </a>
+          </li>
+          <li class="<%= (url == '/adds/link') ? 'Active' : '' %>">
+            <a href="/adds/link"><i class="fa fa-circle-o"></i> Link Ads </a>
+          </li>
+        </ul>
+    </li>
 
     <% if(url == '/vessels/list' || url == '/sectors/list' || url ==
     '/terminals/list' || url == '/line_agents/list' || url ==

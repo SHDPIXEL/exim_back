@@ -35,7 +35,7 @@ const FileUploadSchema = new mongoose.Schema(
     status: {
       type: String,
       enum: ["Active", "Inactive"],
-      default: "active",
+      default: "Active",
     },
   },
   { timestamps: true }
