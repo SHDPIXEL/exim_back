@@ -219,6 +219,14 @@ app.get("/adds/link", (req, res) => {
   });
 });
 
+app.get("/adds/linklist", (req, res) => {
+  console.log("User in request:", req.user);
+  res.render("adds/link_list", {
+    user: req.user || null,
+    url: req.originalUrl,
+  });
+});
+
 app.get('/news/get_news', (req, res) => {
   NewsModel.find({}).then(news => {
       res.json(news.map(item => ({
@@ -265,6 +273,7 @@ let videoNews = require("./routes/videoNews");
 let adds = require('./routes/adds')
 
 app.use("/assets", express.static(path.join(__dirname, "assets")));
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.use("/users", users);
 app.use("/app_users", app_users);

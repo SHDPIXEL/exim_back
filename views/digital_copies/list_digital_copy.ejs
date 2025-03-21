@@ -47,9 +47,10 @@
 	                                <thead>
 	                                    <tr>
 	                                        <th>Sr. No.</th>
-                                            <th>Name</th>
 	                                        <th>Url</th>
+                                            <th>Date</th> <!-- New Column Added -->
 	                                        <th>Image</th>
+                                            <th>Edition</th> <!-- ✅ New Location Column -->
 	                                        <th>Status</th>
 	                                        <th>Action</th>
 	                                    </tr>
@@ -59,8 +60,9 @@
                                         <tr>
                                             <th></th>
                                             <th></th>
+                                            <th></th> <!-- Empty for filtering -->
                                             <th></th>
-                                            <th></th>
+                                            <th id="location"></th> <!-- ✅ Added footer for filtering -->
                                             <th id="status"></th>
                                             <th></th>
                                         </tr>
@@ -94,72 +96,84 @@
                                 </select>` );
             // });
 
-        	ajax_digital_copies_table = $('#digital_copies_table').DataTable({
-            processing: true,
-            serverSide: true,
-            ajax: {
-            	type: 'POST',
-                url : "/digital_copies/get_digital_copies",
-            },
-            // language: {searchPlaceholder: "Search Headline, Link Url and Four Lnes"},
-            columns: [
-                {data: null},
-                {data: 'name', name: 'name'},
-                {data: 'url', name: 'url',
-                    'render': function( data, type, row, meta) {
-                        if(type === 'display') {
-                            return '<a href="'+data+'" target="_blank">'+data+'</a>';
-                        } else {
-                            return data;
-                        }
-                    }
-                },
-                {data: 'image', name: 'image', 
-                    'render': function( data, type, row, meta) {
-                        return '<img src="'+data+'" width="100" height="100" alt="No Image"/>';
-                    }
-                },
-                {data: 'status', name: 'status',
-                    'render': function( data, type, row, meta) {
-                        if(data == '1') {
-                            return 'Active';
-                        } else if(data == '0') {
-                            return 'Inactive';
-                        } else {
-                            return data;
-                        }
-                    }
-                },
-                {defaultContent: '<a href="#" class="edit btn btn-primary btn-xs"><i class="fa fa-pencil-square-o"></i> Edit</a>&nbsp;<button type="button" class="delete btn btn-danger btn-xs"><i class="fa fa-trash"></i> Delete</button>'},
-                {data: '_id', name: '_id', searchable: false, visible: false}
-            ],
-            "order": [
-                [6, "desc"]
-            ],
-            "columnDefs": [
-                {
-                    "searchable": false,
-                    "orderable": false,
-                    "targets": [0, 3, 5]
-                }
-            ],
-            "pageLength": 25,
-            lengthMenu: [
-                    [ 25, 50, 100, 200, -1 ],
-                    [ 25, 50, 100, 200, 'All' ]
-            ],
-            'fnCreatedRow': function (nRow, aData, iDataIndex) {
-            	// console.log(aData._id);
-		        $(nRow).attr('id', aData._id); // or whatever you choose to set as the id
-		         // $('td', nRow).eq(0).html(iDataIndex + 1);
-		    },
-		    "fnRowCallback" : function(nRow, aData, iDisplayIndex) {
-                $("td:first", nRow).html(iDisplayIndex +1);
-               return nRow;
-            }
-        	});
+            // ✅ Add Location Filter Below This Line
+            $('#digital_copies_table tfoot th#location').html( `<select class="form-control">
+                <option value="">Select Edition</option>
+                <option value="Mumbai">Mumbai</option>
+				<option value="Gujarat">Gujarat</option>
+				<option value="Chennai">Chennai</option>
+				<option value="Delhi/NCR">Delhi/NCR</option>
+				<option value="Kolkata">Kolkata</option>
+				<option value="Tuticorin">Tuticorin</option>
+				<option value="kochi">kochi</option>
+            </select>` );
 
-            ajax_digital_copies_table.columns([4]).every( function () {        
+        	if ($("#digital_copies_table").length) {
+                ajax_digital_copies_table = $("#digital_copies_table").DataTable({
+                    processing: true,
+                    serverSide: true,
+                    ajax: {
+                        type: "POST",
+                        url: "/digital_copies/get_digital_copies",
+                    },
+                    columns: [
+                        { data: null },
+                        { data: "url", name: "url",
+                            render: function (data, type, row, meta) {
+                                return type === "display" ? `<a href="${data}" target="_blank">${data}</a>` : data;
+                            }
+                        },
+                        { 
+                            data: "dateISO", name: "date",
+                            render: function (data) {
+                                if (!data) return "N/A"; // Handle missing dates
+                                const formattedDate = new Date(data).toLocaleDateString("en-GB", { 
+                                    year: "numeric", month: "short", day: "numeric" 
+                                });
+                                return formattedDate !== "Invalid Date" ? formattedDate : "N/A";
+                            }
+                        },
+                        { data: "image", name: "image",
+                            render: function (data) {
+                                return `<img src="${data}" width="100" height="100" alt="No Image"/>`;
+                            }
+                        },
+                        { 
+                            data: "location", name: "location", // ✅ Added Location Column
+                            render: function (data) {
+                                return data ? data : "Not Specified";
+                            }
+                        },
+                        { data: "status", name: "status",
+                            render: function (data) {
+                                return data == "1" ? "Active" : "Inactive";
+                            }
+                        },
+                        {
+                            defaultContent:
+                                '<a href="#" class="edit btn btn-primary btn-xs"><i class="fa fa-pencil-square-o"></i> Edit</a> ' +
+                                '<button type="button" class="delete btn btn-danger btn-xs"><i class="fa fa-trash"></i> Delete</button>',
+                        },
+                    ],
+                    order: [[2, "desc"]],
+                    columnDefs: [
+                        { searchable: false, orderable: false, targets: [0, 5, 6] }
+                    ],
+                    pageLength: 25,
+                    lengthMenu: [[25, 50, 100, -1], [25, 50, 100, "All"]],
+                    fnCreatedRow: function (nRow, aData) {
+                        $(nRow).attr("id", aData._id);
+                    },
+                    fnRowCallback: function (nRow, aData, iDisplayIndex) {
+                        $("td:first", nRow).html(iDisplayIndex + 1);
+                        return nRow;
+                    }
+                });
+            } else {
+                console.error("Table #digital_copies_table not found!");
+            }
+
+            ajax_digital_copies_table.columns([3]).every( function () {        
                 var that = this;
                 $( 'select', this.footer() ).on( 'change', function () {
                     if ( that.search() !== this.value ) {
@@ -195,28 +209,20 @@
                         data:id,
                         success: function(data) {
 
-                            var res = data.split("|"); 
-                            if(res[0]=='error')
-                            {
-                                $('#errorMsg').html(res[1]);
+                            console.log("Response:", data);
 
-                                errorMsgDiv.show();  
-
-                                successMsgDiv.hide();
-
-                                errorMsgDiv.delay(3000).fadeOut();
-                            }
-                            else if(res[0]=='success')
-                            {
-                                $('#successMsg').html(res[1]);
-
-                                successMsgDiv.show();
-
-                                errorMsgDiv.hide();
-
-                                successMsgDiv.delay(3000).fadeOut();
-
-                                filterData();
+                            let status = data.status || "error"; // Default to error if missing
+                            let message = data.message || "Unexpected error";
+                        
+                            if (status === "error") {
+                                $('#errorMsg').html(message);
+                                $('.alert-danger').show().delay(3000).fadeOut();
+                                $('.alert-success').hide();
+                            } else if (status === "success") {
+                                $('#successMsg').html(message);
+                                $('.alert-success').show().delay(3000).fadeOut();
+                                $('.alert-danger').hide();
+                                filterData(); // Refresh the table
                             }
 
                         },

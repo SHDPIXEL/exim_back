@@ -5,6 +5,8 @@ const jwt = require("jsonwebtoken");
 const Razorpay = require("razorpay"); // For order creation
 const crypto = require("crypto"); // For verifying Razorpay payment signature
 const axios = require("axios");
+const cron = require("node-cron");
+const nodemailer = require("nodemailer");
 
 const moment = require("moment");
 
@@ -40,6 +42,8 @@ let Appointment = require("../models/appointment");
 let Sector = require("../models/sector");
 //payment Model
 let Payments = require("../models/payments");
+//userSubscription
+let UserSubscriptions = require("../models/userSubscription");
 // Port Model
 let Port = require("../models/port");
 // Vessel Model
@@ -69,6 +73,133 @@ const generateReceiptId = () => {
   const randomNumbers = crypto.randomBytes(4).toString("hex"); // Generates a random 8-character hex string
   return `receipt_exim_${randomNumbers}`;
 };
+
+// Configure email sender (Replace with actual credentials)
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL,
+    pass: process.env.PASSWORD,
+  },
+});
+
+// Function to send email
+const sendEmail = async (userEmail, message) => {
+  try {
+    await transporter.sendMail({
+      from: `"Subscription Alert" <${process.env.EMAIL}>`,
+      to: userEmail,
+      subject: "Exim India Edition Subscription Expiry Reminder",
+      text: message,
+    });
+    console.log(`📩 Email sent to ${userEmail}`);
+  } catch (error) {
+    console.error("❌ Error sending email:", error);
+  }
+};
+
+// Function to send payment confirmation email
+const sendPaymentConfirmationEmail = async (userEmail, orderId, paymentId) => {
+  try {
+    const message = `Dear Customer,\n\nYour payment for Order ID ${orderId} has been successfully processed.\n\nPayment ID: ${paymentId}\nStatus: Completed\n\nThank you for your purchase!\n\nBest regards,\nExim India`;
+
+    await transporter.sendMail({
+      from: `"Payment Confirmation" <${process.env.EMAIL}>`,
+      to: userEmail,
+      subject: "Payment Successful - Order Confirmation",
+      text: message,
+    });
+
+    console.log(`📩 Payment confirmation email sent to ${userEmail}`);
+  } catch (error) {
+    console.error("❌ Error sending payment confirmation email:", error);
+  }
+};
+
+// Function to check and send reminders
+const checkSubscriptionReminders = async () => {
+  console.log("🔍 Checking for expiring subscriptions...");
+
+  // Get today's date at start of the day
+  const today = moment().startOf("day");
+
+  // Generate reminder date ranges
+  const reminderRanges = [
+    {
+      label: "1 month",
+      start: today.clone().add(1, "month").startOf("day"),
+      end: today.clone().add(1, "month").endOf("day"),
+      message: (sub, daysLeft) => `Your Exim India subscription for Edition ${sub.location} is due for renewal in 1 month.`,
+    },
+    {
+      label: "7 days",
+      start: today.clone().add(7, "days").startOf("day"),
+      end: today.clone().add(7, "days").endOf("day"),
+      message: (sub, daysLeft) => `Your Exim India subscription for Edition ${sub.location} is due for renewal in 7 days.`,
+    },
+    {
+      label: "3 days",
+      start: today.clone().add(3, "days").startOf("day"),
+      end: today.clone().add(3, "days").endOf("day"),
+      message: (sub, daysLeft) => `Your Exim India subscription for Edition ${sub.location} will expire in 3 days.`,
+    },
+    {
+      label: "Expired Yesterday", // ✅ Check for subscriptions expired yesterday
+      start: today.clone().subtract(1, "day").startOf("day"),
+      end: today.clone().subtract(1, "day").endOf("day"),
+      message: (sub, daysLeft) => `Your Exim India subscription for Edition ${sub.location} has Been Expired yesterday. Please renew your subscription to continue accessing the service.`,
+    },
+    // New ranges for 1 month, 7 days, and 3 days
+    {
+      label: "1 month renewal reminder",
+      start: today.clone().add(1, "month").startOf("day"),
+      end: today.clone().add(1, "month").endOf("day"),
+      message: (sub, daysLeft) => `Your Exim India subscription for Edition ${sub.location} will expire in 1 month. Please ensure to renew your subscription on time to continue enjoying our services.`,
+    },
+    {
+      label: "7 days renewal reminder",
+      start: today.clone().add(7, "days").startOf("day"),
+      end: today.clone().add(7, "days").endOf("day"),
+      message: (sub, daysLeft) => `Just a reminder: your Exim India subscription for Edition ${sub.location} is expiring in 7 days. Kindly renew to avoid service interruption.`,
+    },
+    {
+      label: "3 days renewal reminder",
+      start: today.clone().add(3, "days").startOf("day"),
+      end: today.clone().add(3, "days").endOf("day"),
+      message: (sub, daysLeft) => `Alert: Your Exim India subscription for Edition ${sub.location} will expire in 3 days. Please renew to continue using our service.`,
+    },
+  ];
+
+  try {
+    for (const range of reminderRanges) {
+      console.log(`🔎 Checking subscriptions expiring in ${range.label}`);
+
+      const subscriptions = await UserSubscriptions.find({
+        expiryDate: { $gte: range.start.toDate(), $lt: range.end.toDate() },
+      }).populate("userId"); // Get user details
+
+      for (const sub of subscriptions) {
+        const userEmail = sub.userId.email; // Ensure AppUser has an email field
+        const daysLeft = moment(sub.expiryDate).diff(today, "days");
+
+        // Use the message defined for each range
+        const message = range.message(sub, daysLeft);
+
+        if (userEmail) {
+          await sendEmail(userEmail, message);
+        }
+
+        console.log(`✅ Reminder sent to ${userEmail} (${range.label})`);
+      }
+    }
+  } catch (error) {
+    console.error("❌ Error checking subscriptions:", error);
+  }
+};
+
+// Schedule job to run daily at 9 AM
+cron.schedule("0 9 * * *", checkSubscriptionReminders);
+console.log("⏳ Subscription reminder service running daily at 9 AM.");
 
 // Store Register Route Start
 module.exports = {
@@ -191,14 +322,15 @@ module.exports = {
     try {
       console.log("required", req.body);
       const { email, password, ip } = req.body; // ✅ Get IP from request body
-  
+
       // Validate required fields
       if (!email || !password || !ip) {
-        return res
-          .status(400)
-          .json({ success: 0, message: "Email, password, and IP address are required." });
+        return res.status(400).json({
+          success: 0,
+          message: "Email, password, and IP address are required.",
+        });
       }
-  
+
       // Find user by email
       const user = await AppUser.findOne({ email });
       if (!user) {
@@ -206,7 +338,7 @@ module.exports = {
           .status(400)
           .json({ success: 0, message: "Invalid email or password." });
       }
-  
+
       // Compare hashed password
       const isMatch = await bcrypt.compare(password, user.password);
       if (!isMatch) {
@@ -214,7 +346,7 @@ module.exports = {
           .status(400)
           .json({ success: 0, message: "Invalid email or password." });
       }
-  
+
       // ✅ Fetch country from IP
       let country = "Unknown"; // Default if API fails
       try {
@@ -225,7 +357,7 @@ module.exports = {
       } catch (error) {
         console.error("IP Location Fetch Error:", error.message);
       }
-  
+
       // Update login history (limit to last 10 logins)
       await AppUser.findByIdAndUpdate(
         user._id,
@@ -239,26 +371,28 @@ module.exports = {
         },
         { new: true }
       );
-  
+
       // Fetch updated user details
-      const updatedUser = await AppUser.findById(user._id).select("-password -confirm_password");
-  
+      const updatedUser = await AppUser.findById(user._id).select(
+        "-password -confirm_password"
+      );
+
       // Format login history for response
       const formattedLoginHistory = updatedUser.login_history.map((entry) => ({
         timestamp: moment(entry.timestamp).format("MMMM D, YYYY, h:mm A"),
         ip: entry.ip,
         country: entry.country, // ✅ Include only country in response
       }));
-  
+
       console.log("his", formattedLoginHistory);
-  
+
       // Generate JWT token
       const token = jwt.sign(
         { userId: user._id, email: user.email },
         process.env.SECRET_KEY,
         { expiresIn: "1h" }
       );
-  
+
       return res.status(200).json({
         success: 1,
         message: "Login Successful.",
@@ -286,21 +420,22 @@ module.exports = {
       return res
         .status(500)
         .json({ success: 0, message: "Something went wrong.", error: err });
-    }  
+    }
   },
-  
+
   changePassword: async function (req, res) {
     try {
       const { oldPassword, newPassword, confirmPassword } = req.body;
-  
+
       // Check if all fields are provided
       if (!oldPassword || !newPassword || !confirmPassword) {
         return res.status(400).json({
           success: 0,
-          message: "All fields (oldPassword, newPassword, confirmPassword) are required.",
+          message:
+            "All fields (oldPassword, newPassword, confirmPassword) are required.",
         });
       }
-  
+
       // Check if new password and confirm password match
       if (newPassword !== confirmPassword) {
         return res.status(400).json({
@@ -308,44 +443,48 @@ module.exports = {
           message: "New password and confirm password do not match.",
         });
       }
-  
+
       // Extract userId from token
       const token = req.headers.authorization?.split(" ")[1];
       if (!token) {
-        return res.status(401).json({ success: 0, message: "Unauthorized: Token missing." });
+        return res
+          .status(401)
+          .json({ success: 0, message: "Unauthorized: Token missing." });
       }
-  
+
       let decoded;
       try {
         decoded = jwt.verify(token, process.env.SECRET_KEY);
       } catch (err) {
         return res.status(401).json({ success: 0, message: "Invalid token." });
       }
-  
+
       const userId = decoded.userId;
-  
+
       // Find user by ID
       const user = await AppUser.findById(userId);
       if (!user) {
         return res.status(404).json({ success: 0, message: "User not found." });
       }
-  
+
       // Check if old password matches the stored hashed password
       const isMatch = await bcrypt.compare(oldPassword, user.password);
       if (!isMatch) {
-        return res.status(400).json({ success: 0, message: "Old password is incorrect." });
+        return res
+          .status(400)
+          .json({ success: 0, message: "Old password is incorrect." });
       }
-  
+
       // Hash the new password
       const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hash(newPassword, salt);
-  
+
       // Update the password
       user.password = hashedPassword;
-  
+
       // ✅ Save user without validating `login_history`
       await user.save({ validateBeforeSave: false });
-  
+
       return res.status(200).json({
         success: 1,
         message: "Password changed successfully.",
@@ -359,11 +498,9 @@ module.exports = {
       });
     }
   },
-  
 
   orders: async function (req, res) {
     try {
-      // Extract token from headers
       const token = req.headers.authorization?.split(" ")[1];
       if (!token) {
         return res
@@ -371,23 +508,16 @@ module.exports = {
           .json({ success: 0, message: "Unauthorized: Token missing." });
       }
 
-      console.log("token", token);
-
-      // Decode token
       let decoded;
       try {
         decoded = jwt.verify(token, process.env.SECRET_KEY);
       } catch (err) {
         return res.status(401).json({ success: 0, message: "Invalid token." });
       }
-      console.log("decoded", decoded);
 
       const userId = decoded.userId;
-      console.log("userId", userId);
+      console.log("Request body:", req.body);
 
-      console.log("required", req.body);
-
-      // Extract request body
       const { amount, subscription_details, type } = req.body;
       if (!amount || isNaN(amount) || amount <= 0) {
         return res
@@ -395,68 +525,121 @@ module.exports = {
           .json({ success: 0, message: "Invalid amount provided." });
       }
 
-      // Fetch user details
       const user = await AppUser.findById(userId);
       if (!user) {
         return res.status(404).json({ success: 0, message: "User not found." });
       }
 
-      // Extract user details
       const username = user.name;
       const designation = user.contact_person_designation;
 
-      // Razorpay instance setup
+      // ✅ Check if the subscription already exists and is still active
+      for (let sub of subscription_details) {
+        const existingSubscription = await UserSubscriptions.findOne({
+          userId,
+          location: sub.location,
+          duration: sub.duration, // Check the same duration
+        });
+
+        if (existingSubscription) {
+          const currentDate = new Date();
+          const expiryDate = new Date(existingSubscription.expiryDate);
+
+          const daysLeft = Math.ceil(
+            (expiryDate - currentDate) / (1000 * 60 * 60 * 24)
+          ); // Days remaining
+
+          if (daysLeft > 30) {
+            return res.status(400).json({
+              success: 0,
+              message: `You can extend the subscription for ${
+                sub.location
+              } only when 1 month or less is left. Your current expiry date is ${expiryDate.toDateString()}.`,
+            });
+          }
+        }
+      }
+
+      // ✅ Proceed to create Razorpay order if no conflicts
       const instance = new Razorpay({
         key_id: process.env.RAZORPAY_KEY_ID,
         key_secret: process.env.RAZORPAY_KEY_SECRET,
       });
 
       const receiptId = generateReceiptId();
-
-      // Order options
       const options = {
-        amount: amount * 100, // Convert to smallest currency unit (paise)
+        amount: amount * 100, // Convert to paise
         currency: "INR",
         receipt: receiptId,
       };
 
-      // Create Razorpay order
       const razorpayOrder = await instance.orders.create(options);
-      console.log("rzp", razorpayOrder);
       if (!razorpayOrder) {
         return res
           .status(500)
           .json({ success: 0, message: "Error creating Razorpay order." });
       }
 
-      console.log("Type of subscription_details:", typeof subscription_details);
-      console.log("Subscription Details:", subscription_details);
-
-      // ✅ Calculate expiry date for each subscription before saving
-      const updatedSubscriptions = subscription_details.map((sub) => {
+      let updatedSubscriptions = [];
+      for (let sub of subscription_details) {
         let expiryDate = null;
 
         if (sub.duration) {
-          const durationMatch = sub.duration.match(/(\d+)\s*year/);
+          const durationMatch = sub.duration.match(/(\d+)\s*(year|years)/i);
           if (durationMatch) {
             const durationYears = parseInt(durationMatch[1], 10);
-            expiryDate = new Date(); // Current date
+            expiryDate = new Date();
             expiryDate.setFullYear(expiryDate.getFullYear() + durationYears);
           }
         }
 
-        return {
-          ...sub,
-          expiryDate, // Add calculated expiry date
-        };
-      });
+        updatedSubscriptions.push({ ...sub, expiryDate });
 
-      // Save payment details in database
+        console.log("Updated Subscriptions:", updatedSubscriptions);
+
+        // ✅ Update or create new UserSubscription
+        const existingSubscription = await UserSubscriptions.findOne({
+          userId,
+          location: sub.location,
+        });
+
+        if (existingSubscription) {
+          let newExpiryDate = new Date(existingSubscription.expiryDate);
+          let currentDate = new Date();
+
+          if (newExpiryDate < currentDate) {
+            newExpiryDate = currentDate;
+          }
+
+          newExpiryDate.setFullYear(
+            newExpiryDate.getFullYear() +
+              (expiryDate
+                ? expiryDate.getFullYear() - currentDate.getFullYear()
+                : 0)
+          );
+
+          existingSubscription.expiryDate = newExpiryDate;
+          existingSubscription.duration = sub.duration;
+          existingSubscription.price = sub.price;
+
+          await existingSubscription.save();
+        } else {
+          await UserSubscriptions.create({
+            userId,
+            location: sub.location,
+            expiryDate,
+            duration: sub.duration,
+            price: sub.price,
+          });
+        }
+      }
+
+      // ✅ Create a new payment record
       const newPayment = await Payments.create({
         userId,
         username,
         designation,
-        subscription_details: updatedSubscriptions, // ✅ Updated with expiry dates
+        subscription_details: updatedSubscriptions,
         type,
         amount,
         paymentStatus: "pending",
@@ -464,14 +647,11 @@ module.exports = {
         razorpayOrderId: razorpayOrder.id,
       });
 
-      console.log("payment", newPayment);
-
-      // Success response
       return res.status(201).json({
         success: 1,
-        message: "Order created successfully",
+        message: "Order created successfully, subscription updated",
         razorpayOrder,
-        paymentDetails: newPayment,
+        newPayment,
       });
     } catch (error) {
       console.error("Error in orders:", error);
@@ -495,10 +675,10 @@ module.exports = {
           .json({ success: 0, message: "Payment details are missing." });
       }
 
-      // Find the order in the database
-      const payment = await Payments.findOne({
-        razorpayOrderId: razorpayOrderId,
-      });
+      // Find the order in the database and populate user details
+      const payment = await Payments.findOne({ razorpayOrderId }).populate(
+        "userId"
+      );
 
       if (!payment) {
         return res
@@ -522,10 +702,21 @@ module.exports = {
       payment.paymentStatus = "success";
       payment.razorpayPaymentId = razorpayPaymentId;
       payment.razorpaySignature = razorpaySignature;
-      payment.status = "completed"; // Mark as completed
+      payment.status = "completed";
       await payment.save();
 
       console.log("paymentsuccess", payment);
+
+      // Fetch user email
+      const userEmail = payment.userId.email; // Assuming `email` field exists in `AppUser`
+
+      if (userEmail) {
+        await sendPaymentConfirmationEmail(
+          userEmail,
+          razorpayOrderId,
+          razorpayPaymentId
+        );
+      }
 
       return res.status(200).json({
         success: 1,
@@ -611,6 +802,20 @@ module.exports = {
     }
   },
 
+  getUserSubscribe: async function (req, res) {
+    try {
+      const userSubscription = await UserSubscriptions.find();
+
+      res.status(200).json({ message: "Data retrived", userSubscription });
+    } catch (error) {
+      console.error("Error in getPayments:", error);
+      return res.status(500).json({
+        success: 0,
+        message: "Internal server error",
+        error: error.message,
+      });
+    }
+  },
   // Store Register Route End
 
   // Get News Route Start

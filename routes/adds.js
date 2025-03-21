@@ -66,6 +66,11 @@ router.get("/link", (req, res) => {
   res.render("adds/link_adds", { user: req.user || null });
 });
 
+router.get("/linklist", (req, res) => {
+  console.log("req user", req.user);
+  res.render("adds/link_list", { user: req.user || null });
+});
+
 router.post(
   "/store",
   upload.fields([
@@ -75,6 +80,7 @@ router.post(
   Adds.createAdd
 );
 router.post("/get_adds",Adds.getAllAdds)
+router.post("/get_adds_Admin",Adds.getAllAddsAdmin)
 router.post("/update-media-status", Adds.updateMediaStatus);
 router.delete("/delete/:addId", Adds.deleteAdd);
 router.get('/manage-ads', async (req, res) => {
@@ -86,6 +92,10 @@ router.get('/manage-ads', async (req, res) => {
   }
 });
 router.get("/media", Adds.getMediaFromAdds);
-router.post("/media/select", Adds.saveSelectedMedia); // Save selected Ad
+router.post("/media/store", Adds.saveSelectedMedia); // Save selected Ad
+router.post("/get_selected",Adds.getSelectedMedia)
+router.post("/get_selected_Admin",Adds.getSelectedMediaAdmin)
+router.delete("/delete-selected-media/:id", Adds.deleteSelectedMedia);
+router.post("/updateSelectedMediaStatus", Adds.updateSelectedMediaStatus);
 
 module.exports = router;

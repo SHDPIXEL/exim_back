@@ -1,14 +1,20 @@
 const mongoose = require("mongoose");
 
 const adSchema = new mongoose.Schema({
-    selectedMedia: [
+  selectedMedia: [
+    {
+      position: String, // e.g., "top-left"
+      media: [
         {
-            position: String, // Static position (e.g., "top-left", "bottom-right")
-            mediaUrl: String, // Selected image/video URL
-            mediaType: String // "image" or "video"
+          mediaUrl: String, // URL of the media
+          mediaType: String, // "image" or "video"
+          sequenceNumber: Number, // Sequence number
+          status: { type: String, enum: ["Active", "Inactive"], default: "Active" }, // Media status
         }
-    ]
+      ]
+    }
+  ]
 });
 
-const selectedAd = mongoose.model("Ad", adSchema);
-module.exports= selectedAd;
+const SelectedAd = mongoose.model("Ad", adSchema);
+module.exports = SelectedAd;

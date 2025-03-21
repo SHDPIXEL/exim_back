@@ -51,6 +51,7 @@ router.post("/order", services.orders);
 router.post("/order-success", services.orderSuccess);
 router.post("/change_password", services.changePassword);
 router.post("/get_payments", services.get_payments);
+router.post("/get_userSubscription", services.getUserSubscribe);
 
 // Get Registered User Route Start
 /*router.get('/register', function(req, res) {

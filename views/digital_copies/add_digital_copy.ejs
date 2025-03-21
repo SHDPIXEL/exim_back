@@ -76,99 +76,81 @@
 				</h1>
 			</section>
 			<section class="content">
-				<!-- for main content of the page -->
 				<div class="row">
 					<div class="col-md-12">
-						<!-- general form elements -->
 						<div class="box box-info">
 							<div class="box-header">
 								<h3 class="box-title">Add Digital Copy</h3>
-							</div><!-- /.box-header -->
-							<!-- form start -->
+							</div>
 							<form id="digital_copy_form" method="POST" class="form-horizontal" role="form" enctype="multipart/form-data">
 								<div class="box-body">
-									<div id="AlertInfo">                            
-										<div class="alert alert-danger" style="display: none">
-											<i class="fa fa-warning"></i>
-											<button class="close" data-dismiss="alert">×</button>
-											<span id="errorMsg">You have some form errors. Please check below.</span>
-										</div>
-
-										<div class="alert alert-success " style="display: none">
-											<i class="fa fa-check"></i>
-											<button class="close" data-dismiss="alert">×</button>
-											<span id="successMsg">Your form validation is successful!</span>
-										</div>
-									</div>
-
 									<div class="row">
-										<div class="col-md-12">
-											<div class="col-md-6">
-												<div class="col-md-12">
-													<div class="form-group">
-														<label class="col-md-4 control-label">Name <span style="color:red;">*</span></label>
-														<div class="col-md-6">
-															<input type="text" class="form-control" id="name" name="name" placeholder="Name">
-														</div>
-													</div>
-												</div>
-
-												<div class="col-md-12">
-                                    				<div class="form-group">
-                                        				<label class="col-md-4 control-label">Image <span style="color:red;">*</span></label>
-                                        				<label class="col-md-offset-1 btn btn-primary btn-file"><i class="fa fa-folder-open" aria-hidden="true"></i> Browse <input type="file" id="image" name="image" style="display: none;">
-                                        				</label>
-                                    				</div>
-                                				</div>
-											</div>   
-
-											<div class="col-md-6">
-												<div class="col-md-12">
-													<div class="form-group">
-														<label class="col-md-4 control-label">Status <span style="color:red;">*</span></label>
-														<div class="col-md-6">
-															<select class="form-control input-sm" id="status" name="status" placeholder="Date">
-																<option value="">Select Status</option>
-																<option value="1">Active</option>
-																<option value="0">Inacive</option>
-															</select>
-														</div>
-													</div>
-												</div>
-
-												<div class="col-md-12 col-md-offset-2" id="image_preview"></div>
-											</div>
-										</div>
-
-										<div class="col-md-12">
+										<div class="col-md-6">
 											<div class="form-group">
-												<label class="col-md-2 control-label">Link Url <span style="color:red;">*</span></label>
-												<div class="col-md-10">
-													<input type="text" class="form-control input-sm" id="url" name="url" placeholder="Link Url">
+												<label class="col-md-4 control-label">Date <span style="color:red;">*</span></label>
+												<div class="col-md-8">
+													<input type="date" class="form-control input-sm" id="date_added" name="date_added">
+												</div>
+											</div>
+										</div>
+										<div class="col-md-6">
+											<div class="form-group">
+												<label class="col-md-4 control-label">Edition <span style="color:red;">*</span></label>
+												<div class="col-md-8">
+													<select class="form-control input-sm" id="location" name="location">
+														<option value="">Select Location</option>
+														<option value="Mumbai">Mumbai</option>
+														<option value="Gujarat">Gujarat</option>
+														<option value="Chennai">Chennai</option>
+														<option value="Delhi/NCR">Delhi/NCR</option>
+														<option value="Kolkata">Kolkata</option>
+														<option value="Tuticorin">Tuticorin</option>
+														<option value="kochi">kochi</option>
+													</select>
+												</div>
+											</div>
+										</div>
+										<div class="col-md-6">
+											<div class="form-group">
+												<label class="col-md-4 control-label">Status <span style="color:red;">*</span></label>
+												<div class="col-md-8">
+													<select class="form-control input-sm" id="status" name="status">
+														<option value="">Select Status</option>
+														<option value="1">Active</option>
+														<option value="0">Inactive</option>
+													</select>
 												</div>
 											</div>
 										</div>
 									</div>
-								</div>        
-
-								<div class="box-footer">
 									<div class="row">
-										<div class="col-md-5 hidden-sm"></div>
-										<div class="col-md-6 col-sm-12">
-											<span class="pull-right col-sm-pull-left">
-												<button type="submit" id="save_digital_copy" class="btn btn-sm btn-success"><i class="glyphicon glyphicon-check"></i> Submit</button>
-												<button type="reset" class="btn btn-sm btn-danger"><i class="glyphicon glyphicon-refresh"></i> Reset</button>
-											</span>
+										<div class="col-md-6">
+											<div class="form-group">
+												<label class="col-md-4 control-label">Image <span style="color:red;">*</span></label>
+												<div class="col-md-8">
+													<label class="btn btn-primary btn-file"><i class="fa fa-folder-open" aria-hidden="true"></i> Browse <input type="file" id="image" name="image" style="display: none;"></label>
+												</div>
+											</div>
+										</div>
+										<div class="col-md-6" id="image_preview"></div>
+									</div>
+									<div class="form-group">
+										<label class="col-md-2 control-label">Link Url <span style="color:red;">*</span></label>
+										<div class="col-md-10">
+											<input type="text" class="form-control input-sm" id="url" name="url" placeholder="Link Url">
 										</div>
 									</div>
 								</div>
+								<div class="box-footer text-right">
+									<button type="submit" id="save_digital_copy" class="btn btn-success"><i class="glyphicon glyphicon-check"></i> Submit</button>
+									<button type="reset" class="btn btn-danger"><i class="glyphicon glyphicon-refresh"></i> Reset</button>
+								</div>
 							</form>
-						</div><!-- /.box -->
+						</div>
 					</div>
 				</div>
 			</section>
 		</div>
-
 		<footer class="main-footer">
 			<% include ../partials/footer %>
 		</footer>
@@ -218,7 +200,14 @@
 	                    },
 	                    "image": {
 	                    	required: true
-	                    }
+	                    },
+						"date": {
+							required: true,
+							date: true
+						},
+						"location": { // ✅ Ensure location is selected
+							required: true
+						}
 	                },
 
 	                invalidHandler: function (event, validator) { //display error alert on form submit     
@@ -244,6 +233,9 @@
 
 	                submitHandler: function (form) {
 	                    var formData = new FormData($("#digital_copy_form")[0]);
+						formData.set("date_added", $("#date_added").val()); // ✅ Use set() instead of append()
+						formData.set("location", $("#location").val()); // ✅ Use set() for location too
+						console.log("Date Added:", $("#date_added").val());
 
 	                    $.ajax({
 	                        url: "/digital_copies/store",
@@ -254,24 +246,35 @@
 	                        processData:false,
 	                        success: function(data)
 	                        {
-	                            var res = data.split("|"); 
-	                            if(res[0]=='error')
-	                            {
-	                                $('#errorMsg').html(res[1]);
-	                                errorMsgDiv.show();  
-	                                successMsgDiv.hide();
-	                                errorMsgDiv.delay(3000).fadeOut();
-	                            }
-	                            else if(res[0]=='success')
-	                            {
-	                                $('#successMsg').html(res[1]);
-	                                successMsgDiv.show();
-	                                errorMsgDiv.hide();
-	                                successMsgDiv.delay(3000).fadeOut();
-	                                setTimeout(function() {
-	                                window.location.href = "/digital_copies/list";
-	                                }, 1000);
-	                            }
+								console.log("Response:", data); // Debugging: Check response format
+
+								// Ensure data is an object, otherwise parse it
+								if (typeof data === "string") {
+									try {
+										data = JSON.parse(data); // Convert to JSON if it's a string
+									} catch (e) {
+										console.error("Invalid JSON response:", data);
+										return;
+									}
+								}
+							
+								// Check for status and message keys
+								let status = data.status || "error"; // Default to "error" if missing
+								let message = data.message || "Unexpected error occurred.";
+							
+								if (status === "error") {
+									$('#errorMsg').html(message);
+									$('.alert-danger').show().delay(3000).fadeOut();
+									$('.alert-success').hide();
+								} else if (status === "success") {
+									$('#successMsg').html(message);
+									$('.alert-success').show().delay(3000).fadeOut();
+									$('.alert-danger').hide();
+							
+									setTimeout(function () {
+										window.location.href = "/digital_copies/list"; // Redirect after success
+									}, 1000);
+								}
 	                        }
 	                    });
 	                }

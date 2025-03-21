@@ -4,7 +4,7 @@ const multer = require('multer');
 
 var storage = multer.diskStorage({
       destination: function (req, file, cb) {
-        cb(null, './public/uploads/digital_copies');
+        cb(null, './uploads/digital_copies');
       },
       filename: function (req, file, cb) {
         cb(null, Date.now() + file.originalname);
@@ -22,6 +22,7 @@ router.get('/list', is_authenticated, digital_copies.list);
 
 // Get Digital Copies Route Start
 router.post('/get_digital_copies', digital_copies.get_digital_copies);
+router.post('/get_bydate', digital_copies.getDigitalCopiesByDate);
 // Get Digital Copies Route End
 
 // Digital Copy Add Route Start

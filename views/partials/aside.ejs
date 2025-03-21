@@ -207,7 +207,7 @@
         </ul>
     </li>    
 
-    <% if (url == '/adds/list' || url == '/adds/add' || url == '/adds/link') { %>
+    <% if (url == '/adds/list' || url == '/adds/add' || url == '/adds/link' || url == "/adds/linklist") { %>
       <li class="treeview active">
     <% } else { %>
       <li class="treeview">
@@ -224,7 +224,10 @@
             <a href="/adds/add"><i class="fa fa-circle-o"></i> Add Ads </a>
           </li>
           <li class="<%= (url == '/adds/link') ? 'Active' : '' %>">
-            <a href="/adds/link"><i class="fa fa-circle-o"></i> Link Ads </a>
+            <a href="/adds/link"><i class="fa fa-circle-o"></i> Select Ads </a>
+          </li>
+          <li class="<%= (url == '/adds/linklist') ? 'Active' : '' %>">
+            <a href="/adds/linklist"><i class="fa fa-circle-o"></i> List Selected Ads </a>
           </li>
         </ul>
     </li>

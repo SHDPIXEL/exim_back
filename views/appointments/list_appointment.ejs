@@ -107,7 +107,11 @@
             serverSide: true,
             ajax: {
             	type: 'POST',
-                url : "/appointments/get_appointments",
+                url : "/appointments/get_appointment_website",
+                data: function (d) {
+                    d.page = Math.floor(d.start / d.length) + 1; // Convert start to page number
+                    d.length = d.length || 25; // Set default limit
+                }
             },
             // searching: false,
             columns: [

@@ -26,7 +26,7 @@
                                 <h3 class="box-title">Select Advertisement</h3>
                             </div>
 
-                            <form id="ads_form" action="/adds/media/select" method="POST" class="form-horizontal">
+                            <form id="ads_form" action="/adds/media/store" method="POST" class="form-horizontal">
                                 <div class="box-body">
                                     <div class="alert alert-danger" style="display: none">
                                         <i class="fa fa-warning"></i>
@@ -43,10 +43,33 @@
                                         <label class="col-md-3 control-label">Position <span style="color:red;">*</span></label>
                                         <div class="col-md-6">
                                             <select class="form-control" id="position" name="position" required>
-                                                <option value="top-left">Top Left</option>
-                                                <option value="top-right">Top Right</option>
-                                                <option value="bottom-left">Bottom Left</option>
-                                                <option value="bottom-right">Bottom Right</option>
+                                                <option value="Home_Top_Left">Home_Top_Left</option>
+                                                <option value="Home_Top_Right">Home_Top_Right</option>
+                                                <option value="Home_AboveEvents_Right">Home_AboveEvents_Right</option>
+                                                <option value="Home_AboveEvents_Left">Home_AboveEvents_Left</option>
+                                                <option value="Home_Subscribe">Home_Subscribe</option>
+                                                <option value="Home_Video">Home_Video</option>
+                                                <option value="Home_Bottom_Right">Home_Bottom_Right</option>
+                                                <option value="Home_Bottom_Left">Home_Bottom_Left</option>
+                                                <option value="News_Details">News_Details</option>
+                                                <option value="Video_Gallery_Details">Video_Gallery_Details</option>
+                                                <option value="Home_Above_Headlines">Home_Above_Headlines</option>
+                                                <option value="News_Bottom_Right">News_Bottom_Right</option>
+                                                <option value="News_Bottom_Left">News_Bottom_Left</option>
+                                                <option value="EximIndia_Bottom_Left">EximIndia_Bottom_Left</option>
+                                                <option value="EximIndia_Bottom_Right">EximIndia_Bottom_Right</option>
+                                                <option value="OurEditors_Bottom_Left">OurEditors_Bottom_Left</option>
+                                                <option value="OurEditors_Bottom_Right">OurEditors_Bottom_Right</option>
+                                                <option value="OurReaders_Bottom_Left">OurReaders_Bottom_Left</option>
+                                                <option value="OurReaders_Bottom_Right">OurReaders_Bottom_Right</option>
+                                                <option value="ExchangeRates_Bottom_Left">ExchangeRates_Bottom_Left</option>
+                                                <option value="ExchangeRates_Bottom_Right">ExchangeRates_Bottom_Right</option>
+                                                <option value="CustomRates_Bottom_Left">CustomRates_Bottom_Left</option>
+                                                <option value="CustomRates_Bottom_Right">CustomRates_Bottom_Right</option>
+                                                <option value="Appointments_Bottom_Left">Appointments_Bottom_Left</option>
+                                                <option value="Appointments_Bottom_Right">Appointments_Bottom_Right</option>
+                                                <option value="Video_Gallery_News">Video_Gallery_News</option>
+                                                <option value="Appointment_Main">Appointment_Main</option>
                                             </select>
                                         </div>
                                     </div>
@@ -54,23 +77,12 @@
                                     <div class="form-group">
                                         <label class="col-md-3 control-label">Select Media <span style="color:red;">*</span></label>
                                         <div class="col-md-6">
-                                            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#imagesModal">Show Images</button>
-                                            <button type="button" class="btn btn-info" data-toggle="modal" data-target="#videosModal">Show Videos</button>
+                                            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#mediaModal">Show Images/Videos</button>
                                         </div>
                                     </div>
 
-                                    <input type="hidden" name="mediaType" id="mediaType">
                                     <input type="hidden" name="mediaUrls" id="mediaUrls">
                                 </div>
-
-                                <div class="box-footer text-right">
-                                    <button type="submit" id="save_ads" class="btn btn-success">
-                                        <i class="glyphicon glyphicon-check"></i> Save Selection
-                                    </button>
-                                    <button type="reset" class="btn btn-danger">
-                                        <i class="glyphicon glyphicon-refresh"></i> Reset
-                                    </button>
-                                </div>                                
                             </form>
                         </div>
                     </div>
@@ -85,89 +97,105 @@
 
     <% include ../partials/tail %>
 
-    <!-- Images Modal -->
-    <div id="imagesModal" class="modal fade" tabindex="-1" role="dialog">
+    <!-- Media Modal -->
+    <div id="mediaModal" class="modal fade" tabindex="-1" role="dialog">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Select Images</h5>
+                    <h5 class="modal-title">Select Media</h5>
                     <button type="button" class="close" data-dismiss="modal">&times;</button>
                 </div>
-                <div class="modal-body" id="imagesContainer"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Videos Modal -->
-    <div id="videosModal" class="modal fade" tabindex="-1" role="dialog">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Select Videos</h5>
-                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <div class="modal-body">
+                    <h5>Images</h5>
+                    <div id="imagesContainer"></div>
+                    <h5>Videos</h5>
+                    <div id="videosContainer"></div>
                 </div>
-                <div class="modal-body" id="videosContainer"></div>
+                <div class="modal-footer">
+                    <button type="button" id="submitMediaSelection" class="btn btn-success">
+                        <i class="glyphicon glyphicon-check"></i> Save Selection
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                        <i class="glyphicon glyphicon-remove"></i> Close
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
         $(document).ready(function () {
-            $.get("/adds/media", function (response) {
-                if (response.success) {
-                    let imagesContainer = $("#imagesContainer");
-                    let videosContainer = $("#videosContainer");
-                    imagesContainer.empty();
-                    videosContainer.empty();
-                    
-                    let ads = response.ads;
-                    if (ads.length === 0) {
-                        imagesContainer.html("<p>No images available.</p>");
-                        videosContainer.html("<p>No videos available.</p>");
-                        return;
-                    }
-                    
-                    ads.forEach(ad => {
-                        ad.images.forEach(image => {
-                            imagesContainer.append(`
-                                <label>
-                                    <input type="checkbox" name="media" value="${image.filePath}" data-type="image">
-                                    <img src="${image.filePath}" width="100">
-                                </label>
-                            `);
-                        });
+            let selectedMedia = [];
 
-                        ad.videos.forEach(video => {
-                            videosContainer.append(`
-                                <label>
-                                    <input type="checkbox" name="media" value="${video.filePath}" data-type="video">
-                                    <video src="${video.filePath}" width="100" controls></video>
-                                </label>
-                            `);
+            // Fetch media when the modal is opened
+            $("#mediaModal").on("show.bs.modal", function () {
+                $.get("/adds/media", function (response) {
+                    if (response.success) {
+                        let imagesContainer = $("#imagesContainer");
+                        let videosContainer = $("#videosContainer");
+                        imagesContainer.empty();
+                        videosContainer.empty();
+
+                        let ads = response.ads;
+                        if (ads.length === 0) {
+                            imagesContainer.html("<p>No images available.</p>");
+                            videosContainer.html("<p>No videos available.</p>");
+                            return;
+                        }
+
+                        ads.forEach(ad => {
+                            ad.images.forEach(image => {
+                                imagesContainer.append(`
+                                    <label>
+                                        <input type="checkbox" name="media" value="${image.filePath}" data-type="image">
+                                        <img src="${image.filePath}" width="100">
+                                    </label>
+                                `);
+                            });
+
+                            ad.videos.forEach(video => {
+                                videosContainer.append(`
+                                    <label>
+                                        <input type="checkbox" name="media" value="${video.filePath}" data-type="video">
+                                        <video src="${video.filePath}" width="100" controls></video>
+                                    </label>
+                                `);
+                            });
                         });
+                    }
+                });
+            });
+
+            // Track selection order dynamically
+            $("#mediaModal").on("change", "input[name='media']", function () {
+                let mediaUrl = $(this).val();
+                let mediaType = $(this).data("type");
+
+                if ($(this).is(":checked")) {
+                    // Add media in selection order
+                    selectedMedia.push({
+                        mediaUrl: mediaUrl,
+                        mediaType: mediaType,
+                        sequenceNumber: selectedMedia.length + 1 // Assign order dynamically
+                    });
+                } else {
+                    // Remove deselected media and update sequence numbers
+                    selectedMedia = selectedMedia.filter(media => media.mediaUrl !== mediaUrl);
+                    selectedMedia.forEach((media, index) => {
+                        media.sequenceNumber = index + 1; // Reassign sequence numbers
                     });
                 }
+
+                console.log("Selected Media:", selectedMedia); // Debugging
+
+                $('#mediaUrls').val(JSON.stringify(selectedMedia)); // Store structured JSON
             });
 
-            $("#imagesContainer, #videosContainer").on("change", "input[name='media']", function () {
-                let selectedMedia = [];
-                let mediaType = "mixed";
-                $("input[name='media']:checked").each(function () {
-                    selectedMedia.push($(this).val());
-                });
-                if (selectedMedia.length > 0) {
-                    $('#mediaUrls').val(selectedMedia.join(","));
-                }
-            });
-
-            // Form submission logic
-            $('#ads_form').submit(function(e) {
-                e.preventDefault();
-
+            // Submit media selection
+            $('#submitMediaSelection').click(function () {
                 $('#save_ads').prop('disabled', true).text('Saving...');
 
-                let selectedMedia = $('#mediaUrls').val();
-                if (!selectedMedia) {
+                if (selectedMedia.length === 0) {
                     $('#errorMsg').text('Please select at least one image or video.');
                     $('.alert-danger').show().delay(3000).fadeOut();
                     $('#save_ads').prop('disabled', false).text('Save Selection');
@@ -176,13 +204,19 @@
 
                 let formData = $('#ads_form').serialize();
 
-                $.post('/adds/media/select', formData, function(response) {
+                $.post('/adds/media/store', formData, function(response) {
                     if (!response.success) {
                         $('#errorMsg').text(response.message);
                         $('.alert-danger').show().delay(3000).fadeOut();
                     } else {
                         $('#successMsg').text('Selection saved successfully!');
                         $('.alert-success').show().delay(3000).fadeOut();
+
+                        // Clear selections after successful submission
+                        $("input[name='media']").prop("checked", false);
+                        selectedMedia = []; // Reset selection list
+                        $('#mediaUrls').val("");
+                        $("#mediaModal").modal("hide");
                     }
                 }).fail(function() {
                     $('#errorMsg').text('Something went wrong. Try again.');

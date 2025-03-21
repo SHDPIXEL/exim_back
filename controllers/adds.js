@@ -119,6 +119,83 @@ module.exports = {
     }
   },
 
+  getAllAddsAdmin: async function (req, res) {
+    try {
+      const page = parseInt(req.body.page) || 1; // Default to page 1
+      const limit = parseInt(req.body.limit) || 25; // Default limit to 25
+      const skip = (page - 1) * limit;
+
+      // Get total count for pagination metadata
+      const totalRecords = await Adds.count();
+      const totalPages = Math.ceil(totalRecords / limit);
+
+      // Fetch paginated data
+      const allAdds = await Adds.find().skip(skip).limit(limit);
+
+      if (allAdds.length === 0) {
+        return res
+          .status(404)
+          .json({ success: false, message: "No ads found" });
+      }
+
+      // Transform data
+      const updatedAdds = allAdds.map((add) => ({
+        ...add.toObject(),
+        images: Array.isArray(add.images)
+          ? add.images
+              .map((image) =>
+                image && image.filePath
+                  ? {
+                      filePath: `http://192.168.1.11:4010/${image.filePath.replace(
+                        /\\/g,
+                        "/"
+                      )}`,
+                      status: image.status,
+                    }
+                  : null
+              )
+              .filter(Boolean)
+          : [],
+        videos: Array.isArray(add.videos)
+          ? add.videos
+              .map((video) =>
+                video && video.filePath
+                  ? {
+                      filePath: `http://192.168.1.11:4010/${video.filePath.replace(
+                        /\\/g,
+                        "/"
+                      )}`,
+                      status: video.status,
+                    }
+                  : null
+              )
+              .filter(Boolean)
+          : [],
+      }));
+
+      return res.status(200).json({
+        success: true,
+        message: "Ads retrieved successfully",
+        data: updatedAdds,
+        recordsTotal: totalRecords, // Required for DataTables
+        recordsFiltered: totalRecords, // Required for DataTables
+        pagination: {
+          totalRecords,
+          totalPages,
+          currentPage: page,
+          limit,
+        },
+      });
+    } catch (error) {
+      console.error("Error retrieving ads:", error.message);
+      res.status(500).json({
+        success: false,
+        message: "Error retrieving ads",
+        error: error.message,
+      });
+    }
+  },
+
   updateMediaStatus: async function (req, res) {
     try {
       const { addId, mediaType, mediaIndex, status } = req.body;
@@ -219,34 +296,242 @@ module.exports = {
       res.json({ success: true, ads });
     } catch (error) {
       console.error("❌ Error fetching ads:", error);
-      res
-        .status(500)
-        .json({
-          success: false,
-          message: "Server error",
-          error: error.message,
-        });
+      res.status(500).json({
+        success: false,
+        message: "Server error",
+        error: error.message,
+      });
     }
   },
 
   saveSelectedMedia: async function (req, res) {
     try {
-      const { position, mediaUrl, mediaType } = req.body;
+      console.log("Request body:", req.body);
+      const { position, mediaUrls } = req.body;
 
-      const newAd = new selectedAd({
-        selectedMedia: [{ position, mediaUrl, mediaType }],
+      if (!mediaUrls) {
+        return res
+          .status(400)
+          .json({ success: false, message: "No media selected" });
+      }
+
+      let mediaArray;
+      try {
+        mediaArray = JSON.parse(mediaUrls);
+      } catch (error) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Invalid media data format" });
+      }
+
+      console.log("Received media:", mediaArray);
+
+      // Find if an ad with the same position exists
+      let existingAd = await selectedAd.findOne({
+        "selectedMedia.position": position,
       });
 
-      await newAd.save();
-      res
-        .status(201)
-        .json({ success: true, message: "Ad saved successfully", newAd });
+      if (existingAd) {
+        let mediaIndex = existingAd.selectedMedia.findIndex(
+          (media) => media.position === position
+        );
+
+        if (mediaIndex !== -1) {
+          let existingUrls = new Set(
+            existingAd.selectedMedia[mediaIndex].media.map(
+              (item) => item.mediaUrl
+            )
+          );
+
+          let newMediaItems = mediaArray
+            .filter((newMedia) => !existingUrls.has(newMedia.mediaUrl))
+            .map((newMedia) => ({
+              mediaUrl: newMedia.mediaUrl,
+              mediaType: newMedia.mediaType,
+              sequenceNumber: newMedia.sequenceNumber,
+              status: "Active", // ✅ Default status set to "Active"
+            }));
+
+          if (newMediaItems.length > 0) {
+            // ✅ Update existing media list for the position
+            await selectedAd.updateOne(
+              { _id: existingAd._id, "selectedMedia.position": position },
+              { $push: { "selectedMedia.$.media": { $each: newMediaItems } } }
+            );
+          }
+        }
+
+        return res.status(200).json({
+          success: true,
+          message: "Ad updated successfully",
+          updatedAd: await selectedAd.findById(existingAd._id),
+        });
+      } else {
+        // ✅ Create a new ad entry if no existing one is found
+        const newAd = new selectedAd({
+          selectedMedia: [
+            {
+              position,
+              media: mediaArray.map((media) => ({
+                mediaUrl: media.mediaUrl,
+                mediaType: media.mediaType,
+                sequenceNumber: media.sequenceNumber,
+                status: "Active", // ✅ Default status added
+              })),
+            },
+          ],
+        });
+
+        console.log("New Ad:", newAd);
+
+        await newAd.save();
+        return res.status(201).json({
+          success: true,
+          message: "Ad saved successfully",
+          newAd,
+        });
+      }
     } catch (error) {
       res.status(500).json({
         success: false,
         message: "Error saving ad",
         error: error.message,
       });
+    }
+  },
+
+  getSelectedMedia: async function (req, res) {
+    try {
+      const allSelectedAds = await selectedAd.find();
+
+      // Transform data to rename mediaUrl -> filePath, include sequenceNumber & status
+      const transformedAds = allSelectedAds.map((ad) => ({
+        ...ad.toObject(),
+        selectedMedia: ad.selectedMedia.map((media) => ({
+          position: media.position,
+          media: media.media.map((item) => ({
+            filePath: item.mediaUrl, // Rename mediaUrl to filePath
+            mediaType: item.mediaType,
+            sequenceNumber: item.sequenceNumber, // Include sequenceNumber
+            status: item.status, // ✅ Include status field
+          })),
+        })),
+      }));
+
+      return res.status(200).json({
+        success: true,
+        message: "Selected Ads Retrieved successfully",
+        selectedAds: transformedAds,
+      });
+    } catch (error) {
+      console.error("Error retrieving selected ads:", error.message);
+      res.status(500).json({
+        success: false,
+        message: "Error retrieving selected ads",
+        error: error.message,
+      });
+    }
+  },
+
+  getSelectedMediaAdmin: async function (req, res) {
+    try {
+      const page = parseInt(req.body.page) || 1; // Default page 1
+      const limit = parseInt(req.body.limit) || 25; // Default limit 25
+      const skip = (page - 1) * limit;
+
+      // Get total count for pagination metadata
+      const totalRecords = await selectedAd.count();
+      const totalPages = Math.ceil(totalRecords / limit);
+
+      // Fetch paginated data
+      const allSelectedAds = await selectedAd.find().skip(skip).limit(limit);
+
+      // Transform data
+      const transformedAds = allSelectedAds.map((ad) => ({
+        ...ad.toObject(),
+        selectedMedia: ad.selectedMedia.map((media) => ({
+          position: media.position,
+          media: media.media.map((item) => ({
+            filePath: item.mediaUrl, // Rename mediaUrl to filePath
+            mediaType: item.mediaType,
+            sequenceNumber: item.sequenceNumber,
+            status: item.status,
+          })),
+        })),
+      }));
+
+      return res.status(200).json({
+        success: true,
+        message: "Selected Ads Retrieved successfully",
+        selectedAds: transformedAds,
+        recordsTotal: totalRecords, // Required for DataTables
+        recordsFiltered: totalRecords, // Required for DataTables
+        pagination: {
+          totalRecords,
+          totalPages,
+          currentPage: page,
+          limit,
+        },
+      });
+    } catch (error) {
+      console.error("Error retrieving selected ads:", error.message);
+      res.status(500).json({
+        success: false,
+        message: "Error retrieving selected ads",
+        error: error.message,
+      });
+    }
+  },
+
+  deleteSelectedMedia: async function (req, res) {
+    try {
+      console.log("req delete params:", req.params); // Debugging log
+      const { id } = req.params; // Use 'id' instead of 'addId'
+
+      if (!id) {
+        return res.status(400).json({ message: "Ad ID is required" });
+      }
+
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({ message: "Invalid Ad ID format" });
+      }
+
+      const result = await selectedAd.deleteOne({ _id: id });
+
+      if (result.deletedCount === 0) {
+        return res.status(404).json({ message: "Ad not found" });
+      }
+
+      res.status(200).json({ message: "Ad deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting ad:", error);
+      res.status(500).json({ message: "Internal Server Error" });
+    }
+  },
+
+  updateSelectedMediaStatus: async function (req, res) {
+    try {
+      console.log("required", req.body);
+      const { addId, mediaType, sequenceNumber, status } = req.body;
+
+      const ad = await selectedAd.findById(addId);
+      if (!ad) return res.status(404).json({ message: "Ad not found" });
+
+      ad.selectedMedia.forEach((media) => {
+        media.media.forEach((item) => {
+          if (
+            item.mediaType === mediaType &&
+            item.sequenceNumber === sequenceNumber
+          ) {
+            item.status = status;
+          }
+        });
+      });
+
+      await ad.save();
+      res.json({ message: "Media status updated successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Error updating media status" });
     }
   },
 };
