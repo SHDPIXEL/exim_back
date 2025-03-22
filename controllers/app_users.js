@@ -15,37 +15,37 @@ module.exports = {
     res.render("app_users/list_app_user");
   },
   // App Users List End
-  //   addfeilds: async function (req, res) {
-  //     try {
-  //       const result = await AppUser.updateMany(
-  //         {},
-  //         {
-  //           $set: {
-  //             contact_person: "",
-  //             contact_person_designation: "",
-  //             company_address: "",
-  //             city: "",
-  //             pincode: "",
-  //             state: "",
-  //             country: "",
-  //             password: "",
-  //             confirm_password: "",
-  //           },
-  //         }
-  //       );
+    // addfeilds: async function (req, res) {
+    //   try {
+    //     const result = await AppUser.updateMany(
+    //       {},
+    //       {
+    //         $set: {
+    //           contact_person: "",
+    //           contact_person_designation: "",
+    //           company_address: "",
+    //           city: "",
+    //           pincode: "",
+    //           state: "",
+    //           country: "",
+    //           password: "",
+    //           confirm_password: "",
+    //         },
+    //       }
+    //     );
 
-  //       console.log(`Updated ${result.modifiedCount} users.`);
-  //       return res.json({
-  //         success: true,
-  //         message: `${result.modifiedCount} users updated.`,
-  //       });
-  //     } catch (error) {
-  //       console.error("Error updating documents:", error);
-  //       return res
-  //         .status(500)
-  //         .json({ success: false, message: "Internal server error", error });
-  //     }
-  //   },
+    //     console.log(`Updated ${result.modifiedCount} users.`);
+    //     return res.json({
+    //       success: true,
+    //       message: `${result.modifiedCount} users updated.`,
+    //     });
+    //   } catch (error) {
+    //     console.error("Error updating documents:", error);
+    //     return res
+    //       .status(500)
+    //       .json({ success: false, message: "Internal server error", error });
+    //   }
+    // },
 
   // Get App Users Data Start
   get_app_users: function (req, res) {

@@ -96,11 +96,17 @@
                     },
                     { data: 'date', name: 'date', render: function(data) { return new Date(data).toLocaleDateString(); } },
                     { data: 'headline', name: 'headline' },
-                    { 
+                    {
                         data: 'videos', 
                         name: 'videos',
                         render: function(data) {
-                            return data ? `<a href="${data}" target="_blank">View Video</a>` : 'No Video';
+                            if (!data) return 'No Video';
+                            
+                            // Ensure the correct path by removing any unintended prefixes
+                            const baseUrl = "http://192.168.1.11:4010/";
+                            let correctedPath = data.replace(/^\/?videoNews\//, ''); // Remove leading "/videoNews/" if exists
+                    
+                            return `<a href="${baseUrl}${correctedPath}" target="_blank">View Video</a>`;
                         }
                     },
                     { data: 'status', name: 'status' },

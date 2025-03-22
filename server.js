@@ -15,6 +15,8 @@ const NewsModel = require('./models/news')
 // const cors = require('cors');
 // const cookieParser = require('cookie-parser');
 
+mongoose.Promise = global.Promise;
+
 mongoose.connect(
   "mongodb://127.0.0.1:27017/exim_app",
   {

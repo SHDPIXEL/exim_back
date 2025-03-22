@@ -13,7 +13,7 @@ module.exports = {
       // console.log("Uploaded Images:", req.files?.images);
       // console.log("Uploaded Videos:", req.files?.videos);
 
-      const { position, status } = req.body;
+      const { status } = req.body;
 
       // Extract unique image paths
       const imagePaths = [];
@@ -45,7 +45,7 @@ module.exports = {
 
       // Create and save the new Ad entry
       const newAd = new Adds({
-        position,
+        position:"POSITION",
         images: imagePaths,
         videos: videoPaths,
         status: status || "Active",
