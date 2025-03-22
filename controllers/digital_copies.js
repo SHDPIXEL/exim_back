@@ -226,7 +226,7 @@ module.exports = {
     }
 
     const image = req.file
-      ? "http://eximindiaonline.in:3000/uploads/digital_copies/" +
+      ? "https://eximback.demo.shdpixel.com/uploads/digital_copies/" +
         req.file.filename
       : "";
 
@@ -320,7 +320,7 @@ module.exports = {
             });
           }
           digital_copy.image =
-            "http://eximindiaonline.in:3000/uploads/digital_copies/" +
+            "https://eximback.demo.shdpixel.com/uploads/digital_copies/" +
             req.file.filename;
         }
 

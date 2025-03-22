@@ -194,7 +194,7 @@ module.exports = {
     const status = req.body.status;
     const image =
       req.file !== undefined
-        ? "http://eximindiaonline.in:3000/uploads/events/" + req.file.filename
+        ? "https://eximback.demo.shdpixel.com/uploads/events/" + req.file.filename
         : "";
 
     Event.findOne(
@@ -306,7 +306,7 @@ module.exports = {
                   });
                 }
                 event.image =
-                  "http://eximindiaonline.in:3000/uploads/events/" +
+                  "https://eximback.demo.shdpixel.com/uploads/events/" +
                   req.file.filename;
               }
 

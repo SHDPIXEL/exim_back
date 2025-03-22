@@ -76,7 +76,7 @@ module.exports = {
               .map((image) =>
                 image && image.filePath
                   ? {
-                      filePath: `http://192.168.1.11:4010/${image.filePath.replace(
+                      filePath: `https://eximback.demo.shdpixel.com/${image.filePath.replace(
                         /\\/g,
                         "/"
                       )}`,
@@ -92,7 +92,7 @@ module.exports = {
               .map((video) =>
                 video && video.filePath
                   ? {
-                      filePath: `http://192.168.1.11:4010/${video.filePath.replace(
+                      filePath: `https://eximback.demo.shdpixel.com/${video.filePath.replace(
                         /\\/g,
                         "/"
                       )}`,
@@ -146,7 +146,7 @@ module.exports = {
               .map((image) =>
                 image && image.filePath
                   ? {
-                      filePath: `http://192.168.1.11:4010/${image.filePath.replace(
+                      filePath: `https://eximback.demo.shdpixel.com/${image.filePath.replace(
                         /\\/g,
                         "/"
                       )}`,
@@ -161,7 +161,7 @@ module.exports = {
               .map((video) =>
                 video && video.filePath
                   ? {
-                      filePath: `http://192.168.1.11:4010/${video.filePath.replace(
+                      filePath: `https://eximback.demo.shdpixel.com/${video.filePath.replace(
                         /\\/g,
                         "/"
                       )}`,
@@ -269,7 +269,7 @@ module.exports = {
 
   getMediaFromAdds: async function (req, res) {
     try {
-      const baseURL = "http://192.168.1.11:4010/"; // 🔹 Your server base URL
+      const baseURL = "https://eximback.demo.shdpixel.com/"; // 🔹 Your server base URL
 
       const ads = await Adds.find({ status: "Active" }, "images videos").lean();
 

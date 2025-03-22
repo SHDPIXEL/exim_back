@@ -26,7 +26,7 @@ module.exports = {
 		if(about_id == '') {
 		  	const description = req.body.description;
 		  	const readers = req.body.readers;
-	    	const networks = (req.files.image !== undefined) ? 'http://eximindiaonline.in:3000/uploads/about/networks/'+req.files.image[0].filename : '';
+	    	const networks = (req.files.image !== undefined) ? 'https://eximback.demo.shdpixel.com/uploads/about/networks/'+req.files.image[0].filename : '';
 		    let new_about = new About({
 		      description: description,
 		      readers: readers,
@@ -37,7 +37,7 @@ module.exports = {
 		    	const name = req.body.name;
 		    	req.files['edition_images[]'].map(function(image, ind) {
 		    		let edition = {};
-		    		edition.image = 'http://eximindiaonline.in:3000/uploads/about/editions/'+image.filename;
+		    		edition.image = 'https://eximback.demo.shdpixel.com/uploads/about/editions/'+image.filename;
 		    		edition.name = name[ind];
 		    		editions.push(edition);
 		    	});
@@ -81,14 +81,14 @@ module.exports = {
 						    console.log('File deleted!');
 						});
 	    			}
-    				about.networks = 'http://eximindiaonline.in:3000/uploads/about/networks/'+req.files.image[0].filename;
+    				about.networks = 'https://eximback.demo.shdpixel.com/uploads/about/networks/'+req.files.image[0].filename;
     				// console.log(req.files.image[0].filename);return false;
 		    		}
 		    		if(req.files['edition_images[]'] != undefined) {
 				    	const name = req.body.name;
 				    	req.files['edition_images[]'].map(function(image, ind) {
 				    		let edition = {};
-				    		edition.image = 'http://eximindiaonline.in:3000/uploads/about/editions/'+image.filename;
+				    		edition.image = 'https://eximback.demo.shdpixel.com/uploads/about/editions/'+image.filename;
 				    		edition.name = name[ind];
 				    		about.editions.unshift(edition);
 				    	});

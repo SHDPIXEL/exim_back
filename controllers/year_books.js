@@ -85,7 +85,7 @@ module.exports = {
 	  	const name = req.body.name;
 	  	const url = req.body.url;
 	  	const status = req.body.status;
-    	const image = (req.file !== undefined) ? 'http://eximindiaonline.in:3000/uploads/year_books/'+req.file.filename : '';
+    	const image = (req.file !== undefined) ? 'https://eximback.demo.shdpixel.com/uploads/year_books/'+req.file.filename : '';
 
 		    let new_year_book = new YearBook({
 		      name: name,
@@ -151,7 +151,7 @@ module.exports = {
 							    console.log('File deleted!');return false;
 							});
 		    			}
-	    				year_book.image = 'http://eximindiaonline.in:3000/uploads/year_books/'+req.file.filename;
+	    				year_book.image = 'https://eximback.demo.shdpixel.com/uploads/year_books/'+req.file.filename;
 			    	}
 
 			        // console.log(year_books);return false;

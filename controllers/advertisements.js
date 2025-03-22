@@ -105,8 +105,8 @@ module.exports = {
 	  	const category = req.body.category;
 	  	const url = req.body.url;
 	  	const status = req.body.status;
-    	const image =  (req.files.image !== undefined) ? 'http://eximindiaonline.in:3000/uploads/advertisements/images/'+req.files.image[0].filename : '';
-    	const video = (req.files.video !== undefined) ? 'http://eximindiaonline.in:3000/uploads/advertisements/videos/'+req.files.video[0].filename : '';
+    	const image =  (req.files.image !== undefined) ? 'https://eximback.demo.shdpixel.com/uploads/advertisements/images/'+req.files.image[0].filename : '';
+    	const video = (req.files.video !== undefined) ? 'https://eximback.demo.shdpixel.com/uploads/advertisements/videos/'+req.files.video[0].filename : '';
     	const order = req.body.order;
 
 	    let new_advertisement = new Advertisement({
@@ -176,7 +176,7 @@ module.exports = {
 						    console.log('File deleted!');return false;
 						});
 	    			}
-    				advertisement.image = 'http://eximindiaonline.in:3000/uploads/advertisements/images/'+req.files.image[0].filename;
+    				advertisement.image = 'https://eximback.demo.shdpixel.com/uploads/advertisements/images/'+req.files.image[0].filename;
 		    	}*/
 
         // console.log(advertisements);return false;

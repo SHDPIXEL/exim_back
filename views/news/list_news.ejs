@@ -117,6 +117,13 @@
             ajax: {
             	type: 'POST',
                 url : "/news/get_news",
+                dataSrc: function (json) {
+                    // Ensure that the inFocus field is included in the response
+                    json.data.forEach(function (newsItem) {
+                        newsItem.inFocus = newsItem.inFocus || false; // Default to false if it's not defined
+                    });
+                    return json.data;
+                }
             },
             // language: {searchPlaceholder: "Search Headline, Link Url and Four Lnes"},
             columns: [
@@ -165,13 +172,14 @@
                     }
                 },
                 { 
-                    "data": "_id", 
+                    "data": "inFocus", 
                     "render": function(data, type, row) {
+                        var checked = data ? 'checked' : ''; // Check if 'inFocus' is true
                         return '<a href="#" class="edit btn btn-primary btn-xs"><i class="fa fa-pencil-square-o"></i> Edit</a>&nbsp;' +
                                '<button type="button" class="delete btn btn-danger btn-xs"><i class="fa fa-trash"></i> Delete</button>&nbsp;<br>' +
-                               '<input type="checkbox" class="inFocus" data-id="' + data + '"><label> In Focus</label>';
+                               '<input type="checkbox" class="inFocus" data-id="' + row._id + '" ' + checked + '><label> In Focus</label>';
                     }
-                },
+                },                
                 {data: '_id', name: '_id', searchable: false, visible: false},
                 
             ],

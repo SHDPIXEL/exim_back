@@ -782,7 +782,7 @@ module.exports = {
 
     const image =
       req.file !== undefined
-        ? "http://eximindiaonline.in:3000/uploads/news/" + req.file.filename
+        ? "https://eximback.demo.shdpixel.com/uploads/news/" + req.file.filename
         : "";
 
     const current_date_time = moment().format("YYYY-MM-DD HH:mm:ss");
@@ -996,7 +996,7 @@ module.exports = {
 		    			}*/
 
             news.image =
-              "http://eximindiaonline.in:3000/uploads/news/" +
+              "https://eximback.demo.shdpixel.com/uploads/news/" +
               req.file.filename;
           }
 
@@ -1101,7 +1101,7 @@ module.exports = {
 			    			}*/
 
                 news.image =
-                  "http://eximindiaonline.in:3000/uploads/news/" +
+                  "https://eximback.demo.shdpixel.com/uploads/news/" +
                   req.file.filename;
               }
 

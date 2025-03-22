@@ -31,7 +31,7 @@ module.exports = {
 		if(meet_expert_id == '') {
 			// console.log(req.file);return false;
 		  	const description = req.body.description;
-	    	const image = (req.file !== undefined) ? 'http://eximindiaonline.in:3000/uploads/meet_expert/'+req.file.filename : '';
+	    	const image = (req.file !== undefined) ? 'https://eximback.demo.shdpixel.com/uploads/meet_expert/'+req.file.filename : '';
 		    let new_meet_expert = new MeetExpert({
 		      description: description,
 		      image: image
@@ -74,7 +74,7 @@ module.exports = {
 						    console.log('File deleted!');
 						});
 	    			}
-    				meet_expert.image = 'http://eximindiaonline.in:3000/uploads/meet_expert/'+req.file.filename;
+    				meet_expert.image = 'https://eximback.demo.shdpixel.com/uploads/meet_expert/'+req.file.filename;
     				// console.log(req.files.image[0].filename);return false;
 		    		}
 		    		meet_expert.save(function(err) {

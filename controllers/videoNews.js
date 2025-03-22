@@ -59,7 +59,7 @@ module.exports = {
 
   getAllVideoNews: async (req, res) => {
     try {
-      const baseUrl = "http://192.168.1.11:4010";
+      const baseUrl = "https://eximback.demo.shdpixel.com";
       const news = await VideoNews.find();
   
       const updatedNews = news.map((item) => {
@@ -80,7 +80,7 @@ module.exports = {
   // Fetch Single Video News
   getVideoNewsById: async (req, res) => {
     try {
-      const baseUrl = "http://192.168.1.11:4010";
+      const baseUrl = "https://eximback.demo.shdpixel.com";
       const news = await VideoNews.findById(req.params.id);
   
       if (!news) return res.status(404).json({ message: "News not found" });
