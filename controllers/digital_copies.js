@@ -21,70 +21,70 @@ module.exports = {
   // Get Digital Copies Data Start
   get_digital_copies: function (req, res) {
     var col = req.body.columns[req.body.order[0].column].data;
-    var order = req.body.order[0].dir;
-    var status_search = req.body.columns[4].search.value; // ✅ Status filter
-    var location_search = req.body.columns[5].search.value; // ✅ Location filter
+    var order = req.body.order[0].dir === "asc" ? 1 : -1;
+    var column_order = { [col]: order };
 
-    if (order == "asc") {
-      order = 1;
-    } else {
-      order = -1;
-    }
-    column_order = { [col]: order };
+    // ✅ Improved filtering
+    var status_search = req.body.columns[4].search.value
+      ? { status: { $regex: req.body.columns[4].search.value, $options: "i" } }
+      : {};
 
-    status_search = status_search ? { status: status_search } : {}; // ✅ Status condition
-    location_search = location_search ? { location: location_search } : {}; // ✅ Location condition
+    var location_search = req.body.columns[5].search.value
+      ? {
+          location: { $regex: req.body.columns[5].search.value, $options: "i" },
+        }
+      : {};
 
+    // ✅ Improved general search (now searches in name, url, location, status, and date)
     var common_search = req.body.search.value
       ? {
           $or: [
             { name: { $regex: req.body.search.value, $options: "i" } },
             { url: { $regex: req.body.search.value, $options: "i" } },
+            { location: { $regex: req.body.search.value, $options: "i" } },
+            { status: { $regex: req.body.search.value, $options: "i" } },
+            { date: { $regex: req.body.search.value, $options: "i" } },
           ],
         }
       : {};
 
-    var searchStr = { $and: [common_search, status_search, location_search] }; // ✅ Includes all conditions
+    // ✅ Combine all search filters
+    var searchStr = { $and: [common_search, status_search, location_search] };
 
-    var recordsTotal = 0;
-    var recordsFiltered = 0;
-
-    DigitalCopy.count({}, function (err, c) {
-      recordsTotal = c;
-      DigitalCopy.count(searchStr, function (err, c) {
-        recordsFiltered = c;
+    DigitalCopy.count({}, function (err, totalRecords) {
+      DigitalCopy.count(searchStr, function (err, filteredRecords) {
         DigitalCopy.find(
-			searchStr,
-			"_id name url image status date location",
-			{
-			  skip: Number(req.body.start),
-			  limit: req.body.length != -1 ? Number(req.body.length) : c,
-			},
-			function (err, results) {
-			  if (err) {
-				console.log("Error while getting results:", err);
-				return;
-			  }
-		  
-			  results = results.map((record) => ({
-				...record._doc,
-				dateISO: record.date || null, // ✅ Keeps the stored string format (YYYY-MM-DD)
-				dateFormatted: record.date
-				  ? moment(record.date, "YYYY-MM-DD").format("DD-MM-YYYY") // ✅ Format string correctly
-				  : "N/A",
-				location: record.location || "Not Specified", // ✅ Handles missing locations
-			  }));
-		  
-			  res.send(
-				JSON.stringify({
-				  draw: req.body.draw,
-				  recordsFiltered: recordsFiltered,
-				  recordsTotal: recordsTotal,
-				  data: results,
-				})
-			  );
-			}
-		  ).sort(column_order);		  
+          searchStr,
+          "_id name url image status date location",
+          {
+            skip: Number(req.body.start),
+            limit:
+              req.body.length != -1 ? Number(req.body.length) : filteredRecords,
+            sort: column_order,
+          },
+          function (err, results) {
+            if (err) {
+              console.log("Error while getting results:", err);
+              return;
+            }
+
+            results = results.map((record) => ({
+              ...record._doc,
+              dateISO: record.date || null,
+              dateFormatted: record.date
+                ? moment(record.date, "YYYY-MM-DD").format("DD-MM-YYYY")
+                : "N/A",
+              location: record.location || "Not Specified",
+            }));
+
+            res.json({
+              draw: req.body.draw,
+              recordsTotal: totalRecords,
+              recordsFiltered: filteredRecords,
+              data: results,
+            });
+          }
+        );
       });
     });
   },
@@ -93,118 +93,84 @@ module.exports = {
 
   getDigitalCopiesByDate: async function (req, res) {
     try {
-      console.log("token", req.headers.authorization?.split(" ")[1]);
-      // Extract userId from the token
-      const token = req.headers.authorization?.split(" ")[1]; 
+      // 🛡️ Extract and verify token
+      const token = req.headers.authorization?.split(" ")[1];
       if (!token) {
-        return res
-          .status(401)
-          .json({ success: false, message: "Unauthorized: No token provided" });
+        return res.status(401).json({ success: false, message: "Unauthorized: No token provided" });
       }
-      console.log("TOKENNNN", token);
-
-      // Decode without verification (to check exp, payload, etc.)
-      const decodedPayload = jwt.decode(token, { complete: true });
-      console.log("Decoded Payload (No Verify):", decodedPayload);
-
-      // Check expiration time
-      if (decodedPayload?.payload?.exp) {
-        const expirationDate = new Date(decodedPayload.payload.exp * 1000);
-        console.log(
-          "Token Expiry:",
-          expirationDate,
-          "Current Time:",
-          new Date()
-        );
-      }
-
+  
       let decoded;
       try {
-        // Verify the token
         decoded = jwt.verify(token.trim(), process.env.SECRET_KEY);
-        console.log("Decoded After Verification:", decoded);
       } catch (err) {
-        return res
-          .status(401)
-          .json({ success: false, message: "Unauthorized: Invalid token" });
+        return res.status(401).json({ success: false, message: "Unauthorized: Invalid token" });
       }
-      console.log("decoded", decoded);
-
-      const userId = decoded.userId; // Extract userId from token payload
-      console.log("useriD", userId);
+  
+      const userId = decoded.userId;
       if (!userId) {
-        return res
-          .status(401)
-          .json({ success: false, message: "Unauthorized: Invalid user" });
+        return res.status(401).json({ success: false, message: "Unauthorized: Invalid user" });
       }
-
-      console.log("body data", req.body);
-
-      // Get location and date from request body
+  
+      console.log("User ID:", userId, "Body Data:", req.body);
+  
+      // 📍 Get location and date from request body
       const { location, date } = req.body;
-
-      if (!location || !date) {
-        return res
-          .status(400)
-          .json({ success: false, message: "Location and date are required" });
+  
+      if (!location) {
+        return res.status(400).json({ success: false, message: "Location is required" });
       }
-
-      // Check if the user has a valid subscription for the given location (WITHOUT expiry check)
+  
+      // 🔍 Check if the user has a valid subscription for the location
       const userSubscription = await Payment.findOne({
         userId: userId,
-        "subscription_details.location": location, // Only check if location is subscribed
-        paymentStatus: "success", // Ensure payment was successful
+        "subscription_details.location": location,
+        paymentStatus: "success",
       });
-
-      console.log("check payment", userSubscription);
-
+  
       if (!userSubscription) {
-        return res.status(403).json({
-          success: false,
-          message: "No valid subscription found for this location",
-        });
+        return res.status(403).json({ success: false, message: `No valid subscription for ${location}` });
       }
-
-      console.log("user subscription found but not digital copies in the db");
-
-      // Find all digital copies for that location and date
-      const digitalCopies = await DigitalCopy.find({
-        location: location,
-        date: date,
-      });
-      console.log("All digital copies for location:", digitalCopies);
-
-      console.log("digital copies", digitalCopies);
-
-      if (!digitalCopies.length) {
+  
+      let filter = { location };
+  
+      if (date) {
+        filter.date = date; // If date is provided, filter by date
+      }
+  
+      // 📄 Fetch digital copies sorted by the latest date
+      let digitalCopy = await DigitalCopy.findOne(filter).sort({ date: -1 });
+  
+      // If no record is found for the given date, fetch the most recent one for the location
+      if (!digitalCopy && !date) {
+        digitalCopy = await DigitalCopy.findOne({ location }).sort({ date: -1 });
+      }
+  
+      if (!digitalCopy) {
         return res.status(404).json({
           success: false,
-          message: "No records found for this location and date",
+          message: `No digital copies found for ${location}${date ? ` on ${date}` : ""}`,
         });
       }
-
+  
+      // 🗂️ Transform response
       res.json({
         success: true,
-        data: digitalCopies.map((record) => ({
-          id: record._id,
-          name: record.name,
-          url: record.url,
-          image: record.image,
-          status: record.status,
-          location: record.location,
-		  dateISO: record.date || null, // ✅ Keeps the stored string format (YYYY-MM-DD)
-		  dateFormatted: record.date
-			? moment(record.date, "YYYY-MM-DD").format("DD-MM-YYYY") // ✅ Format string correctly
-			: "N/A",
-        })),
+        data: {
+          id: digitalCopy._id,
+          name: digitalCopy.name,
+          url: digitalCopy.url,
+          image: digitalCopy.image,
+          status: digitalCopy.status,
+          location: digitalCopy.location,
+          dateISO: digitalCopy.date || null,
+          dateFormatted: digitalCopy.date ? moment(digitalCopy.date, "YYYY-MM-DD").format("DD-MM-YYYY") : "N/A",
+        },
       });
     } catch (error) {
       console.error("Error fetching digital copies by date:", error);
-      res
-        .status(500)
-        .json({ success: false, message: "Internal server error" });
+      res.status(500).json({ success: false, message: "Internal server error" });
     }
-  },
+  },  
 
   // Digital Copy Add Form Start
   add: function (req, res) {

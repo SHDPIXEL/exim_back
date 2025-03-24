@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcrypt");
@@ -116,6 +117,20 @@ const sendPaymentConfirmationEmail = async (userEmail, orderId, paymentId) => {
   }
 };
 
+const sendResetPasswordEmail = async ({ to, subject, text }) => {
+  try {
+    await transporter.sendMail({
+      from: process.env.EMAIL,
+      to,
+      subject,
+      text,
+    });
+    console.log(`Password reset email sent to ${to}`);
+  } catch (error) {
+    console.error("Error sending password reset email:", error);
+  }
+};
+
 // Function to check and send reminders
 const checkSubscriptionReminders = async () => {
   console.log("🔍 Checking for expiring subscriptions...");
@@ -129,44 +144,51 @@ const checkSubscriptionReminders = async () => {
       label: "1 month",
       start: today.clone().add(1, "month").startOf("day"),
       end: today.clone().add(1, "month").endOf("day"),
-      message: (sub, daysLeft) => `Your Exim India subscription for Edition ${sub.location} is due for renewal in 1 month.`,
+      message: (sub, daysLeft) =>
+        `Your Exim India subscription for Edition ${sub.location} is due for renewal in 1 month.`,
     },
     {
       label: "7 days",
       start: today.clone().add(7, "days").startOf("day"),
       end: today.clone().add(7, "days").endOf("day"),
-      message: (sub, daysLeft) => `Your Exim India subscription for Edition ${sub.location} is due for renewal in 7 days.`,
+      message: (sub, daysLeft) =>
+        `Your Exim India subscription for Edition ${sub.location} is due for renewal in 7 days.`,
     },
     {
       label: "3 days",
       start: today.clone().add(3, "days").startOf("day"),
       end: today.clone().add(3, "days").endOf("day"),
-      message: (sub, daysLeft) => `Your Exim India subscription for Edition ${sub.location} will expire in 3 days.`,
+      message: (sub, daysLeft) =>
+        `Your Exim India subscription for Edition ${sub.location} will expire in 3 days.`,
     },
     {
       label: "Expired Yesterday", // ✅ Check for subscriptions expired yesterday
       start: today.clone().subtract(1, "day").startOf("day"),
       end: today.clone().subtract(1, "day").endOf("day"),
-      message: (sub, daysLeft) => `Your Exim India subscription for Edition ${sub.location} has Been Expired yesterday. Please renew your subscription to continue accessing the service.`,
+      message: (sub, daysLeft) =>
+        `Your Exim India subscription for Edition ${sub.location} has Been Expired yesterday. Please renew your subscription to continue accessing the service.`,
     },
     // New ranges for 1 month, 7 days, and 3 days
     {
       label: "1 month renewal reminder",
       start: today.clone().add(1, "month").startOf("day"),
       end: today.clone().add(1, "month").endOf("day"),
-      message: (sub, daysLeft) => `Your Exim India subscription for Edition ${sub.location} will expire in 1 month. Please ensure to renew your subscription on time to continue enjoying our services.`,
+      message: (sub, daysLeft) =>
+        `Your Exim India subscription for Edition ${sub.location} will expire in 1 month. Please ensure to renew your subscription on time to continue enjoying our services.`,
     },
     {
       label: "7 days renewal reminder",
       start: today.clone().add(7, "days").startOf("day"),
       end: today.clone().add(7, "days").endOf("day"),
-      message: (sub, daysLeft) => `Just a reminder: your Exim India subscription for Edition ${sub.location} is expiring in 7 days. Kindly renew to avoid service interruption.`,
+      message: (sub, daysLeft) =>
+        `Just a reminder: your Exim India subscription for Edition ${sub.location} is expiring in 7 days. Kindly renew to avoid service interruption.`,
     },
     {
       label: "3 days renewal reminder",
       start: today.clone().add(3, "days").startOf("day"),
       end: today.clone().add(3, "days").endOf("day"),
-      message: (sub, daysLeft) => `Alert: Your Exim India subscription for Edition ${sub.location} will expire in 3 days. Please renew to continue using our service.`,
+      message: (sub, daysLeft) =>
+        `Alert: Your Exim India subscription for Edition ${sub.location} will expire in 3 days. Please renew to continue using our service.`,
     },
   ];
 
@@ -533,21 +555,21 @@ module.exports = {
       const username = user.name;
       const designation = user.contact_person_designation;
 
-      // ✅ Check if the subscription already exists and is still active
+      // ✅ Check if the user has an active subscription (ONLY `paymentStatus: "success"`)
       for (let sub of subscription_details) {
         const existingSubscription = await UserSubscriptions.findOne({
           userId,
           location: sub.location,
-          duration: sub.duration, // Check the same duration
+          duration: sub.duration,
+          paymentStatus: "success", // Only check successful payments
         });
 
         if (existingSubscription) {
           const currentDate = new Date();
           const expiryDate = new Date(existingSubscription.expiryDate);
-
           const daysLeft = Math.ceil(
             (expiryDate - currentDate) / (1000 * 60 * 60 * 24)
-          ); // Days remaining
+          );
 
           if (daysLeft > 30) {
             return res.status(400).json({
@@ -560,7 +582,7 @@ module.exports = {
         }
       }
 
-      // ✅ Proceed to create Razorpay order if no conflicts
+      // ✅ Create Razorpay order
       const instance = new Razorpay({
         key_id: process.env.RAZORPAY_KEY_ID,
         key_secret: process.env.RAZORPAY_KEY_SECRET,
@@ -580,66 +602,12 @@ module.exports = {
           .json({ success: 0, message: "Error creating Razorpay order." });
       }
 
-      let updatedSubscriptions = [];
-      for (let sub of subscription_details) {
-        let expiryDate = null;
-
-        if (sub.duration) {
-          const durationMatch = sub.duration.match(/(\d+)\s*(year|years)/i);
-          if (durationMatch) {
-            const durationYears = parseInt(durationMatch[1], 10);
-            expiryDate = new Date();
-            expiryDate.setFullYear(expiryDate.getFullYear() + durationYears);
-          }
-        }
-
-        updatedSubscriptions.push({ ...sub, expiryDate });
-
-        console.log("Updated Subscriptions:", updatedSubscriptions);
-
-        // ✅ Update or create new UserSubscription
-        const existingSubscription = await UserSubscriptions.findOne({
-          userId,
-          location: sub.location,
-        });
-
-        if (existingSubscription) {
-          let newExpiryDate = new Date(existingSubscription.expiryDate);
-          let currentDate = new Date();
-
-          if (newExpiryDate < currentDate) {
-            newExpiryDate = currentDate;
-          }
-
-          newExpiryDate.setFullYear(
-            newExpiryDate.getFullYear() +
-              (expiryDate
-                ? expiryDate.getFullYear() - currentDate.getFullYear()
-                : 0)
-          );
-
-          existingSubscription.expiryDate = newExpiryDate;
-          existingSubscription.duration = sub.duration;
-          existingSubscription.price = sub.price;
-
-          await existingSubscription.save();
-        } else {
-          await UserSubscriptions.create({
-            userId,
-            location: sub.location,
-            expiryDate,
-            duration: sub.duration,
-            price: sub.price,
-          });
-        }
-      }
-
-      // ✅ Create a new payment record
+      // ✅ Store the subscription details in `Payments`, but do NOT create `UserSubscriptions` yet
       const newPayment = await Payments.create({
         userId,
         username,
         designation,
-        subscription_details: updatedSubscriptions,
+        subscription_details, // Store subscription details here
         type,
         amount,
         paymentStatus: "pending",
@@ -649,7 +617,7 @@ module.exports = {
 
       return res.status(201).json({
         success: 1,
-        message: "Order created successfully, subscription updated",
+        message: "Order created successfully, waiting for payment.",
         razorpayOrder,
         newPayment,
       });
@@ -665,7 +633,7 @@ module.exports = {
 
   orderSuccess: async function (req, res) {
     try {
-      console.log("requiredsuccess", req.body);
+      console.log("Payment Success Callback:", req.body);
       const { razorpayOrderId, razorpayPaymentId, razorpaySignature } =
         req.body;
 
@@ -675,18 +643,17 @@ module.exports = {
           .json({ success: 0, message: "Payment details are missing." });
       }
 
-      // Find the order in the database and populate user details
+      // ✅ Find the payment record
       const payment = await Payments.findOne({ razorpayOrderId }).populate(
         "userId"
       );
-
       if (!payment) {
         return res
           .status(404)
           .json({ success: 0, message: "Order not found." });
       }
 
-      // Validate payment signature
+      // ✅ Validate Razorpay payment signature
       const generatedSignature = crypto
         .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
         .update(razorpayOrderId + "|" + razorpayPaymentId)
@@ -698,21 +665,58 @@ module.exports = {
           .json({ success: 0, message: "Invalid payment signature." });
       }
 
-      // Update payment details in the database
+      // ✅ Update payment status to success
       payment.paymentStatus = "success";
       payment.razorpayPaymentId = razorpayPaymentId;
       payment.razorpaySignature = razorpaySignature;
       payment.status = "completed";
       await payment.save();
 
-      console.log("paymentsuccess", payment);
+      console.log("Payment Successful:", payment);
 
-      // Fetch user email
-      const userEmail = payment.userId.email; // Assuming `email` field exists in `AppUser`
+      // ✅ Now update or create `UserSubscriptions`
+      for (let sub of payment.subscription_details) {
+        let expiryDate = new Date();
+        const durationMatch = sub.duration.match(/(\d+)\s*(year|years)/i);
+        if (durationMatch) {
+          expiryDate.setFullYear(
+            expiryDate.getFullYear() + parseInt(durationMatch[1], 10)
+          );
+        }
 
-      if (userEmail) {
+        const existingSubscription = await UserSubscriptions.findOne({
+          userId: payment.userId._id,
+          location: sub.location,
+        });
+
+        if (existingSubscription) {
+          existingSubscription.expiryDate = expiryDate;
+          existingSubscription.duration = sub.duration;
+          existingSubscription.price = sub.price;
+          existingSubscription.type = payment.type;
+          existingSubscription.razorpayOrderId = razorpayOrderId;
+          existingSubscription.razorpayPaymentId = razorpayPaymentId;
+          existingSubscription.paymentStatus = "success"; // ✅ Set payment status to success
+          await existingSubscription.save();
+        } else {
+          await UserSubscriptions.create({
+            userId: payment.userId._id,
+            location: sub.location,
+            expiryDate,
+            duration: sub.duration,
+            price: sub.price,
+            type: payment.type,
+            razorpayOrderId: razorpayOrderId,
+            razorpayPaymentId: razorpayPaymentId,
+            paymentStatus: "success", // ✅ Set payment status to success
+          });
+        }
+      }
+
+      // ✅ Send confirmation email
+      if (payment.userId.email) {
         await sendPaymentConfirmationEmail(
-          userEmail,
+          payment.userId.email,
           razorpayOrderId,
           razorpayPaymentId
         );
@@ -804,11 +808,29 @@ module.exports = {
 
   getUserSubscribe: async function (req, res) {
     try {
-      const userSubscription = await UserSubscriptions.find();
-
-      res.status(200).json({ message: "Data retrived", userSubscription });
+      // Extract token from headers
+      const token = req.headers.authorization?.split(" ")[1];
+      if (!token) {
+        return res
+          .status(401)
+          .json({ success: 0, message: "Unauthorized: Token missing." });
+      }
+  
+      let decoded;
+      try {
+        decoded = jwt.verify(token, process.env.SECRET_KEY);
+      } catch (err) {
+        return res.status(401).json({ success: 0, message: "Invalid token." });
+      }
+  
+      const userId = decoded.userId;
+  
+      // Fetch subscriptions for the logged-in user
+      const userSubscription = await UserSubscriptions.find({ userId });
+  
+      res.status(200).json({ message: "Data retrieved", userSubscription });
     } catch (error) {
-      console.error("Error in getPayments:", error);
+      console.error("Error in getUserSubscribe:", error);
       return res.status(500).json({
         success: 0,
         message: "Internal server error",
@@ -816,7 +838,124 @@ module.exports = {
       });
     }
   },
+  
   // Store Register Route End
+
+  getUserSubscribe_dashboard: async function (req, res) {
+    try {
+      console.log("token",req.headers.authorization?.split(" ")[1])
+      // Extract token from headers
+      const token = req.headers.authorization?.split(" ")[1];
+      if (!token) {
+        return res
+          .status(401)
+          .json({ success: 0, message: "Unauthorized: Token missing." });
+      }
+  
+      let decoded;
+      try {
+        decoded = jwt.verify(token, process.env.SECRET_KEY);
+      } catch (err) {
+        return res.status(401).json({ success: 0, message: "Invalid token." });
+      }
+  
+      const userId = decoded.userId;
+  
+      // Fetch subscriptions for the logged-in user (without paymentStatus filter)
+      const userSubscription = await UserSubscriptions.find({ userId });
+      console.log("data",userSubscription)
+  
+      res.status(200).json({ message: "Data retrieved", userSubscription });
+    } catch (error) {
+      console.error("Error in getUserSubscribe_dashboard:", error);
+      return res.status(500).json({
+        success: 0,
+        message: "Internal server error",
+        error: error.message,
+      });
+    }
+  },
+  
+
+  forgotPassword: async function (req, res) {
+    try {
+      const { email } = req.body;
+      if (!email) return res.status(400).json({ message: "Email is required" });
+
+      const user = await AppUser.findOne({ email });
+      if (!user) return res.status(404).json({ message: "User not found" });
+
+      // Generate reset token
+      const resetToken = crypto.randomBytes(32).toString("hex");
+      const hashedToken = crypto
+        .createHash("sha256")
+        .update(resetToken)
+        .digest("hex");
+
+      // Save hashed token in DB with expiry time
+      user.resetPasswordToken = hashedToken;
+      await user.save();
+
+      // Set expiry time (15 minutes)
+      const expires = new Date(Date.now() + 15 * 60 * 1000).toISOString(); // ISO format
+
+      // Generate Reset URL
+      const resetUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}?expires=${expires}`;
+      console.log("Reset URL:", resetUrl);
+
+      await sendResetPasswordEmail({
+        to: email,
+        subject: "Exim India Password Reset",
+        text: `Click the link to reset your password: ${resetUrl}`,
+      });
+
+      res.status(200).json({ message: "Password reset link sent to email" });
+    } catch (error) {
+      console.error("Error in forgot password:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  },
+
+  resetPassword: async function (req, res) {
+    try {
+      console.log("req data",req.body,req.params,req.query)
+      const { token } = req.params;
+      const { newPassword, confirmNewPassword } = req.body;
+      const expires = new Date(req.query.expires).getTime(); // Convert ISO to timestamp
+  
+      // Validate expiration
+      if (!expires || Date.now() > expires) {
+        return res.status(400).json({ message: "This link has expired. Please request a new one." });
+      }
+  
+      if (!newPassword || !confirmNewPassword)
+        return res.status(400).json({ message: "Both fields are required" });
+  
+      if (newPassword !== confirmNewPassword)
+        return res.status(400).json({ message: "Passwords do not match" });
+  
+      // Hash the token
+      const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+  
+      // Find user with the hashed token
+      const user = await AppUser.findOne({ resetPasswordToken: hashedToken });
+  
+      if (!user) return res.status(400).json({ message: "Invalid or expired token" });
+  
+      // Hash new password
+      const salt = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(newPassword, salt);
+  
+      // Clear the reset token
+      user.resetPasswordToken = null;
+      await user.save();
+  
+      res.status(200).json({ message: "Password reset successful" });
+    } catch (error) {
+      console.error("Error resetting password:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  },
 
   // Get News Route Start
   news: function (req, res) {

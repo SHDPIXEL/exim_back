@@ -108,112 +108,177 @@ module.exports = {
   // Get Appointments Data End
 
   get_appointments_website: async function (req, res) {
-	try {
-	  if (!req.body.order || !req.body.order.length || !req.body.columns) {
-		return res
-		  .status(400)
-		  .json({ success: false, message: "Invalid request format" });
-	  }
-  
-	  const colIndex = req.body.order[0]?.column;
-	  if (colIndex === undefined || !req.body.columns[colIndex]) {
-		return res
-		  .status(400)
-		  .json({ success: false, message: "Invalid column index" });
-	  }
-  
-	  const col = req.body.columns[colIndex].data;
-	  let order = req.body.order[0].dir === "asc" ? 1 : -1;
-	  let column_order = { [col]: order };
-  
-	  let job_title_search = req.body.columns[1]?.search?.value || "";
-	  let edition_search = req.body.columns[2]?.search?.value || "";
-	  let date_search = req.body.columns[3]?.search?.value || "";
-	  let status_search = req.body.columns[4]?.search?.value || "";
-  
-	  let searchStr = { $and: [] };
-	  if (job_title_search) searchStr.$and.push({ job_title_id: job_title_search });
-	  if (edition_search) searchStr.$and.push({ edition_id: edition_search });
-	  if (date_search) searchStr.$and.push({ date: date_search });
-	  if (status_search) searchStr.$and.push({ status: status_search });
-  
-	  if (searchStr.$and.length === 0) searchStr = {};
-  
-	  const page = parseInt(req.body.page) || 1; // Default to page 1
-	  const limit = 25; // Set limit to 25
-	  const skip = (page - 1) * limit;
-  
-	  const recordsTotal = await Appointment.count();
-	  const recordsFiltered = await Appointment.count(searchStr);
-  
-	  const results = await Appointment.find(searchStr)
-		.skip(skip)
-		.limit(limit)
-		.sort(column_order)
-		.populate("job_title_id", "job_title")
-		.populate("edition_id", "edition");
-  
-	  res.json({
-		draw: req.body.draw || 1,
-		recordsFiltered,
-		recordsTotal,
-		currentPage: page,
-		totalPages: Math.ceil(recordsFiltered / limit),
-		data: results,
-	  });
-	} catch (error) {
-	  console.error("Error fetching appointments:", error);
-	  res.status(500).json({ success: false, message: error.message });
-	}
+    try {
+      if (!req.body.order || !req.body.order.length || !req.body.columns) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Invalid request format" });
+      }
+
+      const colIndex = req.body.order[0]?.column;
+      if (colIndex === undefined || !req.body.columns[colIndex]) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Invalid column index" });
+      }
+
+      const col = req.body.columns[colIndex].data;
+      let order = req.body.order[0].dir === "asc" ? 1 : -1;
+      let column_order = { [col]: order };
+
+      let job_title_search = req.body.columns[1]?.search?.value || "";
+      let edition_search = req.body.columns[2]?.search?.value || "";
+      let date_search = req.body.columns[3]?.search?.value || "";
+      let status_search = req.body.columns[4]?.search?.value || "";
+
+      let searchStr = { $and: [] };
+      if (job_title_search)
+        searchStr.$and.push({ job_title_id: job_title_search });
+      if (edition_search) searchStr.$and.push({ edition_id: edition_search });
+      if (date_search) searchStr.$and.push({ date: date_search });
+      if (status_search) searchStr.$and.push({ status: status_search });
+
+      if (searchStr.$and.length === 0) searchStr = {};
+
+      const page = parseInt(req.body.page) || 1; // Default to page 1
+      const limit = 25; // Set limit to 25
+      const skip = (page - 1) * limit;
+
+      const recordsTotal = await Appointment.count();
+      const recordsFiltered = await Appointment.count(searchStr);
+
+      const results = await Appointment.find(searchStr)
+        .skip(skip)
+        .limit(limit)
+        .sort(column_order)
+        .populate("job_title_id", "job_title")
+        .populate("edition_id", "edition");
+
+      res.json({
+        draw: req.body.draw || 1,
+        recordsFiltered,
+        recordsTotal,
+        currentPage: page,
+        totalPages: Math.ceil(recordsFiltered / limit),
+        data: results,
+      });
+    } catch (error) {
+      console.error("Error fetching appointments:", error);
+      res.status(500).json({ success: false, message: error.message });
+    }
   },
-  
 
   get_allappointments: async function (req, res) {
-	try {
-	  const page = parseInt(req.body.page) || 1; // Default to page 1 if not provided
-	  const limit = 5; // Limit results per page
-	  const skip = (page - 1) * limit;
-	  const column_order = req.body.sort || { createdAt: -1 }; // Default sorting
-	  const searchStr = req.body.search || {}; // Searching filter
-  
-	  // Fetch total appointments count
-	  const totalAppointments = await Appointment.count(searchStr);
-  
-	  // Fetch paginated appointments with populated job_title and edition fields
-	  const appointments = await Appointment.find(searchStr)
-		.skip(skip)
-		.limit(limit)
-		.sort(column_order)
-		.populate({
-		  path: "job_title_id",
-		  select: "job_title",
-		})
-		.populate({
-		  path: "edition_id",
-		  select: "edition",
-		});
-  
-	  // Transform the response to return job_title and edition directly
-	  const transformedAppointments = appointments.map((appointment) => ({
-		...appointment.toObject(),
-		job_title: appointment.job_title_id?.job_title || "N/A",
-		edition: appointment.edition_id?.edition || "N/A",
-	  }));
-  
-	  return res.status(200).json({
-		success: true,
-		message: "Appointments retrieved successfully",
-		appointments: transformedAppointments,
-		totalPages: Math.ceil(totalAppointments / limit),
-		currentPage: page,
-		totalAppointments,
-	  });
-	} catch (error) {
-	  console.error("Error fetching appointments:", error);
-	  res.status(500).json({ success: false, message: error.message });
-	}
+    try {
+      const page = parseInt(req.body.page) || 1; // Default to page 1 if not provided
+      const limit = 5; // Limit results per page
+      const skip = (page - 1) * limit;
+      const column_order = req.body.sort || { createdAt: -1 }; // Default sorting
+      const searchStr = req.body.search || {}; // Searching filter
+
+      // Fetch total appointments count
+      const totalAppointments = await Appointment.count(searchStr);
+
+      // Fetch paginated appointments with populated job_title and edition fields
+      const appointments = await Appointment.find(searchStr)
+        .skip(skip)
+        .limit(limit)
+        .sort(column_order)
+        .populate({
+          path: "job_title_id",
+          select: "job_title",
+        })
+        .populate({
+          path: "edition_id",
+          select: "edition",
+        });
+
+      // Transform the response to return job_title and edition directly
+      const transformedAppointments = appointments.map((appointment) => ({
+        ...appointment.toObject(),
+        job_title: appointment.job_title_id?.job_title || "N/A",
+        edition: appointment.edition_id?.edition || "N/A",
+      }));
+
+      return res.status(200).json({
+        success: true,
+        message: "Appointments retrieved successfully",
+        appointments: transformedAppointments,
+        totalPages: Math.ceil(totalAppointments / limit),
+        currentPage: page,
+        totalAppointments,
+      });
+    } catch (error) {
+      console.error("Error fetching appointments:", error);
+      res.status(500).json({ success: false, message: error.message });
+    }
   },
-  
+
+  search_appointments: async function (req, res) {
+    try {
+      console.log("req appointments", req.body);
+
+      const page = parseInt(req.body.page) || 1;
+      const limit = 5;
+      const skip = (page - 1) * limit;
+      const column_order = req.body.sort || { createdAt: -1 };
+
+      let { edition, query } = req.body;
+      let filter = {};
+
+      // 🔹 Real-Time Search in Description
+      if (query) {
+        filter.$or = [
+          { description: { $regex: "^" + query, $options: "i" } }, // Starts with query
+          { description: { $regex: query, $options: "i" } }, // Contains query
+        ];
+      }
+
+      // 🔹 Fetch Matching Edition IDs Directly
+      if (edition) {
+        const matchingEditions = await Edition.find({
+          edition: { $regex: edition, $options: "i" },
+        }).select("_id");
+
+        const editionIds = matchingEditions.map((ed) => ed._id);
+        if (editionIds.length > 0) {
+          filter["edition_id"] = { $in: editionIds };
+        }
+      }
+
+      // 🔄 Fetch filtered appointments with job title
+      const totalAppointments = await Appointment.count(filter);
+      const appointments = await Appointment.find(filter)
+        .skip(skip)
+        .limit(limit)
+        .sort(column_order)
+        .populate({ path: "edition_id", select: "edition" }) // Fetch edition name
+        .populate({ path: "job_title_id", select: "job_title" }); // Fetch job title ✅ FIXED
+
+      // Transform response to include job title
+      const transformedAppointments = appointments.map((appointment) => ({
+        ...appointment.toObject(),
+        edition: appointment.edition_id?.edition || "N/A",
+        job_title: appointment.job_title_id?.job_title || "N/A", // ✅ FIXED
+      }));
+
+      console.log("search data", transformedAppointments);
+
+      res.status(200).json({
+        success: true,
+        message: "Appointments retrieved successfully",
+        appointments: transformedAppointments,
+        totalPages: Math.ceil(totalAppointments / limit),
+        currentPage: page,
+        totalAppointments,
+      });
+    } catch (error) {
+      console.error("Search Error:", error);
+      res
+        .status(500)
+        .json({ success: false, message: "Internal Server Error" });
+    }
+  },
 
   // Appointment Add Form Start
   add: function (req, res) {

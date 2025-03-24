@@ -62,36 +62,36 @@ module.exports = {
   // },
 
   // News List End
-    new_update_inFocus: async function (req, res) {
-      try {
-        let { id } = req.body;
-        console.log("Received ID:", id); // Debugging log
-    
-        // Validate MongoDB ObjectId
-        if (!mongoose.Types.ObjectId.isValid(id)) {
-          return res.status(400).json({ error: "Invalid News ID" });
-        }
-    
-        // Find the news item
-        const newsItem = await News.findById(id);
-        if (!newsItem) {
-          return res.status(404).json({ error: "News item not found" });
-        }
-    
-        // Toggle inFocus
-        newsItem.inFocus = !newsItem.inFocus;
-        await newsItem.save();
-    
-        res.json({
-          success: true,
-          message: "In Focus status updated.",
-          inFocus: newsItem.inFocus,
-        });
-      } catch (error) {
-        console.error("Error updating inFocus:", error);
-        res.status(500).json({ error: "Internal server error" });
+  new_update_inFocus: async function (req, res) {
+    try {
+      let { id } = req.body;
+      console.log("Received ID:", id); // Debugging log
+
+      // Validate MongoDB ObjectId
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({ error: "Invalid News ID" });
       }
-    },
+
+      // Find the news item
+      const newsItem = await News.findById(id);
+      if (!newsItem) {
+        return res.status(404).json({ error: "News item not found" });
+      }
+
+      // Toggle inFocus
+      newsItem.inFocus = !newsItem.inFocus;
+      await newsItem.save();
+
+      res.json({
+        success: true,
+        message: "In Focus status updated.",
+        inFocus: newsItem.inFocus,
+      });
+    } catch (error) {
+      console.error("Error updating inFocus:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  },
   // Get News Data Start
 
   get_news_recent: function (req, res) {
@@ -678,6 +678,60 @@ module.exports = {
     } catch (error) {
       console.error("Error in get_news_by_category:", error);
       res.status(500).json({ error: "Internal server error" });
+    }
+  },
+
+  search_news: async function (req, res) {
+    try {
+      console.log("REQ,BODY", req.body);
+      let { query, date, page } = req.body;
+      let filter = {};
+      const limit = 5;
+      const currentPage = parseInt(page) || 1;
+      const skip = (currentPage - 1) * limit;
+
+      // 🔹 Real-Time Search (Matches Any Word in Headline, Description, Breaking News, Four Lines)
+      if (query) {
+        filter.$or = [
+          { headline: { $regex: "^" + query, $options: "i" } }, // Starts with query
+          { description: { $regex: "^" + query, $options: "i" } }, // Starts with query
+          { breaking_news: { $regex: "^" + query, $options: "i" } }, // Starts with query
+          { four_lines: { $regex: "^" + query, $options: "i" } }, // Starts with query
+          { headline: { $regex: query, $options: "i" } }, // Contains query
+          { description: { $regex: query, $options: "i" } }, // Contains query
+          { breaking_news: { $regex: query, $options: "i" } }, // Contains query
+          { four_lines: { $regex: query, $options: "i" } }, // Contains query
+        ];
+      }
+
+      // 🔹 Filter by Exact Date (YYYY-MM-DD)
+      if (date) {
+        filter.date = date;
+      }
+
+      // 🔄 Fetch total news count for pagination
+      const totalNews = await News.count(filter);
+
+      // 📰 Fetch paginated news, sorted by latest date
+      const news = await News.find(filter)
+        .sort({ date: -1 })
+        .skip(skip)
+        .limit(limit);
+
+      console.log("search news", news);
+
+      res.json({
+        status: "success",
+        data: news,
+        totalPages: Math.ceil(totalNews / limit),
+        currentPage,
+        totalNews,
+      });
+    } catch (error) {
+      console.error("Search Error:", error);
+      res
+        .status(500)
+        .json({ status: "error", message: "Internal Server Error" });
     }
   },
 

@@ -15,37 +15,37 @@ module.exports = {
     res.render("app_users/list_app_user");
   },
   // App Users List End
-    // addfeilds: async function (req, res) {
-    //   try {
-    //     const result = await AppUser.updateMany(
-    //       {},
-    //       {
-    //         $set: {
-    //           contact_person: "",
-    //           contact_person_designation: "",
-    //           company_address: "",
-    //           city: "",
-    //           pincode: "",
-    //           state: "",
-    //           country: "",
-    //           password: "",
-    //           confirm_password: "",
-    //         },
-    //       }
-    //     );
+  // addfeilds: async function (req, res) {
+  //   try {
+  //     const result = await AppUser.updateMany(
+  //       {},
+  //       {
+  //         $set: {
+  //           contact_person: "",
+  //           contact_person_designation: "",
+  //           company_address: "",
+  //           city: "",
+  //           pincode: "",
+  //           state: "",
+  //           country: "",
+  //           password: "",
+  //           confirm_password: "",
+  //         },
+  //       }
+  //     );
 
-    //     console.log(`Updated ${result.modifiedCount} users.`);
-    //     return res.json({
-    //       success: true,
-    //       message: `${result.modifiedCount} users updated.`,
-    //     });
-    //   } catch (error) {
-    //     console.error("Error updating documents:", error);
-    //     return res
-    //       .status(500)
-    //       .json({ success: false, message: "Internal server error", error });
-    //   }
-    // },
+  //     console.log(`Updated ${result.modifiedCount} users.`);
+  //     return res.json({
+  //       success: true,
+  //       message: `${result.modifiedCount} users updated.`,
+  //     });
+  //   } catch (error) {
+  //     console.error("Error updating documents:", error);
+  //     return res
+  //       .status(500)
+  //       .json({ success: false, message: "Internal server error", error });
+  //   }
+  // },
 
   // Get App Users Data Start
   get_app_users: function (req, res) {
@@ -247,6 +247,44 @@ module.exports = {
     }
   },
 
+  getAllAppUsersAdmin: async function (req, res) {
+    try {
+      let { page } = req.body;
+      page = parseInt(page) || 1; // Default to page 1 if not provided
+      let limit = 25;
+      let skip = (page - 1) * limit;
+
+      // Fetch users with pagination
+      const users = await AppUser.find()
+        .sort({ createdAt: -1 }) // Sort by latest created users
+        .skip(skip)
+        .limit(limit);
+
+      // Get total user count
+      const totalUsers = await AppUser.count();
+
+      return res.status(200).json({
+        success: 1,
+        message: "Users fetched successfully",
+        users,
+        pagination: {
+          totalUsers,
+          totalPages: Math.ceil(totalUsers / limit),
+          currentPage: page,
+          limit,
+        },
+      });
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      return res
+        .status(500)
+        .json({
+          success: 0,
+          message: "Internal server error",
+          error: error.message,
+        });
+    }
+  },
   // Get App Users Data End
 
   // App User Delete Data Start

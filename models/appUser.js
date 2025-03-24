@@ -72,7 +72,8 @@ const AppUserSchema = mongoose.Schema(
         ip: { type: String, required: true },
         country: { type: String }, // ✅ Store only country
       },
-    ],    
+    ],
+    resetPasswordToken: { type: String },    
   },
   { timestamps: true }
 );

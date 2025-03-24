@@ -52,6 +52,12 @@ router.post("/order-success", services.orderSuccess);
 router.post("/change_password", services.changePassword);
 router.post("/get_payments", services.get_payments);
 router.post("/get_userSubscription", services.getUserSubscribe);
+router.post("/get_dashboardSubscription", services.getUserSubscribe_dashboard);
+// ✅ Route for requesting a password reset
+router.post("/forgot-password", services.forgotPassword);
+
+// ✅ Route for resetting the password
+router.post("/reset-password/:token", services.resetPassword);
 
 // Get Registered User Route Start
 /*router.get('/register', function(req, res) {

@@ -5,7 +5,6 @@
 
 <body class="hold-transition skin-blue sidebar-mini">
 	<div class="wrapper">
-
 		<header class="main-header">
 			<% include ../partials/header %>
 		</header>
@@ -16,65 +15,60 @@
 
 		<div class="content-wrapper">
 			<section class="content-header">
-				<h1>
-					Manage Digital Copies
-				</h1>
+				<h1>Manage Digital Copies</h1>
 			</section>
 			<section class="content">
-				<!-- for main content of the page -->
 				<div class="row">
 					<div class="col-md-12">
-						<!-- general form elements -->
 						<div class="box box-info">
 							<div class="box-header">
 								<h3 class="box-title">List Digital Copies</h3>
-							</div><!-- /.box-header -->
-							<div id="AlertInfo">                            
+							</div>
+							<div id="AlertInfo"> 
 								<div class="alert alert-danger" style="display: none">
 									<i class="fa fa-warning"></i>
 									<button class="close" data-dismiss="alert">×</button>
 									<span id="errorMsg">You have some form errors. Please check below.</span>
 								</div>
-
-								<div class="alert alert-success " style="display: none">
+								<div class="alert alert-success" style="display: none">
 									<i class="fa fa-check"></i>
 									<button class="close" data-dismiss="alert">×</button>
 									<span id="successMsg">Your form validation is successful!</span>
 								</div>
 							</div>
+                            <input type="text" id="searchBox" class="form-control" placeholder="Search..." style="margin: 10px; width: 300px;" />
 							<div class="table-responsive">
 								<table class="display compact" id="digital_copies_table">
-	                                <thead>
-	                                    <tr>
-	                                        <th>Sr. No.</th>
-	                                        <th>Url</th>
-                                            <th>Date</th> <!-- New Column Added -->
-	                                        <th>Image</th>
-                                            <th>Edition</th> <!-- ✅ New Location Column -->
-	                                        <th>Status</th>
-	                                        <th>Action</th>
-	                                    </tr>
-	                                </thead>
-	                                <tbody></tbody>
+					                <thead>
+					                    <tr>
+					                        <th>Sr. No.</th>
+					                        <th>Url</th>
+                                        <th>Date</th>
+					                        <th>Image</th>
+                                        <th>Edition</th>
+					                        <th>Status</th>
+					                        <th>Action</th>
+					                    </tr>
+					                </thead>
+					                <tbody></tbody>
                                     <tfoot>
                                         <tr>
                                             <th></th>
                                             <th></th>
-                                            <th></th> <!-- Empty for filtering -->
                                             <th></th>
-                                            <th id="location"></th> <!-- ✅ Added footer for filtering -->
+                                            <th></th>
+                                            <th id="location"></th>
                                             <th id="status"></th>
                                             <th></th>
                                         </tr>
                                     </tfoot>
-	                            </table>
-                        	</div>
-						</div><!-- /.box -->
+					            </table>
+                         </div>
+						</div>
 					</div>
 				</div>
 			</section>
 		</div>
-
 		<footer class="main-footer">
 			<% include ../partials/footer %>
 		</footer>
@@ -87,167 +81,69 @@
 	<script type="text/javascript">
 		var ajax_digital_copies_table;
     	$(document).ready(function() {
-
-            // $('').each( function () {
-                $('#digital_copies_table tfoot th#status').html( `<select class="form-control">
+            $('#digital_copies_table tfoot th#status').html(`<select class="form-control">
                                     <option value="">Select Status</option>
                                     <option value="1">Active</option>
                                     <option value="0">Inactive</option>
-                                </select>` );
-            // });
+                                </select>`);
 
-            // ✅ Add Location Filter Below This Line
-            $('#digital_copies_table tfoot th#location').html( `<select class="form-control">
-                <option value="">Select Edition</option>
-                <option value="Mumbai">Mumbai</option>
-				<option value="Gujarat">Gujarat</option>
-				<option value="Chennai">Chennai</option>
-				<option value="Delhi/NCR">Delhi/NCR</option>
-				<option value="Kolkata">Kolkata</option>
-				<option value="Tuticorin">Tuticorin</option>
-				<option value="kochi">kochi</option>
-            </select>` );
-
-        	if ($("#digital_copies_table").length) {
-                ajax_digital_copies_table = $("#digital_copies_table").DataTable({
-                    processing: true,
-                    serverSide: true,
-                    ajax: {
-                        type: "POST",
-                        url: "/digital_copies/get_digital_copies",
-                    },
-                    columns: [
-                        { data: null },
-                        { data: "url", name: "url",
-                            render: function (data, type, row, meta) {
-                                return type === "display" ? `<a href="${data}" target="_blank">${data}</a>` : data;
-                            }
-                        },
-                        { 
-                            data: "dateISO", name: "date",
-                            render: function (data) {
-                                if (!data) return "N/A"; // Handle missing dates
-                                const formattedDate = new Date(data).toLocaleDateString("en-GB", { 
-                                    year: "numeric", month: "short", day: "numeric" 
-                                });
-                                return formattedDate !== "Invalid Date" ? formattedDate : "N/A";
-                            }
-                        },
-                        { data: "image", name: "image",
-                            render: function (data) {
-                                return `<img src="${data}" width="100" height="100" alt="No Image"/>`;
-                            }
-                        },
-                        { 
-                            data: "location", name: "location", // ✅ Added Location Column
-                            render: function (data) {
-                                return data ? data : "Not Specified";
-                            }
-                        },
-                        { data: "status", name: "status",
-                            render: function (data) {
-                                return data == "1" ? "Active" : "Inactive";
-                            }
-                        },
-                        {
-                            defaultContent:
-                                '<a href="#" class="edit btn btn-primary btn-xs"><i class="fa fa-pencil-square-o"></i> Edit</a> ' +
-                                '<button type="button" class="delete btn btn-danger btn-xs"><i class="fa fa-trash"></i> Delete</button>',
-                        },
-                    ],
-                    order: [[2, "desc"]],
-                    columnDefs: [
-                        { searchable: false, orderable: false, targets: [0, 5, 6] }
-                    ],
-                    pageLength: 25,
-                    lengthMenu: [[25, 50, 100, -1], [25, 50, 100, "All"]],
-                    fnCreatedRow: function (nRow, aData) {
-                        $(nRow).attr("id", aData._id);
-                    },
-                    fnRowCallback: function (nRow, aData, iDisplayIndex) {
-                        $("td:first", nRow).html(iDisplayIndex + 1);
-                        return nRow;
-                    }
-                });
-            } else {
-                console.error("Table #digital_copies_table not found!");
-            }
-
-            ajax_digital_copies_table.columns([3]).every( function () {        
-                var that = this;
-                $( 'select', this.footer() ).on( 'change', function () {
-                    if ( that.search() !== this.value ) {
-                        that
-                        .search( this.value )
-                        .draw();
-                    }
-                });
+        	ajax_digital_copies_table = $("#digital_copies_table").DataTable({
+                processing: true,
+                serverSide: true,
+                ajax: {
+                    type: "POST",
+                    url: "/digital_copies/get_digital_copies",
+                },
+                columns: [
+                    { data: null },
+                    { data: "url", render: (data) => `<a href="${data}" target="_blank">${data}</a>` },
+                    { data: "dateISO", render: (data) => data ? new Date(data).toLocaleDateString("en-GB") : "N/A" },
+                    { data: "image", render: (data) => `<img src="${data}" width="100" height="100" alt="No Image"/>` },
+                    { data: "location", render: (data) => data || "Not Specified" },
+                    { data: "status", render: (data) => data == "1" ? "Active" : "Inactive" },
+                    { defaultContent: '<a href="#" class="edit btn btn-primary btn-xs">Edit</a> <button class="delete btn btn-danger btn-xs">Delete</button>' },
+                ],
+                order: [[2, "desc"]],
+                columnDefs: [{ searchable: false, orderable: false, targets: [0, 5, 6] }],
+                fnCreatedRow: (nRow, aData) => $(nRow).attr("id", aData._id),
+                fnRowCallback: (nRow, aData, iDisplayIndex) => {
+                    $("td:first", nRow).html(iDisplayIndex + 1);
+                    return nRow;
+                }
             });
 
+            $("#searchBox").on("keyup", function() {
+                ajax_digital_copies_table.search(this.value).draw();
+            });
 
-        	$('#digital_copies_table tbody').on('click', '.edit', function (e) {
-        		e.preventDefault();
-                var row = $(this).closest('tr');
-                // console.log(row[0].attributes[0].value);
-                var id = row[0].attributes[0].value;
-                window.location.href="/digital_copies/edit/"+id;
+            $('#digital_copies_table tbody').on('click', '.edit', function (e) {
+                e.preventDefault();
+                var id = $(this).closest('tr').attr('id');
+                window.location.href="/digital_copies/edit/" + id;
             });
 
             $('#digital_copies_table tbody').on('click', '.delete', function (e) {
-                var row = $(this).closest('tr');
-                // console.log(row[0].attributes[0].value);
-                var id = row[0].attributes[0].value;
-            	var errorMsgDiv = $('.alert-danger');
-            	var successMsgDiv = $('.alert-success');
-
-            	bootbox.confirm("Are you sure?", function(result) {
-                if(result)
-                {
-                    $.ajax({
-                        url: '/digital_copies/delete/'+id,
-                        type:'DELETE',
-                        data:id,
-                        success: function(data) {
-
-                            console.log("Response:", data);
-
-                            let status = data.status || "error"; // Default to error if missing
-                            let message = data.message || "Unexpected error";
-                        
-                            if (status === "error") {
-                                $('#errorMsg').html(message);
-                                $('.alert-danger').show().delay(3000).fadeOut();
-                                $('.alert-success').hide();
-                            } else if (status === "success") {
-                                $('#successMsg').html(message);
-                                $('.alert-success').show().delay(3000).fadeOut();
-                                $('.alert-danger').hide();
-                                filterData(); // Refresh the table
+                var id = $(this).closest('tr').attr('id');
+                bootbox.confirm("Are you sure?", function(result) {
+                    if(result) {
+                        $.ajax({
+                            url: '/digital_copies/delete/' + id,
+                            type: 'DELETE',
+                            success: (data) => {
+                                let status = data.status || "error";
+                                let message = data.message || "Unexpected error";
+                                if (status === "success") {
+                                    $('#successMsg').html(message).parent().show().delay(3000).fadeOut();
+                                    ajax_digital_copies_table.ajax.reload();
+                                } else {
+                                    $('#errorMsg').html(message).parent().show().delay(3000).fadeOut();
+                                }
                             }
-
-                        },
-
-                        error: function() {
-
-                            $('#errorMsg').html('There Is Some Form Error!');
-
-                            errorMsgDiv.show();  
-
-                            successMsgDiv.hide();
-
-                            errorMsgDiv.delay(3000).fadeOut();
-                        }
-                    });
-                }
-            	});
+                        });
+                    }
+                });
             });
-
-        	function filterData() {
-            	ajax_digital_copies_table.ajax.reload();
-        	}
     	});
 	</script>
-	</body>
+</body>
 </html>
-
-

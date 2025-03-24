@@ -12,6 +12,7 @@ router.get('/list', is_authenticated, appointments.list);
 router.post('/get_appointments', appointments.get_appointments);
 router.post('/get_appointment_website', appointments.get_appointments_website);
 router.post('/get_allappointment', appointments.get_allappointments);
+router.post('/search_appointments', appointments.search_appointments);
 // Get Appointments Route End
 
 // Appointment Add Route Start
