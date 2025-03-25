@@ -94,7 +94,7 @@ module.exports = {
   },
   // Get News Data Start
 
-  get_news_recent: function (req, res) {
+  get_news_recent: async function (req, res) {
     try {
       // Category ID to Name Mapping
       const categoryMap = {
@@ -109,20 +109,19 @@ module.exports = {
       };
 
       // Validate and extract order
-      var col =
-        req.body.columns?.[req.body.order?.[0]?.column]?.data ||
-        "default_column";
-      var order = req.body.order?.[0]?.dir === "asc" ? 1 : -1;
+      const col =
+        req.body.columns?.[req.body.order?.[0]?.column]?.data || "date";
+      const order = req.body.order?.[0]?.dir === "asc" ? 1 : -1;
 
       // Validate and extract search filters
-      var category_search = req.body.columns?.[1]?.search?.value
+      const category_search = req.body.columns?.[1]?.search?.value
         ? { category_id: req.body.columns[1].search.value }
         : {};
-      var date_search = req.body.columns?.[3]?.search?.value
+      const date_search = req.body.columns?.[3]?.search?.value
         ? { date: req.body.columns[3].search.value }
         : {};
 
-      var common_search = req.body.search?.value
+      const common_search = req.body.search?.value
         ? {
             $or: [
               { headline: { $regex: req.body.search.value, $options: "i" } },
@@ -132,51 +131,47 @@ module.exports = {
               { description: { $regex: req.body.search.value, $options: "i" } },
               { four_lines: { $regex: req.body.search.value, $options: "i" } },
               { sql_id: { $regex: req.body.search.value, $options: "i" } },
+              { image: { $regex: req.body.search.value, $options: "i" } },
             ],
           }
         : {};
 
-      var searchStr = {
+      const searchStr = {
         $and: [common_search, category_search, date_search],
       };
 
       // Count total records
-      News.count({}, function (err, recordsTotal) {
-        if (err) throw err;
+      const recordsTotal = await News.count({});
+      const recordsFiltered = await News.count(searchStr);
 
-        // Count filtered records
-        News.count(searchStr, function (err, recordsFiltered) {
-          if (err) throw err;
+      // Fetch filtered records
+      const results = await News.find(
+        searchStr,
+        "_id category_id headline date breaking_news four_lines image sql_id description inFocus",
+        {
+          skip: Number(req.body.start) || 0,
+          limit:
+            req.body.length != -1 ? Number(req.body.length) : recordsFiltered,
+        }
+      )
+        .sort({ [col]: order })
+        .limit(18)
+        .lean(); // Converts Mongoose documents to plain objects
 
-          // Fetch filtered records
-          News.find(
-            searchStr,
-            "_id category_id headline date breaking_news four_lines image sql_id description",
-            {
-              skip: 0, // Always start from the most recent
-              limit: 18, // Fetch only 18 recent news
-            }
-          )
-            .sort({ [col]: order })
-            .exec(function (err, results) {
-              if (err) throw err;
+      // console.log("Fetched News Data:", results); // Debugging: Check if `image` is present
 
-              // Map category_id to category name
-              results = results.map((news) => ({
-                ...news._doc,
-                category_name:
-                  categoryMap[news.category_id] || "Unknown Category",
-              }));
+      // Map category_id to category name
+      const mappedResults = results.map((news) => ({
+        ...news,
+        category_name: categoryMap[news.category_id] || "Unknown Category",
+      }));
 
-              // Send response
-              res.send({
-                draw: req.body.draw || 0,
-                recordsFiltered,
-                recordsTotal,
-                data: results,
-              });
-            });
-        });
+      // Send response
+      res.send({
+        draw: req.body.draw || 0,
+        recordsFiltered,
+        recordsTotal,
+        data: mappedResults,
       });
     } catch (error) {
       console.error("Error in get_news_recent:", error);
@@ -211,6 +206,7 @@ module.exports = {
               { description: { $regex: req.body.search.value, $options: "i" } },
               { four_lines: { $regex: req.body.search.value, $options: "i" } },
               { sql_id: { $regex: req.body.search.value, $options: "i" } },
+              { image: { $regex: req.body.search.value, $options: "i" } },
             ],
           }
         : {};
@@ -304,6 +300,7 @@ module.exports = {
               { description: { $regex: req.body.search.value, $options: "i" } },
               { four_lines: { $regex: req.body.search.value, $options: "i" } },
               { sql_id: { $regex: req.body.search.value, $options: "i" } },
+              { image: { $regex: req.body.search.value, $options: "i" } },
             ],
           }
         : {};
@@ -389,6 +386,7 @@ module.exports = {
               { image: { $regex: req.body.search.value, $options: "i" } },
               { four_lines: { $regex: req.body.search.value, $options: "i" } },
               { sql_id: { $regex: req.body.search.value, $options: "i" } },
+              { image: { $regex: req.body.search.value, $options: "i" } },
             ],
           }
         : {};
@@ -516,6 +514,7 @@ module.exports = {
               { image: { $regex: req.body.search.value, $options: "i" } },
               { four_lines: { $regex: req.body.search.value, $options: "i" } },
               { sql_id: { $regex: req.body.search.value, $options: "i" } },
+              { image: { $regex: req.body.search.value, $options: "i" } },
             ],
           }
         : {};
@@ -613,6 +612,7 @@ module.exports = {
               { description: { $regex: req.body.search.value, $options: "i" } },
               { four_lines: { $regex: req.body.search.value, $options: "i" } },
               { sql_id: { $regex: req.body.search.value, $options: "i" } },
+              { image: { $regex: req.body.search.value, $options: "i" } },
             ],
           }
         : {};
@@ -735,6 +735,42 @@ module.exports = {
     }
   },
 
+  getInFocusNews: async function (req, res) {
+    try {
+      // Define category mapping
+      const categoryMap = {
+        1: "Shipping News",
+        2: "Trade News",
+        3: "Port News",
+        4: "Transport News",
+        5: "Indian Economy",
+        6: "Special Report",
+        7: "International",
+        8: "Aviation Cargo Express",
+      };
+  
+      // Fetch in-focus news
+      const news = await News.find(
+        { inFocus: true },
+        "_id category_id headline date breaking_news four_lines image sql_id description inFocus"
+      )
+        .sort({ createdAt: -1 })
+        .lean(); // Convert to plain JS objects for modification
+  
+      // Add category name
+      const updatedNews = news.map((item) => ({
+        ...item,
+        category_name: categoryMap[item.category_id] || "Unknown Category",
+      }));
+  
+      res.status(200).json({ success: true, data: updatedNews });
+    } catch (error) {
+      console.error("Error fetching in-focus news:", error);
+      res.status(500).json({ success: false, error: "Internal server error" });
+    }
+  },
+  
+
   get_news: function (req, res) {
     try {
       // Validate and extract order
@@ -808,6 +844,83 @@ module.exports = {
       res.status(500).send({ error: "Internal server error" });
     }
   },
+
+  search_news_categoryId: async function (req, res) {
+    try {
+      console.log("REQ.BODY", req.body);
+  
+      let { query, date, page, categoryId } = req.body;
+      const limit = 5;
+      const currentPage = parseInt(page) || 1;
+      const skip = (currentPage - 1) * limit;
+  
+      // Validate input
+      query = query?.trim();
+      categoryId = parseInt(categoryId); // Ensure categoryId is a number
+  
+      if (!query && !date && !categoryId) {
+        return res.status(400).json({ error: "Provide at least a query, date, or categoryId" });
+      }
+  
+      // 🔹 Build search filter dynamically
+      let searchFilter = {};
+  
+      if (query) {
+        searchFilter.$or = [
+          { headline: { $regex: query, $options: "i" } },
+          { breaking_news: { $regex: query, $options: "i" } },
+          { description: { $regex: query, $options: "i" } },
+          { four_lines: { $regex: query, $options: "i" } },
+          { sql_id: { $regex: query, $options: "i" } },
+          { image: { $regex: query, $options: "i" } },
+        ];
+      }
+  
+      if (date) {
+        const startOfDay = new Date(date);
+        startOfDay.setUTCHours(0, 0, 0, 0); // Start of the day in UTC
+  
+        const endOfDay = new Date(date);
+        endOfDay.setUTCHours(23, 59, 59, 999); // End of the day in UTC
+  
+        searchFilter.date = { $gte: startOfDay, $lte: endOfDay }; // ✅ Matches any time on that date
+      }
+  
+      if (categoryId) {
+        searchFilter.category_id = categoryId; // Filter by category ID
+      }
+  
+      // 🔄 Fetch total news count for pagination
+      const totalNews = await News.count(searchFilter);
+  
+      // 📰 Fetch paginated news, sorted by latest date
+      const results = await News.find(
+        searchFilter,
+        "_id category_id headline date breaking_news four_lines image sql_id description"
+      )
+        .sort({ date: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean();
+  
+      console.log(results);
+  
+      res.json({
+        status: "success",
+        data: results,
+        totalPages: Math.ceil(totalNews / limit),
+        currentPage,
+        totalNews,
+      });
+  
+    } catch (error) {
+      console.error("Error in search_news_categoryId:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  },
+  
+  
+  
 
   // Get News Data End
 

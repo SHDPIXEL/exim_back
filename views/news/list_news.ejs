@@ -119,6 +119,7 @@
                 url : "/news/get_news",
                 dataSrc: function (json) {
                     // Ensure that the inFocus field is included in the response
+                    console.log("DATA",json.data)
                     json.data.forEach(function (newsItem) {
                         newsItem.inFocus = newsItem.inFocus || false; // Default to false if it's not defined
                     });
@@ -128,6 +129,7 @@
             // language: {searchPlaceholder: "Search Headline, Link Url and Four Lnes"},
             columns: [
                 {data: null},
+             
                 {data: 'category_id', name: 'category_id',
                     'render': function( data, type, row, meta) {
                         if(type === 'display') {
