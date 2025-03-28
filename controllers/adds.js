@@ -5,6 +5,7 @@ let Adds = require("../models/adds");
 
 let selectedAd = require("../models/selectedAds");
 
+
 module.exports = {
   createAdd: async function (req, res) {
     try {
@@ -369,7 +370,6 @@ module.exports = {
     }
   },
   
-
   getSelectedMedia: async function (req, res) {
     try {
       const allSelectedAds = await selectedAd.find();
@@ -410,17 +410,17 @@ module.exports = {
       const page = parseInt(req.body.page) || 1;
       const limit = parseInt(req.body.limit) || 25;
       const skip = (page - 1) * limit;
-
+  
       // Fetch total count
       const totalRecords = await selectedAd.count();
-
+  
       // Fetch paginated data, sorted by creation date (if needed)
       const allSelectedAds = await selectedAd
         .find()
         .sort({ _id: 1 }) // Sorting to maintain order
         .skip(skip)
         .limit(limit);
-
+  
       // Function to format date as 'DD-MM-YYYY'
       const formatDate = (date) => {
         if (!date) return null;
@@ -429,23 +429,43 @@ module.exports = {
           d.getMonth() + 1
         ).padStart(2, "0")}-${d.getFullYear()}`;
       };
-
-      // Transform data
-      const transformedAds = allSelectedAds.map((ad) => ({
-        ...ad.toObject(),
-        selectedMedia: ad.selectedMedia.map((media) => ({
-          position: media.position,
-          startDate: formatDate(media.startDate), // Corrected path
-          endDate: formatDate(media.endDate), // Corrected path
-          media: media.media.map((item) => ({
-            filePath: item.mediaUrl,
-            mediaType: item.mediaType,
-            sequenceNumber: item.sequenceNumber,
-            status: item.status,
-          })),
-        })),
-      }));
-
+  
+      // Get today's date in the format YYYY-MM-DD
+      const today = new Date().setHours(0, 0, 0, 0); // Normalize to midnight
+  
+      // Transform data and update status if endDate < today
+      const transformedAds = allSelectedAds.map((ad) => {
+        const updatedMedia = ad.selectedMedia.map((media) => {
+          // Check if any media's endDate is less than today and update status
+          const updatedMediaItems = media.media.map((item) => {
+            const endDate = new Date(media.endDate).setHours(0, 0, 0, 0);
+            if (endDate < today) {
+              item.status = "inactive"; // Set status to inactive if endDate is past
+            }
+            return {
+              ...item,
+              filePath: item.mediaUrl,
+              mediaType: item.mediaType,
+              sequenceNumber: item.sequenceNumber,
+              status: item.status,
+            };
+          });
+  
+          return {
+            ...media,
+            position: media.position,
+            startDate: formatDate(media.startDate), 
+            endDate: formatDate(media.endDate), 
+            media: updatedMediaItems,
+          };
+        });
+  
+        return {
+          ...ad.toObject(),
+          selectedMedia: updatedMedia,
+        };
+      });
+  
       return res.status(200).json({
         success: true,
         message: "Selected Ads Retrieved successfully",
@@ -467,7 +487,7 @@ module.exports = {
         error: error.message,
       });
     }
-  },
+  },  
 
   deleteSelectedMedia: async function (req, res) {
     try {
@@ -558,5 +578,7 @@ module.exports = {
       console.error(error);
       res.status(500).json({ message: "Server error" });
     }
-  },
+  }, 
 };
+
+

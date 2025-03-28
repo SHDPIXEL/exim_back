@@ -217,53 +217,70 @@ module.exports = {
   search_appointments: async function (req, res) {
     try {
       console.log("req appointments", req.body);
-
+  
       const page = parseInt(req.body.page) || 1;
       const limit = 5;
       const skip = (page - 1) * limit;
       const column_order = req.body.sort || { createdAt: -1 };
-
+  
       let { edition, query } = req.body;
       let filter = {};
-
-      // 🔹 Real-Time Search in Description
+  
+      // 🔹 Search job titles if query is provided
       if (query) {
-        filter.$or = [
-          { description: { $regex: "^" + query, $options: "i" } }, // Starts with query
-          { description: { $regex: query, $options: "i" } }, // Contains query
-        ];
+        // Search for matching job titles in AppointmentJobTitle collection
+        const matchingJobTitles = await JobTitle.find({
+          job_title: { $regex: query, $options: "i" }, // Case-insensitive search
+        }).select("_id");
+  
+        const jobTitleIds = matchingJobTitles.map((job) => job._id);
+        if (jobTitleIds.length > 0) {
+          filter["job_title_id"] = { $in: jobTitleIds }; // Filter appointments by matching job title
+        } else {
+          // If no job titles found, return empty result set
+          return res.status(200).json({
+            success: true,
+            message: "No matching job titles found",
+            appointments: [],
+            totalPages: 0,
+            currentPage: page,
+            totalAppointments: 0,
+          });
+        }
       }
-
-      // 🔹 Fetch Matching Edition IDs Directly
+  
+      // 🔹 Filter by Matching Edition IDs (Optional)
       if (edition) {
         const matchingEditions = await Edition.find({
           edition: { $regex: edition, $options: "i" },
         }).select("_id");
-
+  
         const editionIds = matchingEditions.map((ed) => ed._id);
         if (editionIds.length > 0) {
           filter["edition_id"] = { $in: editionIds };
         }
       }
-
-      // 🔄 Fetch filtered appointments with job title
+  
+      // 🔄 Fetch filtered appointments count
       const totalAppointments = await Appointment.count(filter);
+  
+      // 📝 Fetch filtered appointments with job title
       const appointments = await Appointment.find(filter)
         .skip(skip)
         .limit(limit)
         .sort(column_order)
         .populate({ path: "edition_id", select: "edition" }) // Fetch edition name
         .populate({ path: "job_title_id", select: "job_title" }); // Fetch job title ✅ FIXED
-
+  
       // Transform response to include job title
       const transformedAppointments = appointments.map((appointment) => ({
         ...appointment.toObject(),
         edition: appointment.edition_id?.edition || "N/A",
         job_title: appointment.job_title_id?.job_title || "N/A", // ✅ FIXED
       }));
-
+  
       console.log("search data", transformedAppointments);
-
+  
       res.status(200).json({
         success: true,
         message: "Appointments retrieved successfully",
@@ -279,6 +296,7 @@ module.exports = {
         .json({ success: false, message: "Internal Server Error" });
     }
   },
+  
 
   getLatestAppointments: async function (req, res) {
     try {

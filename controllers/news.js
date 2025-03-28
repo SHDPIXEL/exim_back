@@ -706,7 +706,22 @@ module.exports = {
 
       // 🔹 Filter by Exact Date (YYYY-MM-DD)
       if (date) {
-        filter.date = date;
+        // Convert date to ISO format (YYYY-MM-DD)
+        const [day, month, year] = date.split("/");
+        const formattedDate = new Date(`${year}-${month}-${day}`).setHours(
+          0,
+          0,
+          0,
+          0
+        );
+        const nextDay = new Date(formattedDate).setDate(
+          new Date(formattedDate).getDate() + 1
+        ); // Get the next day's start
+
+        filter.date = {
+          $gte: formattedDate, // Greater than or equal to the start of the selected day
+          $lt: nextDay, // Less than the start of the next day
+        };
       }
 
       // 🔄 Fetch total news count for pagination
@@ -748,7 +763,7 @@ module.exports = {
         7: "International",
         8: "Aviation Cargo Express",
       };
-  
+
       // Fetch in-focus news
       const news = await News.find(
         { inFocus: true },
@@ -756,20 +771,19 @@ module.exports = {
       )
         .sort({ createdAt: -1 })
         .lean(); // Convert to plain JS objects for modification
-  
+
       // Add category name
       const updatedNews = news.map((item) => ({
         ...item,
         category_name: categoryMap[item.category_id] || "Unknown Category",
       }));
-  
+
       res.status(200).json({ success: true, data: updatedNews });
     } catch (error) {
       console.error("Error fetching in-focus news:", error);
       res.status(500).json({ success: false, error: "Internal server error" });
     }
   },
-  
 
   get_news: function (req, res) {
     try {
@@ -848,23 +862,25 @@ module.exports = {
   search_news_categoryId: async function (req, res) {
     try {
       console.log("REQ.BODY", req.body);
-  
+
       let { query, date, page, categoryId } = req.body;
       const limit = 5;
       const currentPage = parseInt(page) || 1;
       const skip = (currentPage - 1) * limit;
-  
+
       // Validate input
       query = query?.trim();
       categoryId = parseInt(categoryId); // Ensure categoryId is a number
-  
+
       if (!query && !date && !categoryId) {
-        return res.status(400).json({ error: "Provide at least a query, date, or categoryId" });
+        return res
+          .status(400)
+          .json({ error: "Provide at least a query, date, or categoryId" });
       }
-  
+
       // 🔹 Build search filter dynamically
       let searchFilter = {};
-  
+
       if (query) {
         searchFilter.$or = [
           { headline: { $regex: query, $options: "i" } },
@@ -875,24 +891,24 @@ module.exports = {
           { image: { $regex: query, $options: "i" } },
         ];
       }
-  
+
       if (date) {
         const startOfDay = new Date(date);
         startOfDay.setUTCHours(0, 0, 0, 0); // Start of the day in UTC
-  
+
         const endOfDay = new Date(date);
         endOfDay.setUTCHours(23, 59, 59, 999); // End of the day in UTC
-  
+
         searchFilter.date = { $gte: startOfDay, $lte: endOfDay }; // ✅ Matches any time on that date
       }
-  
+
       if (categoryId) {
         searchFilter.category_id = categoryId; // Filter by category ID
       }
-  
+
       // 🔄 Fetch total news count for pagination
       const totalNews = await News.count(searchFilter);
-  
+
       // 📰 Fetch paginated news, sorted by latest date
       const results = await News.find(
         searchFilter,
@@ -902,9 +918,9 @@ module.exports = {
         .skip(skip)
         .limit(limit)
         .lean();
-  
+
       console.log(results);
-  
+
       res.json({
         status: "success",
         data: results,
@@ -912,15 +928,11 @@ module.exports = {
         currentPage,
         totalNews,
       });
-  
     } catch (error) {
       console.error("Error in search_news_categoryId:", error);
       res.status(500).json({ error: "Internal server error" });
     }
   },
-  
-  
-  
 
   // Get News Data End
 
