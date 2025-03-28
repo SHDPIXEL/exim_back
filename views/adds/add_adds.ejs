@@ -48,27 +48,42 @@
                                         </div>
                                     </div>
 
+                                    <!-- <div class="form-group">
+                                        <label class="col-md-3 control-label">Position <span style="color:red;">*</span></label>
+                                        <div class="col-md-6">
+                                            <input type="text" class="form-control" name="position" id="position" placeholder="Enter position (e.g., top, bottom)" required>
+                                        </div>
+                                    </div> -->
+
                                     <div class="form-group">
-                                        <label class="col-md-3 control-label">Images <span style="color:red;">*</span></label>
+                                        <label class="col-md-3 control-label">Redirect URL <span style="color:red;">*</span></label>
+                                        <div class="col-md-6">
+                                            <input type="url" class="form-control" name="url" id="url" placeholder="Enter URL (e.g., https://example.com)" required>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="col-md-3 control-label">Image</label>
                                         <div class="col-md-6">
                                             <div class="custom-file-upload">
-                                                <input type="file" class="form-control" name="images" id="images" multiple accept="image/*" style="position: absolute; left: -9999px;">
-                                                <button type="button" class="btn btn-primary" id="customImageBtn">Choose Images</button>
+                                                <input type="file" class="form-control" name="images" id="images" accept="image/*" style="position: absolute; left: -9999px;">
+                                                <button type="button" class="btn btn-primary" id="customImageBtn">Choose Image</button>
                                                 <span id="image-chosen">No file selected</span>
                                             </div>
                                         </div>
                                     </div>
                                     
                                     <div class="form-group">
-                                        <label class="col-md-3 control-label">Videos <span style="color:red;">*</span></label>
+                                        <label class="col-md-3 control-label">Video</label>
                                         <div class="col-md-6">
                                             <div class="custom-file-upload">
-                                                <input type="file" class="form-control" name="videos" id="videos" multiple accept="video/mp4, video/avi, video/mkv, video/mov" style="position: absolute; left: -9999px;">
-                                                <button type="button" class="btn btn-primary" id="customVideoBtn">Choose Videos</button>
+                                                <input type="file" class="form-control" name="videos" id="videos" accept="video/mp4, video/avi, video/mkv, video/mov" style="position: absolute; left: -9999px;">
+                                                <button type="button" class="btn btn-primary" id="customVideoBtn">Choose Video</button>
                                                 <span id="video-chosen">No file selected</span>
                                             </div>
                                         </div>
                                     </div>
+
                                 </div>
 
                                 <div class="box-footer text-right">
@@ -102,7 +117,7 @@
                 
                 // Collect the form data, including files
                 let formData = new FormData(this);
-    
+
                 // Make the AJAX request
                 $.ajax({
                     url: '/adds/store',
@@ -128,24 +143,42 @@
                     }
                 });
             });
-    
+
             // Handle custom file selection display
             $('#customImageBtn').on('click', function() {
                 $('#images').click();
             });
-    
+
             $('#images').on('change', function() {
                 let imageFileNames = Array.from(this.files).map(file => file.name).join(', ');
                 $('#image-chosen').text(imageFileNames || 'No file selected');
+
+                // Disable video input when an image is chosen
+                if (this.files.length > 0) {
+                    $('#videos').prop('disabled', true);
+                    $('#customVideoBtn').prop('disabled', true);
+                } else {
+                    $('#videos').prop('disabled', false);
+                    $('#customVideoBtn').prop('disabled', false);
+                }
             });
-    
+
             $('#customVideoBtn').on('click', function() {
                 $('#videos').click();
             });
-    
+
             $('#videos').on('change', function() {
                 let videoFileNames = Array.from(this.files).map(file => file.name).join(', ');
                 $('#video-chosen').text(videoFileNames || 'No file selected');
+
+                // Disable image input when a video is chosen
+                if (this.files.length > 0) {
+                    $('#images').prop('disabled', true);
+                    $('#customImageBtn').prop('disabled', true);
+                } else {
+                    $('#images').prop('disabled', false);
+                    $('#customImageBtn').prop('disabled', false);
+                }
             });
         });
     </script>    

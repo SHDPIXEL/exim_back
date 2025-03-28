@@ -17,7 +17,10 @@ router.get('/list', (req, res) => {
 
 router.post('/store',polls.addPolls)
 router.post('/get_Poll',polls.getPolls)
+router.get('/get/:id', polls.getPollById);
+router.put('/update/:id', polls.updatePoll);
 router.post('/submit_polls',polls.submitPoll)
+router.delete('/delete/:id', polls.deletePoll);
 
 
 module.exports = router;

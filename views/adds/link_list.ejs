@@ -36,6 +36,8 @@
                       <tr>
                         <th>Sr. No.</th>
                         <th>Position</th>
+                        <th>Start Date</th> <!-- New Column -->
+                        <th>End Date</th>   <!-- New Column -->
                         <th>Images</th>
                         <th>Videos</th>
                         <th>Action</th>
@@ -98,52 +100,72 @@
             },
             {
               data: "selectedMedia",
+              render: function (data) {
+                if (!data || data.length === 0) return "N/A";
+            
+                // Extract first media item’s startDate (or update logic as needed)
+                const firstMedia = data[0];
+                return firstMedia.startDate ? firstMedia.startDate : "N/A";
+              },
+            },
+            {
+              data: "selectedMedia",
+              render: function (data) {
+                if (!data || data.length === 0) return "N/A";
+            
+                // Extract first media item’s endDate (or update logic as needed)
+                const firstMedia = data[0];
+                return firstMedia.endDate ? firstMedia.endDate : "N/A";
+              },
+            },            
+            {
+              data: "selectedMedia",
               render: function (data, type, row) {
                 if (!data || data.length === 0) return "<span>No images</span>";
-
+            
+                // Count total media items (both images and videos)
+                let totalMediaCount = data.reduce((count, media) => count + media.media.length, 0);
+            
                 return data
                   .map(
                     (media) => `
-                                <div style="margin-bottom: 10px;">
-                                    <div style="display: flex; flex-wrap: wrap; gap: 10px;">
-                                        ${media.media
-                                          .filter(
-                                            (item) => item.mediaType === "image"
-                                          )
-                                          .map(
-                                            (image) => `
-                                                <div style="width: 32%; text-align: center;">
-                                                    <img src="${
-                                                      image.filePath
-                                                    }" width="100" style="display: block; margin: auto;" />
-                                                    <div>Seq: ${
-                                                      image.sequenceNumber
-                                                    }</div>
-                                                    <select class="media-status" data-id="${
-                                                      row._id
-                                                    }" data-type="image" data-sequence="${
-                                              image.sequenceNumber
-                                            }">
-                                                        <option value="Active" ${
-                                                          image.status ===
-                                                          "Active"
-                                                            ? "selected"
-                                                            : ""
-                                                        }>Active</option>
-                                                        <option value="Inactive" ${
-                                                          image.status ===
-                                                          "Inactive"
-                                                            ? "selected"
-                                                            : ""
-                                                        }>Inactive</option>
-                                                    </select>
-                                                </div>
-                                            `
-                                          )
-                                          .join("")}
+                      <div style="margin-bottom: 10px;">
+                          <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                              ${media.media
+                                .filter((item) => item.mediaType === "image")
+                                .map((image) => {
+                                  const sequenceOptions = [...Array(totalMediaCount).keys()] // Generate up to totalMediaCount
+                                    .map(
+                                      (num) =>
+                                        `<option value="${num + 1}" ${
+                                          image.sequenceNumber === num + 1 ? "selected" : ""
+                                        }>${num + 1}</option>`
+                                    )
+                                    .join("");
+            
+                                  // Disable Inactive option if sequence is 1
+                                  const isDisabled = image.sequenceNumber === 1 ? "disabled" : "";
+                                  return `
+                                    <div style="width: 32%; text-align: center;">
+                                        <img src="${image.filePath}" width="100" style="display: block; margin: auto;" />
+                                        <div>Seq: 
+                                          <select class="sequence-select" data-id="${row._id}" data-type="image" data-old-seq="${image.sequenceNumber}">
+                                            ${sequenceOptions}
+                                          </select>
+                                        </div>
+                                        <div>Status: 
+                                          <select class="media-status" data-id="${row._id}" data-type="image" data-sequence="${image.sequenceNumber}">
+                                            <option value="Active" ${image.status === "Active" ? "selected" : ""}>Active</option>
+                                            <option value="Inactive" ${image.status === "Inactive" ? "selected" : ""} ${isDisabled}>Inactive</option>
+                                          </select>
+                                        </div>
                                     </div>
-                                </div>
-                            `
+                                  `;
+                                })
+                                .join("")}
+                          </div>
+                      </div>
+                    `
                   )
                   .join("");
               },
@@ -152,50 +174,51 @@
               data: "selectedMedia",
               render: function (data, type, row) {
                 if (!data || data.length === 0) return "<span>No videos</span>";
-
+            
+                // Count total media items (both images and videos)
+                let totalMediaCount = data.reduce((count, media) => count + media.media.length, 0);
+            
                 return data
                   .map(
                     (media) => `
-                                <div>
+                      <div>
+                          <div>
+                              ${media.media
+                                .filter((item) => item.mediaType === "video")
+                                .map((video) => {
+                                  const sequenceOptions = [...Array(totalMediaCount).keys()] // Generate up to totalMediaCount
+                                    .map(
+                                      (num) =>
+                                        `<option value="${num + 1}" ${
+                                          video.sequenceNumber === num + 1 ? "selected" : ""
+                                        }>${num + 1}</option>`
+                                    )
+                                    .join("");
+            
+                                  // Disable Inactive option if sequence is 1
+                                  const isDisabled = video.sequenceNumber === 1 ? "disabled" : "";
+            
+                                  return `
                                     <div>
-                                        ${media.media
-                                          .filter(
-                                            (item) => item.mediaType === "video"
-                                          )
-                                          .map(
-                                            (video) => `
-                                                <div>
-                                                    <a href="${
-                                                      video.filePath
-                                                    }" target="_blank">Watch Video</a>
-                                                    <div>Seq: ${
-                                                      video.sequenceNumber
-                                                    }</div>
-                                                    <select class="media-status" data-id="${
-                                                      row._id
-                                                    }" data-type="video" data-sequence="${
-                                              video.sequenceNumber
-                                            }">
-                                                        <option value="Active" ${
-                                                          video.status ===
-                                                          "Active"
-                                                            ? "selected"
-                                                            : ""
-                                                        }>Active</option>
-                                                        <option value="Inactive" ${
-                                                          video.status ===
-                                                          "Inactive"
-                                                            ? "selected"
-                                                            : ""
-                                                        }>Inactive</option>
-                                                    </select>
-                                                </div>
-                                            `
-                                          )
-                                          .join("<br>")}
+                                        <a href="${video.filePath}" target="_blank">Watch Video</a>
+                                        <div>Seq: 
+                                          <select class="sequence-select" data-id="${row._id}" data-type="video" data-old-seq="${video.sequenceNumber}">
+                                            ${sequenceOptions}
+                                          </select>
+                                        </div>
+                                        <div>Status: 
+                                          <select class="media-status" data-id="${row._id}" data-type="video" data-sequence="${video.sequenceNumber}">
+                                            <option value="Active" ${video.status === "Active" ? "selected" : ""}>Active</option>
+                                            <option value="Inactive" ${video.status === "Inactive" ? "selected" : ""} ${isDisabled}>Inactive</option>
+                                          </select>
+                                        </div>
                                     </div>
-                                </div>
-                            `
+                                  `;
+                                })
+                                .join("<br>")}
+                          </div>
+                      </div>
+                    `
                   )
                   .join("");
               },
@@ -244,6 +267,34 @@
             },
             error: function (xhr) {
               alert("Error updating media status: " + xhr.responseText);
+            },
+          });
+        });
+
+        $("#ads_table tbody").on("change", ".sequence-select", function () {
+          var addId = $(this).data("id");
+          var mediaType = $(this).data("type");
+          var oldSequence = $(this).data("old-seq");
+          var newSequence = $(this).val();
+
+          if (oldSequence == newSequence) return; // No change
+
+          $.ajax({
+            type: "POST",
+            url: "/adds/updateMediaSequence",
+            contentType: "application/json",
+            data: JSON.stringify({
+              addId,
+              mediaType,
+              oldSequence,
+              newSequence,
+            }),
+            success: function (response) {
+              alert(response.message);
+              $("#ads_table").DataTable().ajax.reload();
+            },
+            error: function (xhr) {
+              alert("Error updating sequence: " + xhr.responseText);
             },
           });
         });

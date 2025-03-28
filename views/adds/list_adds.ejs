@@ -35,8 +35,7 @@
                     <thead>
                       <tr>
                         <th>Sr. No.</th>
-                        <th>Images</th>
-                        <th>Videos</th>
+                        <th>Media</th>
                         <th>Status</th>
                         <th>Action</th>
                       </tr>
@@ -55,7 +54,10 @@
 
     <% include ../partials/tail %>
 
-    <script src="../../datatables/jquery.dataTables.js" type="text/javascript"></script>
+    <script
+      src="../../datatables/jquery.dataTables.js"
+      type="text/javascript"
+    ></script>
     <script src="../../bootbox/bootbox.min.js" type="text/javascript"></script>
 
     <script>
@@ -67,8 +69,8 @@
             type: "POST",
             url: "/adds/get_adds_Admin",
             data: function (d) {
-              d.page = d.start / d.length + 1; // Convert DataTables start index to page number
-              d.limit = d.length; // Number of records per page
+              d.page = d.start / d.length + 1;
+              d.limit = d.length;
             },
             dataSrc: function (json) {
               console.log("API Response:", json);
@@ -81,49 +83,29 @@
           columns: [
             { data: null },
             {
-              data: "images",
-              name: "images",
+              data: "media",
+              name: "media",
               render: function (data, type, row) {
-                if (!Array.isArray(data) || data.length === 0) {
-                  return "<span>No images</span>";
+                if (!data || !data.filePath) {
+                  return "<span>No media</span>";
                 }
 
+                let imageUrl = data.filePath.trim();
+
                 return `
-                  <div style="display: flex; flex-wrap: wrap; gap: 10px; max-width: 350px;">
-                    ${data
-                      .map(
-                        (image, index) => `
-                          <div style="width: 32%; text-align: center;">
-                            <img src="${image.filePath}" alt="Ad Image" width="100" style="display: block; margin: auto;" />
-                            <select class="media-status" data-id="${row._id}" data-type="images" data-index="${index}" style="width: 100%; margin-top: 5px;">
-                              <option value="Active" ${image.status === "Active" ? "selected" : ""}>Active</option>
-                              <option value="Inactive" ${image.status === "Inactive" ? "selected" : ""}>Inactive</option>
-                            </select>
-                          </div>`
-                      )
-                      .join("")}
-                  </div>`;
-              },
-            },
-            {
-              data: "videos",
-              name: "videos",
-              render: function (data, type, row) {
-                if (!Array.isArray(data) || data.length === 0) {
-                  return "<span>No videos</span>";
-                }
-                return data
-                  .map(
-                    (video, index) => `
-                      <div>
-                        <a href="${video.filePath}" target="_blank">Watch Video</a>
-                        <select class="media-status" data-id="${row._id}" data-type="videos" data-index="${index}">
-                          <option value="Active" ${video.status === "Active" ? "selected" : ""}>Active</option>
-                          <option value="Inactive" ${video.status === "Inactive" ? "selected" : ""}>Inactive</option>
-                        </select>
-                      </div>`
-                  )
-                  .join("<br>");
+                  <div style="text-align: center;">
+                    <img src="${imageUrl}" alt="Ad Image" width="100" />
+                    <br />
+                    <select class="media-status" data-addid="${row._id}">
+                      <option value="Active" ${
+                        data.status === "Active" ? "selected" : ""
+                      }>Active</option>
+                      <option value="Inactive" ${
+                        data.status === "Inactive" ? "selected" : ""
+                      }>Inactive</option>
+                    </select>
+                  </div>
+                `;
               },
             },
             { data: "status", name: "status" },
@@ -146,34 +128,39 @@
             [25, 50, 100, 200, -1],
             [25, 50, 100, 200, "All"],
           ],
-          serverMethod: "POST",
+          serverMethod: "GET",
           drawCallback: function (settings) {
             var api = this.api();
             var startIndex = api.context[0]._iDisplayStart;
-            api.column(0, { search: "applied", order: "applied" }).nodes().each(function (cell, i) {
-              cell.innerHTML = startIndex + i + 1;
-            });
+            api
+              .column(0, { search: "applied", order: "applied" })
+              .nodes()
+              .each(function (cell, i) {
+                cell.innerHTML = startIndex + i + 1;
+              });
           },
         });
 
-        // Update media status on change
         $("#ads_table tbody").on("change", ".media-status", function () {
-          var addId = $(this).data("id");
-          var mediaType = $(this).data("type");
-          var mediaIndex = $(this).data("index");
-          var status = $(this).val();
+          var addId = $(this).data("addid"); // Get Ad ID
+          var newStatus = $(this).val(); // Get selected status
+
+          console.log("Sending Request:", { addId, status: newStatus });
 
           $.ajax({
             type: "POST",
             url: "/adds/update-media-status",
             contentType: "application/json",
-            data: JSON.stringify({ addId, mediaType, mediaIndex, status }),
+            data: JSON.stringify({
+              addId: addId,
+              status: newStatus, // Send only addId and status
+            }),
             success: function (response) {
-              alert(response.message);
-              ajax_ads_table.ajax.reload(); // Refresh table after update
+              alert("Status updated successfully!");
+              ajax_ads_table.ajax.reload(null, false); // Refresh table without resetting pagination
             },
             error: function (xhr) {
-              alert("Error updating media status: " + xhr.responseText);
+              alert("Error updating status: " + xhr.responseText);
             },
           });
         });

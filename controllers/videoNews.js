@@ -15,46 +15,59 @@ module.exports = {
   // Create Video News
   createVideoNews: async (req, res) => {
     try {
-      const {
-        category_id,
-        date,
-        headline,
-        breaking_news,
-        description,
-        four_lines,
-        urls,
-        inFocus,
-      } = req.body;
-  
-      const videoPath = req.file ? req.file.path : "";
-      
-      // Check if there's a video uploaded
-      const isVideo = videoPath ? true : false;
-  
-      const newVideoNews = new VideoNews({
-        category_id,
-        date,
-        headline,
-        breaking_news,
-        description,
-        four_lines,
-        videos: videoPath,
-        urls,
-        inFocus,
-        isVideo, // Set isVideo to true if a video is uploaded
-      });
-  
-      await newVideoNews.save();
-      res.status(201).json({
-        message: "Video news created successfully",
-        data: newVideoNews,
-      });
-    } catch (error) {
-      res.status(500).json({ message: error.message });
-    }
-  },
-  
+        const {
+            category_id,
+            date,
+            headline,
+            breaking_news,
+            description,
+            four_lines,
+            urls,
+            inFocus,
+        } = req.body;
 
+        const videoPath = req.file ? req.file.path : "";
+        const isVideo = !!videoPath;
+
+        // Convert input date to 'YYYY-MM-DD'
+        const inputDate = new Date(date);
+        const startOfDay = new Date(inputDate.setUTCHours(0, 0, 0, 0)); // 00:00:00 UTC
+        const endOfDay = new Date(inputDate.setUTCHours(23, 59, 59, 999)); // 23:59:59 UTC
+
+        // Check if a video news entry already exists for the same date
+        const existingNews = await VideoNews.findOne({
+            date: {
+                $gte: startOfDay, // Start of the given day
+                $lte: endOfDay,   // End of the given day
+            }
+        });
+
+        if (existingNews) {
+            return res.status(400).json({ message: "A Video news entry already exists for this date." });
+        }
+
+        const newVideoNews = new VideoNews({
+            category_id,
+            date: startOfDay, // Store the date in UTC format
+            headline,
+            breaking_news,
+            description,
+            four_lines,
+            videos: videoPath,
+            urls,
+            inFocus,
+            isVideo,
+        });
+
+        await newVideoNews.save();
+        res.status(201).json({
+            message: "Video news created successfully",
+            data: newVideoNews,
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+},
   // Fetch All Video News
 
   getAllVideoNews: async (req, res) => {

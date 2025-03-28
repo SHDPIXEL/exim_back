@@ -97,5 +97,7 @@ router.post("/get_selected",Adds.getSelectedMedia)
 router.post("/get_selected_Admin",Adds.getSelectedMediaAdmin)
 router.delete("/delete-selected-media/:id", Adds.deleteSelectedMedia);
 router.post("/updateSelectedMediaStatus", Adds.updateSelectedMediaStatus);
+router.post("/updateMediaSequence", Adds.updateMediaSequence);
+
 
 module.exports = router;

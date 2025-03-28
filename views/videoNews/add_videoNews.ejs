@@ -84,13 +84,13 @@
                                 
                                     <!-- Breaking News -->
                                     <div class="form-group">
-                                        <label>Breaking News <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="breaking_news" name="breaking_news" placeholder="Breaking News" value="<%= videoNews ? videoNews.breaking_news : '' %>" required>
+                                        <label>Breaking News</label>
+                                        <input type="text" class="form-control" id="breaking_news" name="breaking_news" placeholder="Breaking News" value="<%= videoNews ? videoNews.breaking_news : '' %>">
                                     </div>
                                 
                                     <!-- Four Lines -->
                                     <div class="form-group">
-                                        <label>Four Lines <span class="text-danger">*</span></label>
+                                        <label>Four Lines </span></label>
                                         <textarea class="form-control" id="four_lines" name="four_lines" placeholder="Enter Four Lines" required><%= videoNews ? videoNews.four_lines : '' %></textarea>
                                     </div>
                                 
@@ -191,7 +191,7 @@
                         formData.set('date', formattedDate);
                     }
                 }
-
+            
                 $.ajax({
                     url: isUpdate ? `/videoNews/update/${$('#news_id').val()}` : "/videoNews/store",
                     type: isUpdate ? "PUT" : "POST",
@@ -204,7 +204,11 @@
                         window.location.href = "/videoNews/list";
                     },
                     error: function(xhr) {
-                        alert("Error: " + xhr.responseJSON.message);
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            alert(xhr.responseJSON.message); // Display the error message from backend
+                        } else {
+                            alert("An unexpected error occurred. Please try again.");
+                        }
                     }
                 });
             });

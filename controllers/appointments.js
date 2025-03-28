@@ -280,6 +280,38 @@ module.exports = {
     }
   },
 
+  getLatestAppointments: async function (req, res) {
+    try {
+      // Fetch all editions
+      const editions = await Edition.find();
+
+      const latestAppointments = await Promise.all(
+        editions.map(async (edition) => {
+          // Find the latest appointment for the current edition
+          const latestAppointment = await Appointment.findOne({
+            edition_id: edition._id,
+          })
+            .sort({ date: -1 }) // Get the most recent appointment
+            .populate("job_title_id", "job_title") // Populate job title
+            .lean(); // Convert Mongoose document to a plain object
+
+          return {
+            edition: edition.edition,
+            job_title: latestAppointment?.job_title_id?.job_title || null,
+            date: latestAppointment?.date || null,
+            description: latestAppointment?.description || null,
+            status: latestAppointment?.status || null,
+          };
+        })
+      );
+
+      res.status(200).json({ appointments: latestAppointments });
+    } catch (error) {
+      console.error("Error fetching latest appointments:", error);
+      res.status(500).json({ error: "Internal Server Error" });
+    }
+  },
+
   // Appointment Add Form Start
   add: function (req, res) {
     JobTitle.find({ status: "1" }, function (err, job_titles) {

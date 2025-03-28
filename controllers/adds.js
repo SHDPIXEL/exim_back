@@ -8,50 +8,42 @@ let selectedAd = require("../models/selectedAds");
 module.exports = {
   createAdd: async function (req, res) {
     try {
-      // console.log("Received request at:", new Date().toISOString());
-      // console.log("Request body:", req.body);
-      // console.log("Uploaded Images:", req.files?.images);
-      // console.log("Uploaded Videos:", req.files?.videos);
+      const { status, url } = req.body;
 
-      const { status } = req.body;
-
-      // Extract unique image paths
-      const imagePaths = [];
-      const seenPaths = new Set();
-      if (req.files?.images) {
-        req.files.images.forEach((file) => {
-          if (!seenPaths.has(file.path)) {
-            seenPaths.add(file.path);
-            imagePaths.push({ filePath: file.path, status: "Active" });
-          }
-        });
+      // Ensure at least one media file is uploaded
+      if (!req.files || (!req.files.images && !req.files.videos)) {
+        return res
+          .status(400)
+          .json({ message: "Please upload an image or a video" });
       }
 
-      // Extract unique video paths
-      const videoPaths = [];
-      if (req.files?.videos) {
-        req.files.videos.forEach((file) => {
-          videoPaths.push({ filePath: file.path, status: "Active" });
-        });
+      let media = {}; // To store the single media object
+
+      // Handle Image Upload (Priority over video if both are uploaded)
+      if (req.files.images && req.files.images.length > 0) {
+        media = {
+          filePath: req.files.images[0].path, // Take only the first image
+          url: url || "#", // Default to "#" if no URL provided
+          mediaType: "image",
+          status: "Active",
+        };
       }
-
-      // console.log("Final Image Paths:", imagePaths);
-      // console.log("Final Video Paths:", videoPaths);
-
-      // Ensure all images are captured
-      if (imagePaths.length !== req.files?.images?.length) {
-        console.error("Some images were not processed!");
+      // Handle Video Upload (If no image is uploaded)
+      else if (req.files.videos && req.files.videos.length > 0) {
+        media = {
+          filePath: req.files.videos[0].path, // Take only the first video
+          url: url || "#",
+          mediaType: "video",
+          status: "Active",
+        };
       }
 
       // Create and save the new Ad entry
       const newAd = new Adds({
-        position:"POSITION",
-        images: imagePaths,
-        videos: videoPaths,
+        position: "No Position", // Provide a default position if none is given
+        media,
         status: status || "Active",
       });
-
-      // console.log("New Ad to be saved:", newAd);
 
       await newAd.save();
       res.status(201).json({ message: "Ad created successfully", newAd });
@@ -121,8 +113,8 @@ module.exports = {
 
   getAllAddsAdmin: async function (req, res) {
     try {
-      const page = parseInt(req.body.page) || 1; // Default to page 1
-      const limit = parseInt(req.body.limit) || 25; // Default limit to 25
+      const page = parseInt(req.query.page) || 1; // Default to page 1
+      const limit = parseInt(req.query.limit) || 25; // Default limit to 25
       const skip = (page - 1) * limit;
 
       // Get total count for pagination metadata
@@ -141,36 +133,18 @@ module.exports = {
       // Transform data
       const updatedAdds = allAdds.map((add) => ({
         ...add.toObject(),
-        images: Array.isArray(add.images)
-          ? add.images
-              .map((image) =>
-                image && image.filePath
-                  ? {
-                      filePath: `https://eximback.demo.shdpixel.com/${image.filePath.replace(
-                        /\\/g,
-                        "/"
-                      )}`,
-                      status: image.status,
-                    }
-                  : null
-              )
-              .filter(Boolean)
-          : [],
-        videos: Array.isArray(add.videos)
-          ? add.videos
-              .map((video) =>
-                video && video.filePath
-                  ? {
-                      filePath: `https://eximback.demo.shdpixel.com/${video.filePath.replace(
-                        /\\/g,
-                        "/"
-                      )}`,
-                      status: video.status,
-                    }
-                  : null
-              )
-              .filter(Boolean)
-          : [],
+        media:
+          add.media && add.media.filePath
+            ? {
+                filePath: `https://eximback.demo.shdpixel.com/${add.media.filePath.replace(
+                  /\\/g,
+                  "/"
+                )}`,
+                url: add.media.url,
+                mediaType: add.media.mediaType,
+                status: add.media.status,
+              }
+            : null,
       }));
 
       return res.status(200).json({
@@ -198,40 +172,31 @@ module.exports = {
 
   updateMediaStatus: async function (req, res) {
     try {
-      const { addId, mediaType, mediaIndex, status } = req.body;
-
-      // Validate mediaType
-      if (!["images", "videos"].includes(mediaType)) {
-        return res.status(400).json({ message: "Invalid media type" });
-      }
-
+      const { addId, status } = req.body;
+  
       // Validate status
       if (!["Active", "Inactive"].includes(status)) {
         return res.status(400).json({ message: "Invalid status" });
       }
-
-      // Retrieve the ad by its ID
+  
+      // Find the ad by ID
       const ad = await Adds.findById(addId);
       if (!ad) {
         return res.status(404).json({ message: "Ad not found" });
       }
-
-      // Check if media exists at the given index
-      const mediaArray = ad[mediaType];
-      if (!mediaArray || mediaIndex < 0 || mediaIndex >= mediaArray.length) {
+  
+      // Check if media exists
+      if (!ad.media) {
         return res.status(404).json({ message: "Media not found" });
       }
-
-      // Update the status of the media item
-      const updatedAd = await Adds.findOneAndUpdate(
-        { _id: addId },
-        { $set: { [`${mediaType}.${mediaIndex}.status`]: status } },
-        { new: true }
-      );
-
+  
+      // Update the media status
+      ad.media.status = status;
+      await ad.save();
+  
       res.status(200).json({
         message: "Media status updated successfully",
-        updatedMedia: updatedAd[mediaType][mediaIndex], // Returning only the updated media
+        updatedMedia: ad.media, // Returning updated media object
       });
     } catch (error) {
       res.status(500).json({ message: error.message });
@@ -269,30 +234,24 @@ module.exports = {
 
   getMediaFromAdds: async function (req, res) {
     try {
-      const baseURL = "https://eximback.demo.shdpixel.com/"; // 🔹 Your server base URL
-
-      const ads = await Adds.find({ status: "Active" }, "images videos").lean();
-
+      const baseURL = "https://eximback.demo.shdpixel.com/"; // Server base URL
+  
+      const ads = await Adds.find({ status: "Active" }).lean();
+  
       if (!ads || ads.length === 0) {
         return res.json({ success: false, message: "No active ads found" });
       }
-
-      // 🛠 Normalize paths to prevent double prefixes
+  
+      // Normalize file paths and ensure the base URL is prepended
       ads.forEach((ad) => {
-        ad.images = ad.images.map((image) => ({
-          ...image,
-          filePath:
-            baseURL + image.filePath.replace(/\\/g, "/").replace(/^adds\//, ""), // Fix slashes & duplicate "adds/"
-        }));
-        ad.videos = ad.videos.map((video) => ({
-          ...video,
-          filePath:
-            baseURL + video.filePath.replace(/\\/g, "/").replace(/^adds\//, ""), // Fix slashes & duplicate "adds/"
-        }));
+        if (ad.media && ad.media.filePath) {
+          // Ensure forward slashes and prepend baseURL
+          ad.media.filePath = baseURL + ad.media.filePath.replace(/\\/g, "/");
+        }
       });
-
+  
       console.log("✅ Fixed Ads Data:", JSON.stringify(ads, null, 2));
-
+  
       res.json({ success: true, ads });
     } catch (error) {
       console.error("❌ Error fetching ads:", error);
@@ -303,18 +262,18 @@ module.exports = {
       });
     }
   },
-
+  
   saveSelectedMedia: async function (req, res) {
     try {
       console.log("Request body:", req.body);
-      const { position, mediaUrls } = req.body;
-
+      const { position, mediaUrls, startDate, endDate } = req.body;
+  
       if (!mediaUrls) {
         return res
           .status(400)
           .json({ success: false, message: "No media selected" });
       }
-
+  
       let mediaArray;
       try {
         mediaArray = JSON.parse(mediaUrls);
@@ -323,44 +282,51 @@ module.exports = {
           .status(400)
           .json({ success: false, message: "Invalid media data format" });
       }
-
+  
       console.log("Received media:", mediaArray);
-
+  
       // Find if an ad with the same position exists
       let existingAd = await selectedAd.findOne({
         "selectedMedia.position": position,
       });
-
+  
       if (existingAd) {
         let mediaIndex = existingAd.selectedMedia.findIndex(
           (media) => media.position === position
         );
-
+  
         if (mediaIndex !== -1) {
           let existingUrls = new Set(
             existingAd.selectedMedia[mediaIndex].media.map(
               (item) => item.mediaUrl
             )
           );
-
+  
           let newMediaItems = mediaArray
             .filter((newMedia) => !existingUrls.has(newMedia.mediaUrl))
             .map((newMedia) => ({
               mediaUrl: newMedia.mediaUrl,
               mediaType: newMedia.mediaType,
               sequenceNumber: newMedia.sequenceNumber,
-              status: "Active", // ✅ Default status set to "Active"
+              url: newMedia.url, // ✅ Include the URL field
+              status: "Active",
             }));
-
+  
           if (newMediaItems.length > 0) {
             // ✅ Update existing media list for the position
             await selectedAd.updateOne(
               { _id: existingAd._id, "selectedMedia.position": position },
-              { $push: { "selectedMedia.$.media": { $each: newMediaItems } } }
+              {
+                $push: { "selectedMedia.$.media": { $each: newMediaItems } },
+                $set: {
+                  "selectedMedia.$.startDate": startDate,
+                  "selectedMedia.$.endDate": endDate,
+                },
+              }
             );
           }
         }
-
+  
         return res.status(200).json({
           success: true,
           message: "Ad updated successfully",
@@ -372,18 +338,21 @@ module.exports = {
           selectedMedia: [
             {
               position,
+              startDate,
+              endDate,
               media: mediaArray.map((media) => ({
                 mediaUrl: media.mediaUrl,
                 mediaType: media.mediaType,
                 sequenceNumber: media.sequenceNumber,
-                status: "Active", // ✅ Default status added
+                url: media.url, // ✅ Include the URL field
+                status: "Active",
               })),
             },
           ],
         });
-
+  
         console.log("New Ad:", newAd);
-
+  
         await newAd.save();
         return res.status(201).json({
           success: true,
@@ -399,12 +368,13 @@ module.exports = {
       });
     }
   },
+  
 
   getSelectedMedia: async function (req, res) {
     try {
       const allSelectedAds = await selectedAd.find();
-
-      // Transform data to rename mediaUrl -> filePath, include sequenceNumber & status
+  
+      // Transform data to rename mediaUrl -> filePath and include additional fields
       const transformedAds = allSelectedAds.map((ad) => ({
         ...ad.toObject(),
         selectedMedia: ad.selectedMedia.map((media) => ({
@@ -413,11 +383,12 @@ module.exports = {
             filePath: item.mediaUrl, // Rename mediaUrl to filePath
             mediaType: item.mediaType,
             sequenceNumber: item.sequenceNumber, // Include sequenceNumber
-            status: item.status, // ✅ Include status field
+            status: item.status, // Include status field
+            url: item.url || "", // ✅ Include URL (ensure it's not undefined)
           })),
         })),
       }));
-
+  
       return res.status(200).json({
         success: true,
         message: "Selected Ads Retrieved successfully",
@@ -432,27 +403,42 @@ module.exports = {
       });
     }
   },
+  
 
   getSelectedMediaAdmin: async function (req, res) {
     try {
-      const page = parseInt(req.body.page) || 1; // Default page 1
-      const limit = parseInt(req.body.limit) || 25; // Default limit 25
+      const page = parseInt(req.body.page) || 1;
+      const limit = parseInt(req.body.limit) || 25;
       const skip = (page - 1) * limit;
 
-      // Get total count for pagination metadata
+      // Fetch total count
       const totalRecords = await selectedAd.count();
-      const totalPages = Math.ceil(totalRecords / limit);
 
-      // Fetch paginated data
-      const allSelectedAds = await selectedAd.find().skip(skip).limit(limit);
+      // Fetch paginated data, sorted by creation date (if needed)
+      const allSelectedAds = await selectedAd
+        .find()
+        .sort({ _id: 1 }) // Sorting to maintain order
+        .skip(skip)
+        .limit(limit);
+
+      // Function to format date as 'DD-MM-YYYY'
+      const formatDate = (date) => {
+        if (!date) return null;
+        const d = new Date(date);
+        return `${String(d.getDate()).padStart(2, "0")}-${String(
+          d.getMonth() + 1
+        ).padStart(2, "0")}-${d.getFullYear()}`;
+      };
 
       // Transform data
       const transformedAds = allSelectedAds.map((ad) => ({
         ...ad.toObject(),
         selectedMedia: ad.selectedMedia.map((media) => ({
           position: media.position,
+          startDate: formatDate(media.startDate), // Corrected path
+          endDate: formatDate(media.endDate), // Corrected path
           media: media.media.map((item) => ({
-            filePath: item.mediaUrl, // Rename mediaUrl to filePath
+            filePath: item.mediaUrl,
             mediaType: item.mediaType,
             sequenceNumber: item.sequenceNumber,
             status: item.status,
@@ -464,11 +450,11 @@ module.exports = {
         success: true,
         message: "Selected Ads Retrieved successfully",
         selectedAds: transformedAds,
-        recordsTotal: totalRecords, // Required for DataTables
-        recordsFiltered: totalRecords, // Required for DataTables
+        recordsTotal: totalRecords,
+        recordsFiltered: totalRecords,
         pagination: {
           totalRecords,
-          totalPages,
+          totalPages: Math.ceil(totalRecords / limit),
           currentPage: page,
           limit,
         },
@@ -532,6 +518,45 @@ module.exports = {
       res.json({ message: "Media status updated successfully" });
     } catch (error) {
       res.status(500).json({ message: "Error updating media status" });
+    }
+  },
+
+  updateMediaSequence: async function (req, res) {
+    try {
+      const { addId, mediaType, oldSequence, newSequence } = req.body;
+
+      if (!addId || !mediaType || oldSequence == null || newSequence == null) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      const ad = await selectedAd.findById(addId);
+      if (!ad) return res.status(404).json({ message: "Ad not found" });
+
+      let mediaList = ad.selectedMedia.flatMap((media) => media.media);
+      let mediaItem = mediaList.find(
+        (item) =>
+          item.mediaType === mediaType && item.sequenceNumber == oldSequence
+      );
+
+      if (!mediaItem)
+        return res.status(404).json({ message: "Media not found" });
+
+      let existingItem = mediaList.find(
+        (item) =>
+          item.mediaType === mediaType && item.sequenceNumber == newSequence
+      );
+
+      if (existingItem) {
+        existingItem.sequenceNumber = oldSequence; // Swap sequence numbers
+      }
+
+      mediaItem.sequenceNumber = newSequence; // Assign new sequence
+
+      await ad.save();
+      res.json({ message: "Sequence updated successfully" });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Server error" });
     }
   },
 };

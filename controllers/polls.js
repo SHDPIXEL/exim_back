@@ -143,24 +143,20 @@ module.exports = {
 
         if (!id || optionIndex === undefined) {
           console.log("❌ Missing ID or option index in response:", response);
-          return res
-            .status(400)
-            .json({
-              status: "error",
-              message: "Poll ID and option index are required.",
-            });
+          return res.status(400).json({
+            status: "error",
+            message: "Poll ID and option index are required.",
+          });
         }
 
         console.log("🔹 Finding poll with ID:", id);
         const poll = await Polls.findById(id);
         if (!poll) {
           console.log("❌ Poll not found for ID:", id);
-          return res
-            .status(404)
-            .json({
-              status: "error",
-              message: `Poll with ID ${id} not found.`,
-            });
+          return res.status(404).json({
+            status: "error",
+            message: `Poll with ID ${id} not found.`,
+          });
         }
 
         console.log("🔹 Poll found:", poll);
@@ -206,13 +202,96 @@ module.exports = {
       });
     } catch (err) {
       console.error("🚨 Error submitting poll:", err);
-      return res
+      return res.status(500).json({
+        status: "error",
+        message: "Internal server error.",
+        error: err.message,
+      });
+    }
+  },
+
+  deletePoll: async function (req, res) {
+    try {
+      const { id } = req.params;
+
+      // Check if ID is valid before querying
+      if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+        return res
+          .status(400)
+          .json({ status: "error", message: "Invalid poll ID." });
+      }
+
+      // Check if the poll exists
+      const poll = await Polls.findById(id);
+      if (!poll) {
+        return res
+          .status(404)
+          .json({ status: "error", message: "Poll not found." });
+      }
+
+      // Delete the poll
+      await Polls.deleteOne({ _id: id });
+
+      res.json({ status: "success", message: "Poll deleted successfully!" });
+    } catch (error) {
+      console.error("Error deleting poll:", error);
+      res
         .status(500)
-        .json({
-          status: "error",
-          message: "Internal server error.",
-          error: err.message,
-        });
+        .json({ status: "error", message: "Internal server error." });
+    }
+  },
+
+  getPollById: async function (req, res) {
+    try {
+      const poll = await Polls.findById(req.params.id);
+      if (!poll) {
+        return res
+          .status(404)
+          .json({ status: "error", message: "Poll not found" });
+      }
+      res.json(poll);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ status: "error", message: "Server error" });
+    }
+  },
+
+  updatePoll: async function (req, res) {
+    try {
+      const { question, options, correctAnswerIndex } = req.body;
+      const pollId = req.params.id; // Get poll ID from URL
+
+      if (
+        !question ||
+        !options ||
+        options.length < 2 ||
+        correctAnswerIndex === ""
+      ) {
+        return res
+          .status(400)
+          .json({ status: "error", message: "Invalid data" });
+      }
+
+      const poll = await Polls.findByIdAndUpdate(
+        pollId,
+        { question, options, correctAnswerIndex },
+        { new: true }
+      );
+
+      if (!poll) {
+        return res
+          .status(404)
+          .json({ status: "error", message: "Poll not found" });
+      }
+
+      res.json({
+        status: "success",
+        message: "Poll updated successfully",
+        poll,
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ status: "error", message: "Server error" });
     }
   },
 };

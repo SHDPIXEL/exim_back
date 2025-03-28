@@ -32,6 +32,7 @@
                                             <th>Question</th>
                                             <th>Options</th>
                                             <th>Correct Answer</th>
+                                            <th>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody></tbody>
@@ -87,6 +88,13 @@
                         render: function(data, type, row) {
                             return (Array.isArray(row.options) && row.options[data]) ? row.options[data].text : 'N/A';
                         }
+                    },
+                    { 
+                        data: "_id", 
+                        render: function(data, type, row) {
+                            return '<a href="#" class="edit btn btn-primary btn-xs" data-id="' + data + '"><i class="fa fa-pencil-square-o"></i> Edit</a>&nbsp;' +
+                                   '<button type="button" class="delete btn btn-danger btn-xs" data-id="' + data + '"><i class="fa fa-trash"></i> Delete</button>';
+                        }
                     }
                 ],
                 "order": [[0, "desc"]],
@@ -98,6 +106,43 @@
                     return nRow;
                 }
             });
+
+            // Handle Edit Click
+            $('#poll_table tbody').on('click', '.edit', function(e) {
+                e.preventDefault();
+                var pollId = $(this).data('id'); // Get poll ID from data-id attribute
+                window.location.href = "/polls/add?pollId=" + pollId;
+            });
+
+            // Handle Delete Click
+            $('#poll_table tbody').on('click', '.delete', function(e) {
+                e.preventDefault();
+                var pollId = $(this).data('id'); // Get poll ID from data-id attribute
+            
+                console.log("Attempting to delete poll with ID:", pollId); // Debugging
+            
+                bootbox.confirm("Are you sure you want to delete this poll?", function(result) {
+                    if (result) {
+                        $.ajax({
+                            url: '/polls/delete/' + pollId,
+                            type: 'DELETE',
+                            success: function(response) {
+                                if (response.status === 'success') {
+                                    bootbox.alert("Poll deleted successfully!", function() {
+                                        $('#poll_table').DataTable().ajax.reload(); // Reload table after deletion
+                                    });
+                                } else {
+                                    bootbox.alert("Error: " + response.message);
+                                }
+                            },
+                            error: function(xhr) {
+                                console.error("Error deleting poll:", xhr.responseText);
+                                bootbox.alert("Failed to delete poll.");
+                            }
+                        });
+                    }
+                });
+            });            
         });
     </script>
 </body>
