@@ -20,7 +20,6 @@ const NewsSchema = mongoose.Schema(
     },
     description: {
       type: String,
-      required: true,
     },
     four_lines: {
       type: String,

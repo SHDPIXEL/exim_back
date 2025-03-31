@@ -88,8 +88,28 @@ module.exports = {
       res.status(500).json({ message: error.message });
     }
   },
-  
 
+  getAllVideoNewsUser: async (req, res) => {
+    try {
+      const baseUrl = "https://eximback.demo.shdpixel.com";
+      
+      // Fetch only the most recent 11 video news sorted by date (descending)
+      const news = await VideoNews.find().sort({ date: -1 }).limit(11);
+  
+      const updatedNews = news.map((item) => {
+        return {
+          ...item._doc,
+          category_name: categoryMap[item.category_id] || "Unknown Category",
+          isVideo: item.isVideo, // Directly use the isVideo field from the database
+        };
+      });
+  
+      res.status(200).json(updatedNews);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  },
+  
   // Fetch Single Video News
   getVideoNewsById: async (req, res) => {
     try {

@@ -33,6 +33,7 @@ router.get('/list', (req, res) => {
 // API Routes
 router.post("/store", upload.single("video"), videoNews.createVideoNews);
 router.post("/get_videoNews", videoNews.getAllVideoNews); 
+router.post("/get_videoNewsUser", videoNews.getAllVideoNewsUser); 
 router.post('/news', videoNews.getPaginatedNews);
 router.get("/get_videoNews/:id", videoNews.getVideoNewsById);
 router.put("/update/:id", upload.single("video"), videoNews.updateVideoNews);
