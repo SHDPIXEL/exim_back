@@ -2,7 +2,6 @@ const express = require("express");
 
 const router = express.Router();
 const mongoose = require("mongoose");
-const path = require("path");
 
 const fs = require("fs");
 
@@ -947,107 +946,160 @@ module.exports = {
 
   // News Store Data Start
 
-  store: async function (req, res) {
-    try {
-      const {
-        category_id,
-        date,
-        headline,
-        breaking_news,
-        description,
-        four_lines,
-        useDefaultImage,
-        defaultImageName,
-      } = req.body;
+  store: function (req, res) {
+    const category_id = req.body.category_id;
 
-      let image = "";
+    const date = req.body.date;
 
-      // Handle uploaded image
-      if (req.file) {
-        image =
-          "https://eximback.demo.shdpixel.com/uploads/news/" +
-          req.file.filename;
-      }
-      // Handle default image
-      else if (useDefaultImage === "true" && defaultImageName) {
-        const defaultImagePath = path.join(
-          __dirname,
-          "../assets/default_images",
-          defaultImageName
-        );
-        if (fs.existsSync(defaultImagePath)) {
-          image = `../assets/default_images/${defaultImageName}`;
+    const headline = req.body.headline;
+
+    const breaking_news = req.body.breaking_news;
+
+    const description = req.body.description;
+
+    const four_lines = req.body.four_lines;
+    const isImageGiven = req.body.isImageGiven === "true";
+
+    const image = isImageGiven
+    ? (req.file !== undefined 
+        ? "https://eximback.demo.shdpixel.com/uploads/news/" + req.file.filename 
+        : "")
+    : "https://exim.demo.shdpixel.com/static/media/demo.b9b50add633a2286adb9.jpg";
+
+    const current_date_time = moment().format("YYYY-MM-DD HH:mm:ss");
+
+    // create Request object"https://eximback.demo.shdpixel.com/uploads/news/" + req.file.filename
+
+    var request = new sql.Request();
+
+    // console.log("instore" + req.body);
+
+    if (category_id != "7" && category_id != "8") {
+      console.log("instore if" + category_id);
+
+      // console.log('if', category_id);return false;
+
+      // query to the database and get the records
+
+      request.query(
+        "INSERT INTO newsinformation (Headline, CategoryID, URLNo, mainnews, NewsDate, fourlines, Details, AddDate)VALUES ('" +
+          headline +
+          "', '" +
+          category_id +
+          "', '0', '0', '" +
+          date +
+          "', '" +
+          four_lines +
+          "', '" +
+          description +
+          "', '" +
+          current_date_time +
+          "')",
+        function (err) {
+          if (err) {
+            console.log("Sql Error: " + err);
+
+            return;
+          }
+
+          request.query("SELECT @@IDENTITY AS id", function (error, recordset) {
+            // console.log(recordset.recordset[0].id);return false;
+
+            let new_news = new News({
+              category_id: category_id,
+
+              date: date,
+
+              headline: headline,
+
+              breaking_news: breaking_news,
+
+              description: description,
+
+              four_lines: four_lines,
+
+              image: image,
+
+              // sql_id: ''
+
+              sql_id: recordset.recordset[0].id,
+            });
+
+            new_news.save(function (err) {
+              if (err) {
+                console.log(err);
+
+                res.send("error|" + err);
+              } else {
+                let new_log = new Log({
+                  user_id: req.user._id,
+
+                  message: "Add",
+
+                  table: "news",
+                });
+
+                new_log.save(function (err, user) {
+                  if (err) {
+                    console.log("err " + err);
+
+                    return res.send(err);
+                  }
+                });
+
+                res.send("success|Record Inserted Successfully.");
+              }
+            });
+          });
         }
-      }
+      );
+    } else {
+      // console.log('else', category_id);return false;
 
-      const current_date_time = moment().format("YYYY-MM-DD HH:mm:ss");
+      let new_news = new News({
+        category_id: category_id,
 
-      const request = new sql.Request();
+        date: date,
 
-      if (category_id !== "7" && category_id !== "8") {
-        // Insert into MSSQL
-        await request.query(`
-          INSERT INTO newsinformation (Headline, CategoryID, URLNo, mainnews, NewsDate, fourlines, Details, AddDate) 
-          VALUES ('${headline}', '${category_id}', '0', '0', '${date}', '${four_lines}', '${description}', '${current_date_time}')
-        `);
+        headline: headline,
 
-        // Get the last inserted ID
-        const result = await request.query("SELECT @@IDENTITY AS id");
-        const sql_id = typeof result.recordset !== "undefined" ? result.recordset[0].id : "";
+        breaking_news: breaking_news,
 
-        // Save to MongoDB
-        let new_news = new News({
-          category_id,
-          date,
-          headline,
-          breaking_news,
-          description,
-          four_lines,
-          image,
-          sql_id,
-        });
+        description: description,
 
-        await new_news.save();
+        four_lines: four_lines,
 
-        // Save log entry
-        let new_log = new Log({
-          user_id: req.user._id,
-          message: "Add",
-          table: "news",
-        });
+        image: image,
 
-        await new_log.save();
+        sql_id:
+          typeof recordset === "undefined" ? "" : recordset.recordset[0].id,
+      });
 
-        res.send("success|Record Inserted Successfully.");
-      } else {
-        // Directly save in MongoDB for categories 7 & 8
-        let new_news = new News({
-          category_id,
-          date,
-          headline,
-          breaking_news,
-          description,
-          four_lines,
-          image,
-          sql_id: "",
-        });
+      new_news.save(function (err) {
+        if (err) {
+          console.log(err);
 
-        await new_news.save();
+          res.send("error|" + err);
+        } else {
+          let new_log = new Log({
+            user_id: req.user._id,
 
-        // Save log entry
-        let new_log = new Log({
-          user_id: req.user._id,
-          message: "Add",
-          table: "news",
-        });
+            message: "Add",
 
-        await new_log.save();
+            table: "news",
+          });
 
-        res.send("success|Record Inserted Successfully.");
-      }
-    } catch (err) {
-      console.log("Error:", err);
-      res.send("error|" + err.message);
+          new_log.save(function (err, user) {
+            if (err) {
+              console.log("err " + err);
+
+              return res.send(err);
+            }
+          });
+
+          res.send("success|Record Inserted Successfully.");
+        }
+      });
     }
   },
 

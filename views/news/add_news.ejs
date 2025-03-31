@@ -126,17 +126,12 @@
 												</div>
 
 												<div class="col-md-12">
-													<div class="form-group">
-														<label class="col-md-4 control-label">Image <!-- <span style="color:red;">*</span> --></label>
-														<label class="col-md-offset-1 btn btn-primary btn-file">
-															<i class="fa fa-folder-open" aria-hidden="true"></i> Browse 
-															<input type="file" id="image" name="image" style="display: none;">
-														</label>
-														<div id="image_preview" class="mt-2">
-															<!-- Default image preview will be added dynamically here -->
-														</div>
-													</div>
-												</div>
+                                    				<div class="form-group">
+                                        				<label class="col-md-4 control-label">Image <!-- <span style="color:red;">*</span> --></label>
+                                        				<label class="col-md-offset-1 btn btn-primary btn-file"><i class="fa fa-folder-open" aria-hidden="true"></i> Browse <input type="file" id="image" name="image" style="display: none;">
+                                        				</label>
+                                    				</div>
+                                				</div>
 											</div>   
 
 											<div class="col-md-6">
@@ -232,111 +227,119 @@
 	<script type="text/javascript" src="https://ckeditor.com/docs/vendors/4.12.1/ckeditor/ckeditor.js"></script>
 	<script type="text/javascript">
 		$(document).ready(function() {
-			// Mapping category ID to default image filenames
-			const defaultImages = {
-				"1": "Shipping News.jpg",
-				"2": "Trade News.jpg",
-				"3": "Port News.jpg",
-				"4": "Transport News.jpg",
-				"5": "Indian Economy.jpg",
-				"6": "Special Report.jpg",
-				"7": "International.jpg",
-				"8": "Aviation Cargo Express.jpg"
-			};
-		
-			$(document).on('change', '#image', function(event) {
-				$('#image_preview').html(''); // Clear previous preview
-				var total_file = this.files.length;
-				for (var i = 0; i < total_file; i++) {
-					$('#image_preview').append(`<div class="img-wrap">
-						<i class="fa fa-times close" aria-hidden="true"></i>
-						<img src="${URL.createObjectURL(event.target.files[i])}">
-					</div>`);
-				}
+
+			$(document).on('change','#image',function(event) {
+            	var total_file=document.getElementById("image").files.length;
+            	for(var i=0;i<total_file;i++)
+            	{
+                	$('#image_preview').append(`<div class="img-wrap">
+                                    <i class="fa fa-times close" aria-hidden="true"></i>
+                                    <img src="${URL.createObjectURL(event.target.files[i])}"'>
+                                  </div>`);
+            	}
+        	});
+
+			$(document).on('click',".close",function() {
+			    $(this).parent().remove();
 			});
-		
-			$(document).on('click', ".close", function() {
-				$(this).parent().remove();
-				$('#image').val(''); // Clear file input
-			});
-		
-			$(document).on('click', '#save_news', function(event) {
-				event.preventDefault(); // Prevent default form submission
-		
-				var myForm = $('#news_form');
-				var errorMsgDiv = $('.alert-danger');
-				var successMsgDiv = $('.alert-success');
-		
-				myForm.validate({
-					errorElement: 'span',
-					errorClass: 'help-block help-block-error',
-					focusInvalid: false,
-					ignore: "",
-					rules: {
-						"category_id": {
-							required: true
-						},
-						"date": {
-							required: true
-						},
-						"headline": {
-							required: true
-						}
-					},
-					invalidHandler: function (event, validator) {
-						successMsgDiv.hide();
-						errorMsgDiv.show().delay(3000).fadeOut();
-					},
-					highlight: function (element) {
-						$(element).closest('.form-group').addClass('has-error');
-					},
-					unhighlight: function (element) {
-						$(element).closest('.form-group').removeClass('has-error');
-					},
-					success: function (label) {
-						label.closest('.form-group').removeClass('has-error');
-					},
-					submitHandler: function (form) {
-						var formData = new FormData(myForm[0]);
-						var categoryId = $('#category_id').val();
-						var imageInput = $('#image')[0].files.length;
-						
-						if (imageInput === 0 && categoryId in defaultImages) {
-							formData.append("useDefaultImage", "true");
-							formData.append("defaultImageName", defaultImages[categoryId]);
-						}
-		
-						$.ajax({
-							url: "/news/store",
-							type: "POST",
-							data: formData,
-							contentType: false,
-							cache: false,
-							processData: false,
-							success: function(data) {
-								var res = data.split("|");
-								if (res[0] == 'error') {
-									$('#errorMsg').html(res[1]);
-									errorMsgDiv.show().delay(3000).fadeOut();
-								} else if (res[0] == 'success') {
-									$('#successMsg').html(res[1]);
-									successMsgDiv.show().delay(3000).fadeOut();
-									setTimeout(function() {
-										window.location.href = "/news/add";
-									}, 1000);
-								}
-							}
-						});
-					}
-				});
-			});
-		
-			$("#date").datepicker({
-				changeMonth: true,
-				changeYear: true,
-				dateFormat: 'yy-mm-dd'
-			});
-		});
+
+			CKEDITOR.replace( 'description', {
+				extraPlugins: 'colorbutton, colordialog, justify, font'
+			} );
+
+			$(document).on('click', '#save_news', function() {
+	            var myForm = $('#news_form');
+	            var errorMsgDiv = $('.alert-danger');
+	            var successMsgDiv = $('.alert-success');
+
+	            myForm.validate({
+	                errorElement: 'span', //default input error message container
+	                errorClass: 'help-block help-block-error', // default input error message class
+	                focusInvalid: false, // do not focus the last invalid input
+	                ignore: "",  // validate all fields including form hidden input
+	                rules: {
+	                    "category_id": {
+	                        required: true
+	                    },
+	                    "date": {
+	                        required: true
+	                    },
+	                    "headline": {
+	                        required: true
+	                    },
+	                    /*"link_url": {
+	                        required: true
+	                    },*/
+	                    "description": {
+	                        required: true
+	                    }
+	                },
+
+	                invalidHandler: function (event, validator) { //display error alert on form submit     
+	                    successMsgDiv.hide();
+	                    errorMsgDiv.show();
+	                    errorMsgDiv.delay(3000).fadeOut();
+	                },
+
+	                highlight: function (element) { // hightlight error inputs
+	                    $(element)
+	                        .closest('.form-group').addClass('has-error'); // set error class to the control group
+	                },
+
+	                unhighlight: function (element) { // revert the change done by hightlight
+	                    $(element)
+	                        .closest('.form-group').removeClass('has-error'); // set error class to the control group
+	                },
+
+	                success: function (label) {
+	                    label
+	                        .closest('.form-group').removeClass('has-error'); // set success class to the control group
+	                },
+
+	                submitHandler: function (form) {
+	                    var formData = new FormData($("#news_form")[0]);
+						var isImageGiven = $("#image").get(0).files.length > 0 ? true : false;
+						formData.append("isImageGiven", isImageGiven);
+
+	                    $.ajax({
+	                        url: "/news/store",
+	                        type: "POST",
+	                        data:  formData,
+	                        contentType: false,
+	                        cache: false,
+	                        processData:false,
+	                        success: function(data)
+	                        {
+	                            var res = data.split("|"); 
+	                            if(res[0]=='error')
+	                            {
+	                                $('#errorMsg').html(res[1]);
+	                                errorMsgDiv.show();  
+	                                successMsgDiv.hide();
+	                                errorMsgDiv.delay(3000).fadeOut();
+	                            }
+	                            else if(res[0]=='success')
+	                            {
+	                                $('#successMsg').html(res[1]);
+	                                successMsgDiv.show();
+	                                errorMsgDiv.hide();
+	                                successMsgDiv.delay(3000).fadeOut();
+	                                setTimeout(function() {
+	                                window.location.href = "/news/add";
+	                                }, 1000);
+	                            }
+	                        }
+	                    });
+	                }
+	            });
+	        });
+
+	        $( "#date" ).datepicker({
+                changeMonth: true,
+                changeYear: true,
+                dateFormat: 'yy-mm-dd'
+            });
+    	});
 	</script>
 	</body>
 </html>

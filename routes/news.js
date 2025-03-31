@@ -40,7 +40,7 @@ router.get('/add', is_authenticated, news.add);
 // News Add Route End
 
 // News Store Route Start
-router.post('/store', upload.single('image'), news.store);
+router.post('/store', upload.single('image'), news.store); 
 // News Store Route End
 
 // News Edit Route Start
