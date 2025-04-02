@@ -21,7 +21,23 @@ router.get('/', is_authenticated, newsletter.newsletter);
 // Newsletter Add Route End
 
 // Newsletter Store Route Start
-router.get('/newsletter_preview', newsletter.newsletter_preview);
+// router.get('/newsletter_preview', newsletter.newsletter_preview);
+
+router.get("/newsletter_preview", async (req, res) => {
+  try {
+      const { date } = req.query;
+      if (!date) {
+          return res.status(400).json({ error: "Date parameter is required" });
+      }
+
+      const htmlContent = await newsletter.fetchNewsByCategory(date);
+      res.setHeader("Content-Type", "text/html");
+      res.send(htmlContent);
+  } catch (error) {
+      console.error("Error fetching news:", error);
+      res.status(500).json({ error: "Internal server error" });
+  }
+});
 // Newsletter Store Route End
 
 // Newsletter Edit Route Start

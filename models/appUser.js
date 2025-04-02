@@ -71,6 +71,7 @@ const AppUserSchema = mongoose.Schema(
         timestamp: { type: Date, default: Date.now },
         ip: { type: String, required: true },
         country: { type: String }, // ✅ Store only country
+        deviceId: { type: String, required: true }, // ✅ Unique identifier for device
       },
     ],
     resetPasswordToken: { type: String },    

@@ -1,21 +1,110 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const moment = require('moment');
+const moment = require("moment");
+const mongoose = require("mongoose");
 
 // Bring in News Model
-let News = require('../models/news');
+let News = require("../models/news");
 // Bring in Log Model
-let Log = require('../models/log');
+let Log = require("../models/log");
+
+const generateHTML = async function (newsData, date) {
+  let html = `<div align='center'>
+    <table width='600' border='0' cellspacing='0' cellpadding='0'>
+    <tr><td colspan='2' align='center' valign='top'>
+    <p style='font-size: 13px;'>Can't View Newsletter? <a href='#' target='_blank'>Click Here!</a></p>
+    </td></tr>
+    <tr><td colspan='2' bgcolor='#eee' align='center'>
+    <img src='https://eximin.net/DataFiles/cmsnewsletters/images/exim-header.png' width='600' alt='Exim' /></td></tr>
+    <tr><td colspan='2' bgcolor='#2957a4' align='center'>
+    <h2 style='color: #fff; font-size: 13px;'>India's Leading Maritime & Logistics Publication</h2></td></tr>
+    <tr><td width='425px' bgcolor='#eee' valign='top'>
+    <table border='0' cellspacing='0' cellpadding='0'>
+    <tr><td colspan='2' bgcolor='#eee' align='center'>
+    <p style='font-size: 13px;'><strong>${date}</strong></p></td></tr>`;
+
+  for (const [category, newsList] of Object.entries(newsData)) {
+    if (newsList.length > 0) {
+      html += `<tr><td bgcolor='#2957a4'>
+            <p style='color: #fff; font-size: 13px; font-weight: bold;'><img src='https://eximin.net/DataFiles/cmsnewsletters/images/news-head.png' alt='' width='14' /> ${category}</p>
+            </td></tr>`;
+
+      newsList.forEach((news) => {
+        html += `<tr><td style='padding: 8px 7px; border-bottom: 3px solid #ddd;'>
+                <p style='font-size: 13px;'><a style='color: #000;' href='https://eximin.net/newsdetails.aspx?news_id=${news.id}&frndate=${date}&tondate=${date}&snkeywords=' target='_blank'>
+                ${news.headline}</a></p></td></tr>`;
+      });
+    }
+  }
+
+  html += `</table></td>
+    <td width='175px' valign='top'>
+    <table border='0' cellspacing='0' cellpadding='0'><tr><td style='border:2px solid #ddd;' align='center' valign='top'><a style='color: #000; text-decoration: none;' href='https://ctl.net.in/ctl-bhp-2025-default.aspx' target='_blank'>
+    <img src ='https://eximin.net/DataFiles/cmsevents/wc22016CTL-BHP25_exim.jpg'  width='199' alt='' />
+    </a></td>
+    </tr>
+    </table></td>
+    </tr>
+    <tr><td colspan='2'><table border='0' cellspacing='0' cellpadding='0'><tr><td style='padding: 8px 7px; background-color: #111; font-size: 12px;' align='center' width='200'><a style='color: #fff; text-decoration: none;' href='https://eximin.net/EnewsSubscribe.aspx' target='_blank'>SUBSCRIBE FOR<br/>E-NEWS</a></td><td style='padding: 8px 7px; background-color: #111; font-size: 12px;' align='center' width='200'><a style='color: #fff; text-decoration: none;' href='https://eximin.net/DcopyNewUser.aspx' target='_blank'>SUBSCRIBE FOR<br />DIGITAL COPY</a></td><td style='padding: 8px 7px; background-color: #111; font-size: 12px;' align='center' width='200'><a style='color: #fff; text-decoration: none;' href='https://eximin.net/EximHardCopySubscription.aspx' target='_blank'>SUBSCRIBE FOR<br />PRINT COPY</a></td></tr></table></td></tr><tr>
+    <td colspan='2' style='line-height:0px;'>
+    <img src='https://eximin.net/DataFiles/cmsnewsletters/images/eximin.jpg' width='600' height='200' alt='Exim' />
+    </td>
+    </tr>
+    <tr><td colspan='2' style='color: #fff; padding: 8px 7px;' bgcolor='#2957a4' align='center'><p style='font-size: 13px; line-height:18px; padding:0px; margin:0px;'><a href='http://www.facebook.com/pages/Exim-India/132749816804720' target='blank'><img src='https://eximin.net/DataFiles/cmsnewsletters/images/facebook.png' width='25' height='25' alt='Facebook' border='0' /></a>&nbsp;<a href='https://twitter.com/Exim_India' target='blank'><img src='https://eximin.net/DataFiles/cmsnewsletters/images/twitter.png' width='25' height='25' alt='Twitter' border='0' /></a><br /><br />Address: Kailashpati Bldg, Plot No .10, Block 'A', 1st Floor, Veera Desai Road Extension, Behind Balaji Telefilms Ltd, Andheri(West), Mumbai - 400 053.<br /><br />Contact No.: <a style='color:#fff' href='tel:+912267571400'>+91 22 67571400</a>, Email: <a style='color:#fff' href='mailto:infomumbai@exim-india.com'>infomumbai@exim-india.com</a><br /><br />&copy; Exim India</p></td></tr><tr>
+    <td colspan='2'  style='padding: 8px 7px;'>
+    <p style='font-size: 13px; line-height:18px; padding:0px; margin:0px;'><strong>Disclaimer:</strong> This email has been sent to you by Exim India (for more information visit www.eximin.net). This email is intended solely for the addressee and the information it contains is confidential. If you are not the intended recipient, please inform us as soon as possible. Write your queries to  <a style='color:#000;' href='mailto:admin@exim-india.com'>admin@exim-india.com</a>.
+    <br/><br/>
+    <strong>To ensure that Exim India Newsletter find your inbox, please whitelist <a style='color:#000;' href='mailto:news@eximin.net'>news@eximin.net</a> in your email account.</strong>
+    <br/><br/>
+     <strong>Exim India Publication Group</strong>
+    </p></td>
+    </tr>
+    </table></div>`;
+  return html;
+};
 
 module.exports = {
-	// Newsletters List Start
-	/*list: function(req, res) {
+  fetchNewsByCategory: async function (date) {
+    const categories = [
+      { id: "1", name: "Shipping News" },
+      { id: "2", name: "Trade News" },
+      { id: "3", name: "Port News" },
+      { id: "4", name: "Transport News" },
+      { id: "5", name: "Indian Economy" },
+      { id: "6", name: "Special Report" },
+    ];
+
+    let newsData = {};
+
+    for (const category of categories) {
+      let categoryObjectId;
+
+      try {
+        categoryObjectId = new mongoose.Types.ObjectId(category.id);
+      } catch (error) {
+        console.error(`Invalid category ID: ${category.id}`);
+        continue;
+      }
+
+      newsData[category.name] = await News.find({
+        category_id: categoryObjectId, // Converted to ObjectId
+        date: date,
+      })
+        .sort({ createdAt: -1 })
+        .limit(4);
+    }
+
+    return generateHTML(newsData, date);
+  },
+
+  // Newsletters List Start
+  /*list: function(req, res) {
   		// res.render('user/list_user');
 	},*/
-	// Newsletters List End
+  // Newsletters List End
 
-	// Get Newsletters Data Start
-	/*get_users: function(req, res) {
+  // Get Newsletters Data Start
+  /*get_users: function(req, res) {
 	    var col = req.body.columns[req.body.order[0].column].data;
 	    var order = req.body.order[0].dir;
 	    if(order == 'asc') {
@@ -59,49 +148,58 @@ module.exports = {
 	          });
 	   });
 	},*/
-	// Get Newsletters Data End
+  // Get Newsletters Data End
 
-	// Newsletter Add Form Start
-	newsletter: function(req, res) {
-  		res.render('newsletter');
-	},
-	// Newsletter Add Form End
+  // Newsletter Add Form Start
+  newsletter: function (req, res) {
+    res.render("newsletter");
+  },
+  // Newsletter Add Form End
 
-	// Newsletter Preview Data Start
-	newsletter_preview: function(req, res) {
-	  	// console.log(new Date(req.query.date));return false;
-	  	News.aggregate([
-		    {
-				$match : {date : new Date(req.query.date)}
-		    },
-		    { 
-				$group : { _id : { "category_id": "$category_id", date: "$date"}}
-		    },
-		    {
-		    	$sort : {"_id.category_id" : 1}
-		    }
-		    ],
-		    function (err, category_id) {
-	        	if (err) {
-	            	console.log(err);
-	            	return;
-	        	}
+  // Newsletter Preview Data Start
+  newsletter_preview: function (req, res) {
+    // console.log(new Date(req.query.date));return false;
+    News.aggregate(
+      [
+        {
+          $match: { date: new Date(req.query.date) },
+        },
+        {
+          $group: { _id: { category_id: "$category_id", date: "$date" } },
+        },
+        {
+          $sort: { "_id.category_id": 1 },
+        },
+      ],
+      function (err, category_id) {
+        if (err) {
+          console.log(err);
+          return;
+        }
 
-	        	News.find({$and: [{'date': new Date(req.query.date)}, {'category_id': {$nin: ['7', '8']}}]}, function(err, news) {
-			  		if(err) {
-			  			console.log('error '+err);
-			            res.send('error|'+err);
-			  		}
-			  		// console.log(news);return false;
-		        	res.render('newsletter_preview', {
-		          		category_id: category_id,
-		          		news: news,
-		          		date: req.query.date
-		          	});
-	  			}).select('category_id headline sql_id');
-	    	}
-		);
-			/*let new_log = new Log({
+        News.find(
+          {
+            $and: [
+              { date: new Date(req.query.date) },
+              { category_id: { $nin: ["7", "8"] } },
+            ],
+          },
+          function (err, news) {
+            if (err) {
+              console.log("error " + err);
+              res.send("error|" + err);
+            }
+            // console.log(news);return false;
+            res.render("newsletter_preview", {
+              category_id: category_id,
+              news: news,
+              date: req.query.date,
+            });
+          }
+        ).select("category_id headline sql_id");
+      }
+    );
+    /*let new_log = new Log({
 	        	user_id: req.user._id,
 	        	message: 'Newsletter Preview',
 	        	table: 'news'
@@ -113,11 +211,11 @@ module.exports = {
 	          		return res.send(err);
 	        	}
 	      	});*/
-	},
-	// Newsletter Preview Data End
+  },
+  // Newsletter Preview Data End
 
-	// Newsletter Edit Form Start
-	/*edit: function(req, res) {
+  // Newsletter Edit Form Start
+  /*edit: function(req, res) {
 		User.findById(req.params.id, function(err, user) {
 		    if(user) {
 		      	res.render('user/edit_user', {
@@ -126,10 +224,10 @@ module.exports = {
 		    }
 		});
 	},*/
-	// Newsletter Edit Form End
+  // Newsletter Edit Form End
 
-	// Newsletter Update Data Start
-	/*update: function(req, res) {
+  // Newsletter Update Data Start
+  /*update: function(req, res) {
   		let query = {_id: req.params.id}
   		User.findOne({ $and: [{'email': req.body.email}, {'_id': { $ne: req.params.id}}]}, function(err, user) {
 	  		if(err) {
@@ -157,10 +255,10 @@ module.exports = {
 	  		}
 	  	});
 	},*/
-	// Newsletter Update Data End
+  // Newsletter Update Data End
 
-	// Newsletter Delete Data Start
-	/*delete: function(req, res) {
+  // Newsletter Delete Data Start
+  /*delete: function(req, res) {
   		let query = {_id: req.params.id}
   		// console.log(req.params.id);
   		User.findById(req.params.id, function(err, user) {
@@ -177,17 +275,17 @@ module.exports = {
     		}
   		});
 	},*/
-	// Newsletter Delete Data End
+  // Newsletter Delete Data End
 
-	// Newsletter Login Form Start
-	/*login: function(req, res) {
+  // Newsletter Login Form Start
+  /*login: function(req, res) {
   		req.flash('msg', '');
   		res.render('login');
 	},*/
-	// Newsletter Login Form End
+  // Newsletter Login Form End
 
-	// Newsletter Logout Start
-	/*logout: function(req, res) {
+  // Newsletter Logout Start
+  /*logout: function(req, res) {
 		let new_log = new Log({
 	        user_id: req.user._id,
 	        message: 'Logout',
@@ -203,10 +301,10 @@ module.exports = {
   		req.logout();
   		res.redirect('/');
 	},*/
-	// Newsletter Logout End
+  // Newsletter Logout End
 
-	// Fetch Newsletters Data Start
-	/*fetch_users: function(req, res) {
+  // Fetch Newsletters Data Start
+  /*fetch_users: function(req, res) {
   		User.find({}, function(err, users) {
   			if(err) {
   				console.log('err '+err);
@@ -215,5 +313,5 @@ module.exports = {
   			res.send(users);
   		});
 	},*/
-	// Fetch Newsletters Data End
-}
+  // Fetch Newsletters Data End
+};

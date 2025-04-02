@@ -7,11 +7,15 @@ const Razorpay = require("razorpay"); // For order creation
 const crypto = require("crypto"); // For verifying Razorpay payment signature
 const axios = require("axios");
 const cron = require("node-cron");
+const path = require("path");
+const fs = require("fs");
+const puppeteer = require("puppeteer");
 const nodemailer = require("nodemailer");
 
 const moment = require("moment");
 
 const mailer = require("nodemailer");
+const { toWords } = require("number-to-words"); // ✅ Import number-to-words
 
 // App User Model
 let AppUser = require("../models/appUser");
@@ -223,6 +227,271 @@ const checkSubscriptionReminders = async () => {
 cron.schedule("0 9 * * *", checkSubscriptionReminders);
 console.log("⏳ Subscription reminder service running daily at 9 AM.");
 
+const generatePdf = async (invoiceDetails) => {
+  const {
+    name,
+    amount,
+    orderId,
+    userId,
+    transactionId,
+    locations, // Merged locations
+    durations, // Merged durations
+    prices, // ✅ Merged prices
+    phoneNumber,
+    customerAddress,
+    invoiceDate,
+    invoiceTime,
+    amountInWords,
+  } = invoiceDetails;
+
+  const invoiceHtml = `
+   <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Modern Invoice</title>
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+            :root {
+                --primary: #1d75d9;
+                --text-primary: #1f2937;
+                --text-secondary: #6b7280;
+                --background: #f9fafb;
+                --card: #ffffff;
+                --border: #e5e7eb;
+            }
+
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body {
+                font-family: 'Inter', sans-serif;
+                background: var(--background);
+                display: flex;
+                justify-content: center;
+                color: var(--text-primary);
+                padding: 2rem;
+                line-height: 1.5;
+            }
+
+            .invoice-container {
+                max-width: 800px;
+                width: 100%;
+                background: var(--card);
+                padding: 2.5rem;
+                border-radius: 12px;
+                box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+            }
+
+            .header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                /*padding-bottom: 1.5rem;*/
+                /*border-bottom: 2px solid var(--border);*/
+            }
+
+            .logo-section img {
+                height: 50px;
+            }
+
+            .info-container {
+                display: flex;
+                justify-content: space-between;
+                margin-top: 1.5rem;
+                padding-bottom: 1.5rem;
+                border-bottom: 2px solid var(--border);
+            }
+
+            .supplier-info, .customer-info {
+                flex: 1;
+                font-size: 0.875rem;
+            }
+
+            .supplier-info p, .customer-info p {
+                margin-bottom: 0.5rem;
+            }
+
+            .invoice-details-container {
+                display: flex;
+                justify-content: space-between;
+                margin-top: 1.5rem;
+                padding-bottom: 1.5rem;
+                border-bottom: 2px solid var(--border);
+                font-size: 0.875rem;
+            }
+
+            .table-container {
+                margin: 2rem 0;
+                border-radius: 12px;
+                overflow: hidden;
+                border: 1px solid var(--border);
+            }
+
+            .invoice-table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+
+            .invoice-table th {
+                background: var(--primary);
+                color: white;
+                font-weight: 500;
+                padding: 1rem;
+                text-transform: uppercase;
+                font-size: 0.75rem;
+            }
+
+            .invoice-table td {
+                padding: 1rem;
+                border-bottom: 1px solid var(--border);
+                font-size: 0.875rem;
+                color: var(--text-secondary);
+            }
+
+            .total-section {
+                margin-top: 2rem;
+                padding-top: 1.5rem;
+                border-top: 2px solid var(--border);
+                text-align: right;
+            }
+
+            .total-row {
+                display: flex;
+                justify-content: flex-end;
+                gap: 4rem;
+                font-size: 0.875rem;
+                color: var(--text-secondary);
+            }
+
+            .total-row.final {
+                font-size: 1.25rem;
+                font-weight: 600;
+                color: var(--primary);
+            }
+        </style>
+    </head>
+    <body>
+        <div class="invoice-container">
+            <!-- Header Section -->
+            <div class="header" style="background: #1d75d9; padding: 1rem; border-radius: 12px 12px 0 0;">
+                <div class="logo-section" style="text-align: left; width: 100%;">
+                    <img src="https://exim.demo.shdpixel.com/static/media/logo-exim.14c9676bee1b10e8401a.png" alt="Breboot Logo" style="max-height: 60px;">
+                </div>
+            </div>
+            
+            <!-- Tax Invoice Heading -->
+            <div style="text-align: center; font-size: 1.2rem; font-weight: 700; margin-top: 0.8rem; color: var(--text-primary); padding-bottom: 1rem; border-bottom: 2px solid var(--border);">
+                Tax Invoice
+            </div>
+            
+            <!-- Supplier & Customer Info -->
+            <div class="info-container" style="display: flex; justify-content: space-between; gap: 2rem;">
+                <div class="supplier-info" style="flex: 1; text-align: left;">
+                    <p><strong>Supplier Name:</strong> Exim India</p>
+                    <p><strong>Supplier Address:</strong> 123 Street, City, State, 456789</p>
+                    <p><strong>GSTIN:</strong> 29AABCT3518Q1ZV</p>
+                </div>
+                <div class="customer-info" style="flex: 1; text-align: right;">
+                      <p><strong>Name:</strong> ${name}</p>
+                    <p><strong>Phone:</strong> ${phoneNumber}</p>
+                    <p><strong>Address:</strong> ${customerAddress}</p>
+                </div>
+            </div>
+
+
+            <!-- Invoice Details (Moved Below Supplier & Customer Info) -->
+            <div class="invoice-details-container">
+                <div class="left-details">
+                    <p><strong>Invoice Date:</strong> ${invoiceDate} ${invoiceTime}</p>
+                    <p><strong>Transaction ID:</strong> ${transactionId}</p>
+                </div>
+                <div class="right-details" style="text-align: right;">
+                    <p><strong>Order ID:</strong> ${orderId}</p>
+                    <p><strong>Payment Method:</strong> UPI/DIGITAL </p>
+                </div>
+            </div>
+
+            <!-- Product Table -->
+            <div class="table-container">
+                <table class="invoice-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Edition</th>
+                            <th>Price</th>
+                            <th>Duration</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td>${locations}</td>
+                            <td>₹${prices}</td>
+                            <td>${durations}</td>
+                            <td>₹${prices}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Total Amount -->
+            <div class="total-section" style="border-bottom: 2px solid var(--border); padding-bottom: 1rem;">
+                <div class="total-row final" style="font-size: 1.1rem;">
+                    <span style="font-weight: bold; color: #1d75d9;">Total Paid Amount: ₹${amount}</span>
+                </div>
+                <div class="total-row" style="font-size: 0.9rem; color: var(--text-primary); font-weight: 500;">
+                    <span>Total Amount in Words: ${amountInWords}</span>
+                </div>
+            </div>
+            
+            <!-- Additional Invoice Notes -->
+            <table style="width: 100%; border-collapse: collapse; margin-top: 2rem; border: 1px solid var(--border);">
+                <tr>
+                    <td style="width: 50%; padding: 8px; border-right: 1px solid var(--border); font-size: 0.875rem; color: var(--text-primary); vertical-align: bottom; text-align: left;">
+                        <p>www.exim.demo.shdpixel.com</p>
+                    </td>
+                    <td style="width: 50%; padding: 8px; font-size: 0.875rem; color: var(--text-primary); vertical-align: bottom; text-align: right;">
+                        <p>E&OE</p>
+                        <p style="margin-top: 2rem;">Authorized Signatory</p>
+                        <p>Exim India</p>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </body>
+    </html>`;
+
+  const invoicesDir = path.join(__dirname, "../invoices");
+  if (!fs.existsSync(invoicesDir)) {
+    fs.mkdirSync(invoicesDir, { recursive: true });
+  }
+
+  const invoiceFileName = `invoice-${userId}-${orderId}.pdf`;
+  const invoicePath = path.join(invoicesDir, invoiceFileName);
+
+  const browser = await puppeteer.launch({
+    headless: "new",
+    args: ["--no-sandbox"],
+  });
+  const page = await browser.newPage();
+  await page.setViewport({ width: 800, height: 1000 });
+  await page.setContent(invoiceHtml, { waitUntil: "networkidle0" });
+
+  await page.pdf({
+    path: invoicePath,
+    format: "A4",
+    printBackground: true,
+    margin: { top: "20px", bottom: "20px", left: "20px", right: "20px" },
+  });
+
+  await browser.close();
+
+  return `/invoices/${invoiceFileName}`;
+};
+
 // Store Register Route Start
 module.exports = {
   register: async function (req, res) {
@@ -297,6 +566,7 @@ module.exports = {
         state: state || "",
         country: country || "",
         password: hashedPassword,
+        login_history: [], // ✅ Initialize empty login history (for tracking devices later)
       });
 
       console.log("New user created:", app_user);
@@ -330,6 +600,7 @@ module.exports = {
           pincode: savedUser.pincode,
           state: savedUser.state,
           country: savedUser.country,
+          login_history: [], // ✅ Return empty history (will update on login)
         },
       });
     } catch (err) {
@@ -343,58 +614,79 @@ module.exports = {
   login: async function (req, res) {
     try {
       console.log("required", req.body);
-      const { email, password, ip } = req.body; // ✅ Get IP from request body
+      const { email, password, ip, deviceId } = req.body;
 
       // Validate required fields
-      if (!email || !password || !ip) {
+      if (!email || !password || !ip || !deviceId) {
         return res.status(400).json({
           success: 0,
-          message: "Email, password, and IP address are required.",
+          message: "Email, password, IP address, and deviceId are required.",
         });
       }
 
       // Find user by email
       const user = await AppUser.findOne({ email });
       if (!user) {
-        return res
-          .status(400)
-          .json({ success: 0, message: "Invalid email or password." });
+        return res.status(400).json({
+          success: 0,
+          message: "Invalid email or password.",
+        });
       }
 
       // Compare hashed password
       const isMatch = await bcrypt.compare(password, user.password);
       if (!isMatch) {
-        return res
-          .status(400)
-          .json({ success: 0, message: "Invalid email or password." });
+        return res.status(400).json({
+          success: 0,
+          message: "Invalid email or password.",
+        });
       }
 
       // ✅ Fetch country from IP
-      let country = "Unknown"; // Default if API fails
+      let country = "Unknown";
       try {
         const { data } = await axios.get(`http://ip-api.com/json/${ip}`);
         if (data.status === "success") {
-          country = data.country; // ✅ Store only country
+          country = data.country;
         }
       } catch (error) {
         console.error("IP Location Fetch Error:", error.message);
       }
 
-      // Update login history (limit to last 10 logins)
-      await AppUser.findByIdAndUpdate(
-        user._id,
-        {
-          $push: {
-            login_history: {
-              $each: [{ timestamp: new Date(), ip, country }], // ✅ Store IP & country
-              $slice: -10, // Keep only the last 10 logins
-            },
-          },
-        },
-        { new: true }
+      // 🔹 Extract unique device IDs from login history
+      let loginHistory = user.login_history || [];
+      const existingDeviceIndex = loginHistory.findIndex(
+        (entry) => entry.deviceId === deviceId
       );
 
-      // Fetch updated user details
+      // 🔹 If the device is already logged in, update timestamp
+      if (existingDeviceIndex !== -1) {
+        loginHistory[existingDeviceIndex].timestamp = new Date();
+        loginHistory[existingDeviceIndex].ip = ip;
+        loginHistory[existingDeviceIndex].country = country;
+      } else {
+        // 🔹 Restrict to max 3 unique devices
+        const uniqueDevices = new Set(
+          loginHistory.map((entry) => entry.deviceId)
+        );
+        if (uniqueDevices.size >= 3) {
+          return res.status(403).json({
+            success: 0,
+            message:
+              "Maximum 3 devices allowed. Please log out from another device first.",
+            activeDevices: loginHistory,
+          });
+        }
+
+        // 🔹 If new device, add to history
+        loginHistory.push({ timestamp: new Date(), ip, country, deviceId });
+      }
+
+      // 🔹 Keep only the last 10 login entries
+      user.login_history = loginHistory.slice(-10);
+      await user.save();
+
+      // Fetch updated user details (excluding passwords)
       const updatedUser = await AppUser.findById(user._id).select(
         "-password -confirm_password"
       );
@@ -403,10 +695,11 @@ module.exports = {
       const formattedLoginHistory = updatedUser.login_history.map((entry) => ({
         timestamp: moment(entry.timestamp).format("MMMM D, YYYY, h:mm A"),
         ip: entry.ip,
-        country: entry.country, // ✅ Include only country in response
+        country: entry.country,
+        deviceId: entry.deviceId,
       }));
 
-      console.log("his", formattedLoginHistory);
+      console.log("Active Devices:", formattedLoginHistory);
 
       // Generate JWT token
       const token = jwt.sign(
@@ -434,14 +727,16 @@ module.exports = {
           pincode: user.pincode,
           state: user.state,
           country: user.country,
-          login_history: formattedLoginHistory, // ✅ Send login timestamps with IP & country only
+          login_history: formattedLoginHistory,
         },
       });
     } catch (err) {
       console.error("Error in login:", err);
-      return res
-        .status(500)
-        .json({ success: 0, message: "Something went wrong.", error: err });
+      return res.status(500).json({
+        success: 0,
+        message: "Something went wrong.",
+        error: err,
+      });
     }
   },
 
@@ -653,6 +948,26 @@ module.exports = {
           .json({ success: 0, message: "Order not found." });
       }
 
+      // ✅ Fetch user details
+      const user = await AppUser.findById(payment.userId);
+      if (!user) {
+        return res.status(404).json({ success: 0, message: "User not found." });
+      }
+
+      // ✅ Extract user mobile number
+      const userMobile = user.mobile;
+
+      // ✅ Format address
+      const addressParts = [
+        user.company_address,
+        user.city,
+        user.pincode,
+        user.state,
+        user.country,
+      ]
+        .filter(Boolean) // Remove empty values
+        .join(", "); // Combine with commas
+
       // ✅ Validate Razorpay payment signature
       const generatedSignature = crypto
         .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
@@ -713,12 +1028,63 @@ module.exports = {
         }
       }
 
+      // ✅ Format invoice date as "DD-MM-YYYY HH:MM AM/PM"
+      const now = new Date();
+      const invoiceDate = now.toLocaleDateString("en-GB"); // "02-04-2025"
+      const invoiceTime = now
+        .toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
+        })
+        .toUpperCase(); // "03:45 PM"
+
+      // ✅ Merge multiple locations, durations, and expiry dates into a single string
+      const locations = payment.subscription_details
+        .map((sub) => sub.location)
+        .join(", ");
+      const durations = payment.subscription_details
+        .map((sub) => sub.duration)
+        .join(", ");
+      const expiryDates = payment.subscription_details
+        .map((sub) => new Date(sub.expiryDate).toDateString())
+        .join(", ");
+      const prices = payment.subscription_details
+        .map((sub) => sub.price)
+        .join(", "); // Formatting prices
+
+      // ✅ Convert amount to words
+      const amountInWords =
+        toWords(payment.amount).toUpperCase() + " RUPEES ONLY"; // Example: "EIGHT THOUSAND RUPEES ONLY"
+
+      // ✅ Invoice data
+      const invoiceData = {
+        userId: payment.userId,
+        orderId: razorpayOrderId,
+        name: payment.username,
+        amount: payment.amount,
+        amountInWords,
+        invoiceDate,
+        invoiceTime,
+        transactionId: razorpayPaymentId,
+        locations, // Merged locations
+        durations, // Merged durations
+        expiryDates, // Merged expiry dates
+        prices, // ✅ Merged prices
+        phoneNumber: userMobile,
+        customerAddress: addressParts, // ✅ Formatted Address
+      };
+
+      // ✅ Generate and save invoice PDF
+      const invoicePath = await generatePdf(invoiceData);
+
       // ✅ Send confirmation email
       if (payment.userId.email) {
         await sendPaymentConfirmationEmail(
           payment.userId.email,
           razorpayOrderId,
-          razorpayPaymentId
+          razorpayPaymentId,
+          invoicePath
         );
       }
 
@@ -726,6 +1092,7 @@ module.exports = {
         success: 1,
         message: "Payment successful!",
         paymentDetails: payment,
+        invoicePath
       });
     } catch (error) {
       console.error("Error verifying payment:", error);
@@ -815,19 +1182,19 @@ module.exports = {
           .status(401)
           .json({ success: 0, message: "Unauthorized: Token missing." });
       }
-  
+
       let decoded;
       try {
         decoded = jwt.verify(token, process.env.SECRET_KEY);
       } catch (err) {
         return res.status(401).json({ success: 0, message: "Invalid token." });
       }
-  
+
       const userId = decoded.userId;
-  
+
       // Fetch subscriptions for the logged-in user
       const userSubscription = await UserSubscriptions.find({ userId });
-  
+
       res.status(200).json({ message: "Data retrieved", userSubscription });
     } catch (error) {
       console.error("Error in getUserSubscribe:", error);
@@ -838,12 +1205,12 @@ module.exports = {
       });
     }
   },
-  
+
   // Store Register Route End
 
   getUserSubscribe_dashboard: async function (req, res) {
     try {
-      console.log("token",req.headers.authorization?.split(" ")[1])
+      console.log("token", req.headers.authorization?.split(" ")[1]);
       // Extract token from headers
       const token = req.headers.authorization?.split(" ")[1];
       if (!token) {
@@ -851,20 +1218,20 @@ module.exports = {
           .status(401)
           .json({ success: 0, message: "Unauthorized: Token missing." });
       }
-  
+
       let decoded;
       try {
         decoded = jwt.verify(token, process.env.SECRET_KEY);
       } catch (err) {
         return res.status(401).json({ success: 0, message: "Invalid token." });
       }
-  
+
       const userId = decoded.userId;
-  
+
       // Fetch subscriptions for the logged-in user (without paymentStatus filter)
       const userSubscription = await UserSubscriptions.find({ userId });
-      console.log("data",userSubscription)
-  
+      console.log("data", userSubscription);
+
       res.status(200).json({ message: "Data retrieved", userSubscription });
     } catch (error) {
       console.error("Error in getUserSubscribe_dashboard:", error);
@@ -875,11 +1242,10 @@ module.exports = {
       });
     }
   },
-  
 
   forgotPassword: async function (req, res) {
     try {
-      console.log("email",req.body)
+      console.log("email", req.body);
       const { email } = req.body;
       if (!email) return res.status(400).json({ message: "Email is required" });
 
@@ -919,38 +1285,44 @@ module.exports = {
 
   resetPassword: async function (req, res) {
     try {
-      console.log("req data",req.body,req.params,req.query)
+      console.log("req data", req.body, req.params, req.query);
       const { token } = req.params;
       const { newPassword, confirmNewPassword } = req.body;
       const expires = new Date(req.query.expires).getTime(); // Convert ISO to timestamp
-  
+
       // Validate expiration
       if (!expires || Date.now() > expires) {
-        return res.status(400).json({ message: "This link has expired. Please request a new one." });
+        return res.status(400).json({
+          message: "This link has expired. Please request a new one.",
+        });
       }
-  
+
       if (!newPassword || !confirmNewPassword)
         return res.status(400).json({ message: "Both fields are required" });
-  
+
       if (newPassword !== confirmNewPassword)
         return res.status(400).json({ message: "Passwords do not match" });
-  
+
       // Hash the token
-      const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
-  
+      const hashedToken = crypto
+        .createHash("sha256")
+        .update(token)
+        .digest("hex");
+
       // Find user with the hashed token
       const user = await AppUser.findOne({ resetPasswordToken: hashedToken });
-  
-      if (!user) return res.status(400).json({ message: "Invalid or expired token" });
-  
+
+      if (!user)
+        return res.status(400).json({ message: "Invalid or expired token" });
+
       // Hash new password
       const salt = await bcrypt.genSalt(10);
       user.password = await bcrypt.hash(newPassword, salt);
-  
+
       // Clear the reset token
       user.resetPasswordToken = null;
       await user.save();
-  
+
       res.status(200).json({ message: "Password reset successful" });
     } catch (error) {
       console.error("Error resetting password:", error);

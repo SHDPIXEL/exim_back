@@ -203,11 +203,23 @@
 	                },
 
 	                submitHandler: function (form) {
+						    // Get CKEditor HTML content
+						var descriptionData = CKEDITOR.instances.description.getData();
+
+						// Manually create the data object including the formatted description
+						var formData = {
+							job_title_id: $("#job_title_id").val(),
+							edition_id: $("#edition_id").val(),
+							date: $("#date").val(),
+							description: descriptionData, // Use CKEditor HTML content
+							status: $("#status").val()
+						};
 
 	                    $.ajax({
 	                        url: "/appointments/store",
 	                        type: "POST",
-	                        data:  $('#appointment_form').serialize(),
+							data: JSON.stringify(formData), // Send data as JSON
+							contentType: "application/json", // Set content type
 	                        success: function(data)
 	                        {
 	                            var res = data.split("|"); 

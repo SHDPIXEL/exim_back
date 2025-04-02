@@ -2,9 +2,10 @@ const mongoose = require('mongoose');
 
 // News Schema
 const NewsSchema = mongoose.Schema({
-  category_id:{
-    type: String,
-    required: true
+  category_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Category", // Reference Category Model
+    required: true,
   },
   date:{
     type: Date,

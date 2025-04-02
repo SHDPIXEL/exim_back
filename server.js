@@ -205,6 +205,14 @@ app.get("/videoNews/list", (req, res) => {
   });
 });
 
+app.get("/upcomingrenewals/list", (req, res) => {
+  console.log("User in request:", req.user);
+  res.render("upcomingRenewals/list_upcomingrenewals", {
+    user: req.user || null,
+    url: req.originalUrl,
+  });
+});
+
 app.get("/adds/list", (req, res) => {
   console.log("User in request:", req.user);
   res.render("adds/list_adds", {
@@ -273,9 +281,12 @@ let polls = require("./routes/polls");
 let files = require("./routes/menu");
 let videoNews = require("./routes/videoNews");
 let adds = require('./routes/adds')
+let userSubscription = require('./routes/userSubcriptions')
 
 app.use("/assets", express.static(path.join(__dirname, "assets")));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+// Serve static files from the invoices directory
+app.use("/invoices", express.static(path.join(__dirname, "invoices")));
 
 app.use("/users", users);
 app.use("/app_users", app_users);
@@ -311,6 +322,7 @@ app.use("/polls", polls);
 app.use("/files", files);
 app.use("/videoNews", videoNews);
 app.use("/adds",adds)
+app.use("/userSubscriptions",userSubscription)
 // Start Server
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`Server is running on http://127.0.0.1:${PORT}`);

@@ -51,13 +51,13 @@
     <li class="treeview">
       <% } %>
       <a href="#">
-        <i class="fa fa-envelope"></i> <span>Subscribe Email Ids</span>
+        <i class="fa fa-envelope"></i> <span>Active Users</span>
         <i class="fa fa-angle-left pull-right"></i>
       </a>
       <ul class="treeview-menu">
         <li class="<%= (url == '/app_users/list') ? 'active' : '' %>">
           <a href="/app_users/list"
-            ><i class="fa fa-circle-o"></i> list Subscribe Email Ids
+            ><i class="fa fa-circle-o"></i> list Active Users
           </a>
         </li>
       </ul>
@@ -203,6 +203,22 @@
           </li>
           <li class="<%= (url == '/videoNews/list') ? 'Active' : '' %>">
             <a href="/VideoNews/add"><i class="fa fa-circle-o"></i> Add Files </a>
+          </li>
+        </ul>
+    </li>    
+
+    <% if (url == '/upcomingrenewals/list') { %>
+      <li class="treeview active">
+    <% } else { %>
+      <li class="treeview">
+    <% } %>
+        <a href="#">
+          <i class="fa fa-refresh"></i> <span>Upcoming Renewals</span>
+          <i class="fa fa-angle-left pull-right"></i>
+        </a>
+        <ul class="treeview-menu">
+          <li class="<%= (url == '/upcomingrenewals/list') ? 'Active' : '' %>">
+            <a href="/upcomingrenewals/list"><i class="fa fa-circle-o"></i> List Upcoming Renewals </a>
           </li>
         </ul>
     </li>    

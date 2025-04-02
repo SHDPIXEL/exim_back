@@ -110,18 +110,26 @@
                 {data: 'currency', name: 'currency'},
                 {data: 'import', name: 'import'},
                 {data: 'export', name: 'export'},
-                {data: 'date', name: 'date',
-                    'render': function( data, type, row, meta) {
-                        if(type === 'display') {
-                            return moment(data).format("YYYY-MM-DD");
-                        } else {
-                            return data;
-                        }
+                { 
+                    data: 'date', 
+                    name: 'date',
+                    render: function(data, type) {
+                        return type === 'display' ? moment(data).format("YYYY-MM-DD") : data;
                     }
                 },
                 {data: 'notification_no', name: 'notification_no'},
                 {data: 'sql_id', name: 'sql_id'},
-                {defaultContent: '<a href="#" class="edit btn btn-primary btn-xs"><i class="fa fa-pencil-square-o"></i> Edit</a>&nbsp;<button type="button" class="delete btn btn-danger btn-xs"><i class="fa fa-trash"></i> Delete</button>'},
+                {
+                    data: 'sql_id',
+                    render: function(data, type, row) {
+                        return `<a href="#" class="edit btn btn-primary btn-xs" data-id="${row._id}">
+                                    <i class="fa fa-pencil-square-o"></i> Edit
+                                </a>&nbsp;
+                                <button type="button" class="delete btn btn-danger btn-xs" data-id="${row._id}">
+                                    <i class="fa fa-trash"></i> Delete
+                                </button>`;
+                    }                                      
+                },
                 {data: '_id', name: '_id', searchable: false, visible: false}
             ],
             "order": [
@@ -140,7 +148,7 @@
                     [ 25, 50, 100, 200, 'All' ]
             ],
             'fnCreatedRow': function (nRow, aData, iDataIndex) {
-            	// console.log(aData._id);
+                console.log("Row Data in DataTables:", aData); // ✅ Add this log
 		        $(nRow).attr('id', aData.sql_id); // or whatever you choose to set as the id
 		         // $('td', nRow).eq(0).html(iDataIndex + 1);
 		    },
@@ -162,13 +170,12 @@
             });
 
 
-        	$('#customs_table tbody').on('click', '.edit', function (e) {
-        		e.preventDefault();
-                var row = $(this).closest('tr');
-                // console.log(row[0].attributes[0].value);
-                var id = row[0].attributes[0].value;
-                window.location.href="/customs/edit/"+id;
-            });
+            $('#customs_table tbody').on('click', '.edit', function(e) {
+                e.preventDefault();
+                var id = $(this).data('id');
+                console.log("Edit button clicked for ID:", id); // ✅ Check the output
+                window.location.href = "/customs/add?id=" + id;
+            });                   
 
             $('#customs_table tbody').on('click', '.delete', function (e) {
                 var row = $(this).closest('tr');

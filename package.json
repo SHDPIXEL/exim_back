@@ -41,9 +41,11 @@
     "multer": "^1.4.1",
     "node-cron": "^3.0.3",
     "nodemailer": "^6.10.0",
+    "number-to-words": "^1.2.4",
     "passport": "^0.3.2",
     "passport-local": "^1.0.0",
     "pug": "^2.0.0-rc.1",
+    "puppeteer": "^24.5.0",
     "razorpay": "^2.9.6",
     "sequelize": "^6.37.6",
     "uuid": "^7.0.2"

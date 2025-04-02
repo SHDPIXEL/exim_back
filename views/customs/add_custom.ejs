@@ -34,6 +34,7 @@
 							</div><!-- /.box-header -->
 							<!-- form start -->
 							<form id="custom_form" method="POST" class="" role="form">
+								<input type="hidden" id="custom_id" name="custom_id"> <!-- Hidden field for editing -->
 								<div class="box-body">
 									<div id="AlertInfo">                            
 										<div class="alert alert-danger" style="display: none">
@@ -181,7 +182,73 @@
 	<script src="../../jquery_ui/js/jquery-ui.min.js"></script>
 	<script type="text/javascript">
 		$(document).ready(function() {
+			var urlParams = new URLSearchParams(window.location.search);
+			var editId = urlParams.get("id"); // Extract ID from URL
 
+			console.log("Extracted editId:", editId); // Debugging log
+
+    function isValidObjectId(id) {
+        return /^[a-fA-F0-9]{24}$/.test(id);
+    }
+
+    if (editId) {
+        if (!isValidObjectId(editId)) {
+            alert("Invalid ID format. Please check the URL.");
+            window.location.href = "/customs/list";
+            return;
+        }
+
+        $.ajax({
+            url: `/customs/customs/${editId}`,
+            type: "GET",
+			success: function (response) {
+				console.log("Response received:", response); // Debugging
+			
+				if (response.status === "success" && response.data) {
+					let data = response.data;
+			
+					if (!response.currencies || !Array.isArray(response.currencies)) {
+						console.error("Currencies array is missing in the response!");
+						return;
+					}
+			
+					let currencyOptions = `<option value="">Select Currency</option>`;
+					response.currencies.forEach(function (currency) {
+						let selected = data.currency === currency.currency ? "selected" : "";
+						currencyOptions += `<option value="${currency.currency}" ${selected}>${currency.currency}</option>`;
+					});
+			
+					$("#custom_tbody").html(`
+						<tr>
+							<td>
+								<div class="form-group">
+									<select name="currency[]" class="form-control">
+										${currencyOptions}
+									</select>
+								</div>
+							</td>
+							<td><div class="form-group"><input name="import[]" class="form-control" value="${data.import.trim()}"></div></td>
+							<td><div class="form-group"><input name="export[]" class="form-control" value="${data.export.trim()}"></div></td>
+							<td><div class="form-group"><button type="button" class="btn btn-danger btn-xs remove"><i class="fa fa-trash"></i></button></div></td>
+						</tr>
+					`);
+			
+					// 🔹 Fix: Set the date value correctly
+					if (data.date) {
+						let formattedDate = data.date.split("T")[0]; // Extract YYYY-MM-DD
+						$("#date").val(formattedDate);
+					}
+				} else {
+					alert("Invalid response format.");
+				}
+			},
+            error: function () {
+                alert("Invalid or non-existent ID.");
+                window.location.href = "/customs/list";
+            }
+        });
+    }
+			
 			$(document).on('click', '#add', function() {
 				$('#custom_tbody').append(`
 											<tr>
@@ -270,10 +337,19 @@
 	                },
 
 	                submitHandler: function (form) {
+						var formData = $('#custom_form').serialize();
+						var id = $('#custom_id').val(); // Assuming there's an input field with id "custom_id" for editing
+						if (id && !isValidObjectId(id)) {
+							alert("Invalid ID format. Cannot proceed.");
+							return;
+						}
+						var url = id ? `/customs/update_customs/${id}` : "/customs/store";
+						var method = id ? "PUT" : "POST";
+
 	                    $.ajax({
-	                        url: "/customs/store",
-	                        type: "POST",
-	                        data:  $('#custom_form').serialize(),
+							url: url,
+							type: method,
+							data: formData,
 	                        success: function(data)
 	                        {
 	                            var res = data.split("|"); 
