@@ -54,12 +54,37 @@ module.exports = {
 
   getPolls: async function (req, res) {
     try {
+      // Retrieve all polls
       const polls = await Polls.find();
-      res.json(polls);
+  
+      // Map each poll to include totalVotes and formatted options
+      const formattedPolls = polls.map((poll) => {
+        // Calculate total votes for the poll
+        const totalVotes = poll.options.reduce((sum, option) => sum + option.votes, 0);
+  
+        // Format each option with its vote count and percentage (if any votes exist)
+        const formattedOptions = poll.options.map((option) => ({
+          text: option.text,
+          votes: option.votes,
+          percentage: totalVotes > 0 ? ((option.votes / totalVotes) * 100).toFixed(2) : "0.00"
+        }));
+  
+        return {
+          _id: poll._id,
+          question: poll.question,
+          options: formattedOptions,
+          correctAnswerIndex: poll.correctAnswerIndex,
+          totalVotes: totalVotes
+        };
+      });
+  
+      // Return the polls with additional vote information
+      res.json({ polls: formattedPolls });
     } catch (err) {
+      console.error("Error fetching polls:", err);
       res.status(500).json({ error: err.message });
     }
-  },
+  },  
 
   //     submitPoll: async function(req, res) {
   //       try {

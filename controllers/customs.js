@@ -99,6 +99,91 @@ module.exports = {
       });
     });
   },
+
+  get_customs_website: async function (req, res) {
+    try {
+      console.log("Request Body:", req.body);
+
+      // Extract sorting info
+      const columns = req.body?.columns || [];
+      const orderArray = req.body?.order || [];
+      const searchValue = req.body?.search?.value || "";
+
+      // Determine sorting column
+      let col =
+        columns.length > 0 && orderArray.length > 0
+          ? columns[orderArray[0].column]?.data || "sql_id"
+          : "date"; // Default sorting by latest date
+      let order = orderArray.length > 0 && orderArray[0].dir === "asc" ? 1 : -1;
+      const column_order = { [col]: order };
+
+      // Date filter logic
+      let date_search = {};
+      let queryLimit = 25;
+      let skipVal = 0;
+      let useDateFilter = false;
+
+      if (req.body.date) {
+        let dateInput = req.body.date.trim(); // Extract input and trim spaces
+        let dateVal = new Date(dateInput);
+
+        if (!isNaN(dateVal.getTime())) {
+          let startOfDay = new Date(dateVal.setUTCHours(0, 0, 0, 0));
+          let endOfDay = new Date(dateVal.setUTCHours(23, 59, 59, 999));
+
+          date_search = { date: { $gte: startOfDay, $lte: endOfDay } };
+          useDateFilter = true;
+
+          // Apply pagination when filtering by date
+          skipVal = Number(req.body.start) || 0;
+          queryLimit = req.body.length !== -1 ? Number(req.body.length) : 25;
+        }
+      }
+
+      // Build search criteria
+      let common_search = {};
+      if (searchValue) {
+        common_search = {
+          $or: [
+            { currency: { $regex: searchValue, $options: "i" } },
+            { import: { $regex: searchValue, $options: "i" } },
+            { export: { $regex: searchValue, $options: "i" } },
+            { notification_no: { $regex: searchValue, $options: "i" } },
+            { sql_id: { $regex: searchValue, $options: "i" } },
+          ],
+        };
+      }
+
+      // Final search filter
+      let searchStr = useDateFilter
+        ? { $and: [common_search, date_search] }
+        : common_search;
+
+      // Fetch total and filtered record counts
+      const recordsTotal = await Custom.count({});
+      const recordsFiltered = await Custom.count(searchStr);
+
+      // Fetch data with sorting and pagination
+      const results = await Custom.find(
+        searchStr,
+        "_id currency import export date notification_no sql_id"
+      )
+        .sort(useDateFilter ? {} : { date: -1 }) // Sort by latest date only if no date filter is used
+        .skip(skipVal)
+        .limit(queryLimit);
+
+      res.json({
+        draw: req.body.draw,
+        recordsTotal,
+        recordsFiltered,
+        data: results,
+      });
+    } catch (error) {
+      console.error("Error in get_customs_website:", error);
+      res.status(500).json({ error: error.message });
+    }
+  },
+
   // Get Customs Data End
 
   // Customs Add Form Start
@@ -149,12 +234,11 @@ module.exports = {
 
         await new_custom.save();
 
-		const new_log = new Log({
-			user_id: req.user ? req.user._id : null, // Avoids the error
-			message: "Add",
-			table: "customs",
-		});
-		
+        const new_log = new Log({
+          user_id: req.user ? req.user._id : null, // Avoids the error
+          message: "Add",
+          table: "customs",
+        });
 
         await new_log.save();
         count++;

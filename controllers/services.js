@@ -73,6 +73,8 @@ let MeetExpert = require("../models/meetExpert");
 let QuestionAnswer = require("../models/questionAnswer");
 // Question Gazette Vessel Model
 let GazetteVessel = require("../models/gazetteVessel");
+let Invoice = require("../models/invoices"); // Import the Invoice model
+let Counter = require("../models/counter");
 
 const generateReceiptId = () => {
   const randomNumbers = crypto.randomBytes(4).toString("hex"); // Generates a random 8-character hex string
@@ -227,269 +229,299 @@ const checkSubscriptionReminders = async () => {
 cron.schedule("0 9 * * *", checkSubscriptionReminders);
 console.log("⏳ Subscription reminder service running daily at 9 AM.");
 
-const generatePdf = async (invoiceDetails) => {
-  const {
-    name,
-    amount,
-    orderId,
-    userId,
-    transactionId,
-    locations, // Merged locations
-    durations, // Merged durations
-    prices, // ✅ Merged prices
-    phoneNumber,
-    customerAddress,
-    invoiceDate,
-    invoiceTime,
-    amountInWords,
-  } = invoiceDetails;
+// const generatePdf = async (invoiceDetails) => {
+//   const {
+//     name,
+//     amount,
+//     orderId,
+//     userId,
+//     transactionId,
+//     locations, // Merged locations
+//     durations, // Merged durations
+//     prices, // ✅ Merged prices
+//     phoneNumber,
+//     customerAddress,
+//     invoiceDate,
+//     invoiceTime,
+//     amountInWords,
+//   } = invoiceDetails;
 
-  const invoiceHtml = `
-   <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Modern Invoice</title>
-        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-        <style>
-            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+//   const invoiceHtml = `
+//    <!DOCTYPE html>
+//     <html lang="en">
+//     <head>
+//         <meta charset="UTF-8">
+//         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+//         <title>Modern Invoice</title>
+//         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+//         <style>
+//             @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-            :root {
-                --primary: #1d75d9;
-                --text-primary: #1f2937;
-                --text-secondary: #6b7280;
-                --background: #f9fafb;
-                --card: #ffffff;
-                --border: #e5e7eb;
-            }
+//             :root {
+//                 --primary: #1d75d9;
+//                 --text-primary: #1f2937;
+//                 --text-secondary: #6b7280;
+//                 --background: #f9fafb;
+//                 --card: #ffffff;
+//                 --border: #e5e7eb;
+//             }
 
-            * { margin: 0; padding: 0; box-sizing: border-box; }
-            body {
-                font-family: 'Inter', sans-serif;
-                background: var(--background);
-                display: flex;
-                justify-content: center;
-                color: var(--text-primary);
-                padding: 2rem;
-                line-height: 1.5;
-            }
+//             * { margin: 0; padding: 0; box-sizing: border-box; }
+//             body {
+//                 font-family: 'Inter', sans-serif;
+//                 background: var(--background);
+//                 display: flex;
+//                 justify-content: center;
+//                 color: var(--text-primary);
+//                 padding: 2rem;
+//                 line-height: 1.5;
+//             }
 
-            .invoice-container {
-                max-width: 800px;
-                width: 100%;
-                background: var(--card);
-                padding: 2.5rem;
-                border-radius: 12px;
-                box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-            }
+//             .invoice-container {
+//                 max-width: 800px;
+//                 width: 100%;
+//                 background: var(--card);
+//                 padding: 2.5rem;
+//                 border-radius: 12px;
+//                 box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+//             }
 
-            .header {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                /*padding-bottom: 1.5rem;*/
-                /*border-bottom: 2px solid var(--border);*/
-            }
+//             .header {
+//                 display: flex;
+//                 justify-content: space-between;
+//                 align-items: center;
+//                 /*padding-bottom: 1.5rem;*/
+//                 /*border-bottom: 2px solid var(--border);*/
+//             }
 
-            .logo-section img {
-                height: 50px;
-            }
+//             .logo-section img {
+//                 height: 50px;
+//             }
 
-            .info-container {
-                display: flex;
-                justify-content: space-between;
-                margin-top: 1.5rem;
-                padding-bottom: 1.5rem;
-                border-bottom: 2px solid var(--border);
-            }
+//             .info-container {
+//                 display: flex;
+//                 justify-content: space-between;
+//                 margin-top: 1.5rem;
+//                 padding-bottom: 1.5rem;
+//                 border-bottom: 2px solid var(--border);
+//             }
 
-            .supplier-info, .customer-info {
-                flex: 1;
-                font-size: 0.875rem;
-            }
+//             .supplier-info, .customer-info {
+//                 flex: 1;
+//                 font-size: 0.875rem;
+//             }
 
-            .supplier-info p, .customer-info p {
-                margin-bottom: 0.5rem;
-            }
+//             .supplier-info p, .customer-info p {
+//                 margin-bottom: 0.5rem;
+//             }
 
-            .invoice-details-container {
-                display: flex;
-                justify-content: space-between;
-                margin-top: 1.5rem;
-                padding-bottom: 1.5rem;
-                border-bottom: 2px solid var(--border);
-                font-size: 0.875rem;
-            }
+//             .invoice-details-container {
+//                 display: flex;
+//                 justify-content: space-between;
+//                 margin-top: 1.5rem;
+//                 padding-bottom: 1.5rem;
+//                 border-bottom: 2px solid var(--border);
+//                 font-size: 0.875rem;
+//             }
 
-            .table-container {
-                margin: 2rem 0;
-                border-radius: 12px;
-                overflow: hidden;
-                border: 1px solid var(--border);
-            }
+//             .table-container {
+//                 margin: 2rem 0;
+//                 border-radius: 12px;
+//                 overflow: hidden;
+//                 border: 1px solid var(--border);
+//             }
 
-            .invoice-table {
-                width: 100%;
-                border-collapse: collapse;
-            }
+//             .invoice-table {
+//                 width: 100%;
+//                 border-collapse: collapse;
+//             }
 
-            .invoice-table th {
-                background: var(--primary);
-                color: white;
-                font-weight: 500;
-                padding: 1rem;
-                text-transform: uppercase;
-                font-size: 0.75rem;
-            }
+//             .invoice-table th {
+//                 background: var(--primary);
+//                 color: white;
+//                 font-weight: 500;
+//                 padding: 1rem;
+//                 text-transform: uppercase;
+//                 font-size: 0.75rem;
+//             }
 
-            .invoice-table td {
-                padding: 1rem;
-                border-bottom: 1px solid var(--border);
-                font-size: 0.875rem;
-                color: var(--text-secondary);
-            }
+//             .invoice-table td {
+//                 padding: 1rem;
+//                 border-bottom: 1px solid var(--border);
+//                 font-size: 0.875rem;
+//                 color: var(--text-secondary);
+//             }
 
-            .total-section {
-                margin-top: 2rem;
-                padding-top: 1.5rem;
-                border-top: 2px solid var(--border);
-                text-align: right;
-            }
+//             .total-section {
+//                 margin-top: 2rem;
+//                 padding-top: 1.5rem;
+//                 border-top: 2px solid var(--border);
+//                 text-align: right;
+//             }
 
-            .total-row {
-                display: flex;
-                justify-content: flex-end;
-                gap: 4rem;
-                font-size: 0.875rem;
-                color: var(--text-secondary);
-            }
+//             .total-row {
+//                 display: flex;
+//                 justify-content: flex-end;
+//                 gap: 4rem;
+//                 font-size: 0.875rem;
+//                 color: var(--text-secondary);
+//             }
 
-            .total-row.final {
-                font-size: 1.25rem;
-                font-weight: 600;
-                color: var(--primary);
-            }
-        </style>
-    </head>
-    <body>
-        <div class="invoice-container">
-            <!-- Header Section -->
-            <div class="header" style="background: #1d75d9; padding: 1rem; border-radius: 12px 12px 0 0;">
-                <div class="logo-section" style="text-align: left; width: 100%;">
-                    <img src="https://exim.demo.shdpixel.com/static/media/logo-exim.14c9676bee1b10e8401a.png" alt="Breboot Logo" style="max-height: 60px;">
-                </div>
-            </div>
-            
-            <!-- Tax Invoice Heading -->
-            <div style="text-align: center; font-size: 1.2rem; font-weight: 700; margin-top: 0.8rem; color: var(--text-primary); padding-bottom: 1rem; border-bottom: 2px solid var(--border);">
-                Tax Invoice
-            </div>
-            
-            <!-- Supplier & Customer Info -->
-            <div class="info-container" style="display: flex; justify-content: space-between; gap: 2rem;">
-                <div class="supplier-info" style="flex: 1; text-align: left;">
-                    <p><strong>Supplier Name:</strong> Exim India</p>
-                    <p><strong>Supplier Address:</strong> 123 Street, City, State, 456789</p>
-                    <p><strong>GSTIN:</strong> 29AABCT3518Q1ZV</p>
-                </div>
-                <div class="customer-info" style="flex: 1; text-align: right;">
-                      <p><strong>Name:</strong> ${name}</p>
-                    <p><strong>Phone:</strong> ${phoneNumber}</p>
-                    <p><strong>Address:</strong> ${customerAddress}</p>
-                </div>
-            </div>
+//             .total-row.final {
+//                 font-size: 1.25rem;
+//                 font-weight: 600;
+//                 color: var(--primary);
+//             }
+//         </style>
+//     </head>
+//     <body>
+//         <div class="invoice-container">
+//             <!-- Header Section -->
+//             <div class="header" style="background: #1d75d9; padding: 1rem; border-radius: 12px 12px 0 0;">
+//                 <div class="logo-section" style="text-align: left; width: 100%;">
+//                     <img src="https://exim.demo.shdpixel.com/static/media/logo-exim.14c9676bee1b10e8401a.png" alt="Breboot Logo" style="max-height: 60px;">
+//                 </div>
+//             </div>
 
+//             <!-- Tax Invoice Heading -->
+//             <div style="text-align: center; font-size: 1.2rem; font-weight: 700; margin-top: 0.8rem; color: var(--text-primary); padding-bottom: 1rem; border-bottom: 2px solid var(--border);">
+//                 Tax Invoice
+//             </div>
 
-            <!-- Invoice Details (Moved Below Supplier & Customer Info) -->
-            <div class="invoice-details-container">
-                <div class="left-details">
-                    <p><strong>Invoice Date:</strong> ${invoiceDate} ${invoiceTime}</p>
-                    <p><strong>Transaction ID:</strong> ${transactionId}</p>
-                </div>
-                <div class="right-details" style="text-align: right;">
-                    <p><strong>Order ID:</strong> ${orderId}</p>
-                    <p><strong>Payment Method:</strong> UPI/DIGITAL </p>
-                </div>
-            </div>
+//             <!-- Supplier & Customer Info -->
+//             <div class="info-container" style="display: flex; justify-content: space-between; gap: 2rem;">
+//                 <div class="supplier-info" style="flex: 1; text-align: left;">
+//                     <p><strong>Supplier Name:</strong> Exim India</p>
+//                     <p><strong>Supplier Address:</strong> 123 Street, City, State, 456789</p>
+//                     <p><strong>GSTIN:</strong> 29AABCT3518Q1ZV</p>
+//                 </div>
+//                 <div class="customer-info" style="flex: 1; text-align: right;">
+//                       <p><strong>Name:</strong> ${name}</p>
+//                     <p><strong>Phone:</strong> ${phoneNumber}</p>
+//                     <p><strong>Address:</strong> ${customerAddress}</p>
+//                 </div>
+//             </div>
 
-            <!-- Product Table -->
-            <div class="table-container">
-                <table class="invoice-table">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Edition</th>
-                            <th>Price</th>
-                            <th>Duration</th>
-                            <th>Total</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>1</td>
-                            <td>${locations}</td>
-                            <td>₹${prices}</td>
-                            <td>${durations}</td>
-                            <td>₹${prices}</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+//             <!-- Invoice Details (Moved Below Supplier & Customer Info) -->
+//             <div class="invoice-details-container">
+//                 <div class="left-details">
+//                     <p><strong>Invoice Date:</strong> ${invoiceDate} ${invoiceTime}</p>
+//                     <p><strong>Transaction ID:</strong> ${transactionId}</p>
+//                 </div>
+//                 <div class="right-details" style="text-align: right;">
+//                     <p><strong>Order ID:</strong> ${orderId}</p>
+//                     <p><strong>Payment Method:</strong> UPI/DIGITAL </p>
+//                 </div>
+//             </div>
 
-            <!-- Total Amount -->
-            <div class="total-section" style="border-bottom: 2px solid var(--border); padding-bottom: 1rem;">
-                <div class="total-row final" style="font-size: 1.1rem;">
-                    <span style="font-weight: bold; color: #1d75d9;">Total Paid Amount: ₹${amount}</span>
-                </div>
-                <div class="total-row" style="font-size: 0.9rem; color: var(--text-primary); font-weight: 500;">
-                    <span>Total Amount in Words: ${amountInWords}</span>
-                </div>
-            </div>
-            
-            <!-- Additional Invoice Notes -->
-            <table style="width: 100%; border-collapse: collapse; margin-top: 2rem; border: 1px solid var(--border);">
-                <tr>
-                    <td style="width: 50%; padding: 8px; border-right: 1px solid var(--border); font-size: 0.875rem; color: var(--text-primary); vertical-align: bottom; text-align: left;">
-                        <p>www.exim.demo.shdpixel.com</p>
-                    </td>
-                    <td style="width: 50%; padding: 8px; font-size: 0.875rem; color: var(--text-primary); vertical-align: bottom; text-align: right;">
-                        <p>E&OE</p>
-                        <p style="margin-top: 2rem;">Authorized Signatory</p>
-                        <p>Exim India</p>
-                    </td>
-                </tr>
-            </table>
-        </div>
-    </body>
-    </html>`;
+//             <!-- Product Table -->
+//             <div class="table-container">
+//                 <table class="invoice-table">
+//                     <thead>
+//                         <tr>
+//                             <th>#</th>
+//                             <th>Edition</th>
+//                             <th>Price</th>
+//                             <th>Duration</th>
+//                             <th>Total</th>
+//                         </tr>
+//                     </thead>
+//                     <tbody>
+//                         <tr>
+//                             <td>1</td>
+//                             <td>${locations}</td>
+//                             <td>₹${prices}</td>
+//                             <td>${durations}</td>
+//                             <td>₹${prices}</td>
+//                         </tr>
+//                     </tbody>
+//                 </table>
+//             </div>
 
-  const invoicesDir = path.join(__dirname, "../invoices");
-  if (!fs.existsSync(invoicesDir)) {
-    fs.mkdirSync(invoicesDir, { recursive: true });
-  }
+//             <!-- Total Amount -->
+//             <div class="total-section" style="border-bottom: 2px solid var(--border); padding-bottom: 1rem;">
+//                 <div class="total-row final" style="font-size: 1.1rem;">
+//                     <span style="font-weight: bold; color: #1d75d9;">Total Paid Amount: ₹${amount}</span>
+//                 </div>
+//                 <div class="total-row" style="font-size: 0.9rem; color: var(--text-primary); font-weight: 500;">
+//                     <span>Total Amount in Words: ${amountInWords}</span>
+//                 </div>
+//             </div>
 
-  const invoiceFileName = `invoice-${userId}-${orderId}.pdf`;
-  const invoicePath = path.join(invoicesDir, invoiceFileName);
+//             <!-- Additional Invoice Notes -->
+//             <table style="width: 100%; border-collapse: collapse; margin-top: 2rem; border: 1px solid var(--border);">
+//                 <tr>
+//                     <td style="width: 50%; padding: 8px; border-right: 1px solid var(--border); font-size: 0.875rem; color: var(--text-primary); vertical-align: bottom; text-align: left;">
+//                         <p>www.exim.demo.shdpixel.com</p>
+//                     </td>
+//                     <td style="width: 50%; padding: 8px; font-size: 0.875rem; color: var(--text-primary); vertical-align: bottom; text-align: right;">
+//                         <p>E&OE</p>
+//                         <p style="margin-top: 2rem;">Authorized Signatory</p>
+//                         <p>Exim India</p>
+//                     </td>
+//                 </tr>
+//             </table>
+//         </div>
+//     </body>
+//     </html>`;
 
-  const browser = await puppeteer.launch({
-    headless: "new",
-    args: ["--no-sandbox"],
-  });
-  const page = await browser.newPage();
-  await page.setViewport({ width: 800, height: 1000 });
-  await page.setContent(invoiceHtml, { waitUntil: "networkidle0" });
+//   const invoicesDir = path.join(__dirname, "invoices");
+//   if (!fs.existsSync(invoicesDir)) {
+//     fs.mkdirSync(invoicesDir, { recursive: true });
+//   }
+//   const userIdString = userId?._id?.toString() || userId;
+//   const invoiceFileName = `invoice-${userIdString}-order_${orderId}.pdf`;
+//   const invoicePath = path.join(__dirname, "invoices", invoiceFileName);
 
-  await page.pdf({
-    path: invoicePath,
-    format: "A4",
-    printBackground: true,
-    margin: { top: "20px", bottom: "20px", left: "20px", right: "20px" },
-  });
+//   const browser = await puppeteer.launch({
+//     headless: "new",
+//     args: ["--no-sandbox"],
+//   });
+//   const page = await browser.newPage();
+//   await page.setViewport({ width: 800, height: 1000 });
+//   await page.setContent(invoiceHtml, { waitUntil: "networkidle0" });
 
-  await browser.close();
+//   await page.pdf({
+//     path: invoicePath,
+//     format: "A4",
+//     printBackground: true,
+//     margin: { top: "20px", bottom: "20px", left: "20px", right: "20px" },
+//   });
 
-  return `/invoices/${invoiceFileName}`;
+//   await browser.close();
+
+//   return `/invoices/${invoiceFileName}`;
+// };
+const generateUniqueInvoiceId = async () => {
+  const now = new Date();
+  const year = now.getFullYear(); // e.g., 2025
+  const monthAbbr = now
+    .toLocaleString("en-US", { month: "short" })
+    .toUpperCase(); // APR, MAY, etc.
+
+  const counter = await Counter.findOneAndUpdate(
+    { name: "invoice" },
+    { $inc: { value: 1 } },
+    { new: true, upsert: true }
+  );
+
+  const uniqueNumber = counter.value.toString().padStart(6, "0"); // Ensures 6 digits, e.g., 000123
+  return `INV-${year}${monthAbbr}-${uniqueNumber}`;
+};
+
+const getFingerprint = (req) => {
+  const userAgent = req.headers["user-agent"] || "";
+  const acceptLanguage = req.headers["accept-language"] || "";
+  const uaPlatform = req.headers["sec-ch-ua-platform"] || "";
+  const uaMobile = req.headers["sec-ch-ua-mobile"] || "0";
+  const ua = req.headers["sec-ch-ua"] || "";
+
+  return `${userAgent}-${acceptLanguage}-${uaPlatform}-${uaMobile}-${ua}`;
+};
+
+const generateDeviceId = (req) => {
+  const fingerprint = getFingerprint(req);
+  return crypto.createHash("sha256").update(fingerprint).digest("hex");
 };
 
 // Store Register Route Start
@@ -614,10 +646,10 @@ module.exports = {
   login: async function (req, res) {
     try {
       console.log("required", req.body);
-      const { email, password, ip, deviceId } = req.body;
+      const { email, password, ip } = req.body;
 
       // Validate required fields
-      if (!email || !password || !ip || !deviceId) {
+      if (!email || !password || !ip) {
         return res.status(400).json({
           success: 0,
           message: "Email, password, IP address, and deviceId are required.",
@@ -642,6 +674,9 @@ module.exports = {
         });
       }
 
+      // ✅ Generate Unique Device Fingerprint in Backend
+      const deviceId = generateDeviceId(req);
+
       // ✅ Fetch country from IP
       let country = "Unknown";
       try {
@@ -653,31 +688,33 @@ module.exports = {
         console.error("IP Location Fetch Error:", error.message);
       }
 
-      // 🔹 Extract unique device IDs from login history
+      // ✅ Restrict to Max 3 Unique Devices
       let loginHistory = user.login_history || [];
+      const uniqueDevices = new Set(
+        loginHistory.map((entry) => entry.deviceId)
+      );
+
       const existingDeviceIndex = loginHistory.findIndex(
         (entry) => entry.deviceId === deviceId
       );
 
-      // 🔹 If the device is already logged in, update timestamp
       if (existingDeviceIndex !== -1) {
-        loginHistory[existingDeviceIndex].timestamp = new Date();
-        loginHistory[existingDeviceIndex].ip = ip;
-        loginHistory[existingDeviceIndex].country = country;
+        // 🔹 If the same device logs in again, update timestamp, IP, and country
+        loginHistory[existingDeviceIndex] = {
+          timestamp: new Date(),
+          ip,
+          country,
+          deviceId,
+        };
       } else {
-        // 🔹 Restrict to max 3 unique devices
-        const uniqueDevices = new Set(
-          loginHistory.map((entry) => entry.deviceId)
-        );
         if (uniqueDevices.size >= 3) {
           return res.status(403).json({
             success: 0,
             message:
-              "Maximum 3 devices allowed. Please log out from another device first.",
+              "Maximum 3 devices allowed. Logout from another device to login here.",
             activeDevices: loginHistory,
           });
         }
-
         // 🔹 If new device, add to history
         loginHistory.push({ timestamp: new Date(), ip, country, deviceId });
       }
@@ -954,10 +991,7 @@ module.exports = {
         return res.status(404).json({ success: 0, message: "User not found." });
       }
 
-      // ✅ Extract user mobile number
       const userMobile = user.mobile;
-
-      // ✅ Format address
       const addressParts = [
         user.company_address,
         user.city,
@@ -965,8 +999,8 @@ module.exports = {
         user.state,
         user.country,
       ]
-        .filter(Boolean) // Remove empty values
-        .join(", "); // Combine with commas
+        .filter(Boolean)
+        .join(", ");
 
       // ✅ Validate Razorpay payment signature
       const generatedSignature = crypto
@@ -980,7 +1014,7 @@ module.exports = {
           .json({ success: 0, message: "Invalid payment signature." });
       }
 
-      // ✅ Update payment status to success
+      // ✅ Update payment status
       payment.paymentStatus = "success";
       payment.razorpayPaymentId = razorpayPaymentId;
       payment.razorpaySignature = razorpaySignature;
@@ -989,7 +1023,7 @@ module.exports = {
 
       console.log("Payment Successful:", payment);
 
-      // ✅ Now update or create `UserSubscriptions`
+      // ✅ Update or Create `UserSubscriptions`
       for (let sub of payment.subscription_details) {
         let expiryDate = new Date();
         const durationMatch = sub.duration.match(/(\d+)\s*(year|years)/i);
@@ -1011,7 +1045,7 @@ module.exports = {
           existingSubscription.type = payment.type;
           existingSubscription.razorpayOrderId = razorpayOrderId;
           existingSubscription.razorpayPaymentId = razorpayPaymentId;
-          existingSubscription.paymentStatus = "success"; // ✅ Set payment status to success
+          existingSubscription.paymentStatus = "success";
           await existingSubscription.save();
         } else {
           await UserSubscriptions.create({
@@ -1023,21 +1057,21 @@ module.exports = {
             type: payment.type,
             razorpayOrderId: razorpayOrderId,
             razorpayPaymentId: razorpayPaymentId,
-            paymentStatus: "success", // ✅ Set payment status to success
+            paymentStatus: "success",
           });
         }
       }
 
-      // ✅ Format invoice date as "DD-MM-YYYY HH:MM AM/PM"
+      // ✅ Format invoice date
       const now = new Date();
-      const invoiceDate = now.toLocaleDateString("en-GB"); // "02-04-2025"
+      const invoiceDate = now.toLocaleDateString("en-GB");
       const invoiceTime = now
         .toLocaleTimeString("en-US", {
           hour: "2-digit",
           minute: "2-digit",
           hour12: true,
         })
-        .toUpperCase(); // "03:45 PM"
+        .toUpperCase();
 
       // ✅ Merge multiple locations, durations, and expiry dates into a single string
       const locations = payment.subscription_details
@@ -1051,15 +1085,17 @@ module.exports = {
         .join(", ");
       const prices = payment.subscription_details
         .map((sub) => sub.price)
-        .join(", "); // Formatting prices
+        .join(", ");
 
       // ✅ Convert amount to words
       const amountInWords =
-        toWords(payment.amount).toUpperCase() + " RUPEES ONLY"; // Example: "EIGHT THOUSAND RUPEES ONLY"
+        toWords(payment.amount).toUpperCase() + " RUPEES ONLY";
+      const invoiceId = await generateUniqueInvoiceId();
 
-      // ✅ Invoice data
-      const invoiceData = {
-        userId: payment.userId,
+      // ✅ Save invoice data to the database
+      const invoice = await Invoice.create({
+        invoiceId, // ✅ Unique invoice ID
+        userId: payment.userId._id,
         orderId: razorpayOrderId,
         name: payment.username,
         amount: payment.amount,
@@ -1067,24 +1103,22 @@ module.exports = {
         invoiceDate,
         invoiceTime,
         transactionId: razorpayPaymentId,
-        locations, // Merged locations
-        durations, // Merged durations
-        expiryDates, // Merged expiry dates
-        prices, // ✅ Merged prices
+        locations,
+        durations,
+        expiryDates,
+        prices,
         phoneNumber: userMobile,
-        customerAddress: addressParts, // ✅ Formatted Address
-      };
+        customerAddress: addressParts,
+      });
 
-      // ✅ Generate and save invoice PDF
-      const invoicePath = await generatePdf(invoiceData);
+      console.log("Invoice saved successfully:", invoice);
 
       // ✅ Send confirmation email
       if (payment.userId.email) {
         await sendPaymentConfirmationEmail(
           payment.userId.email,
           razorpayOrderId,
-          razorpayPaymentId,
-          invoicePath
+          razorpayPaymentId
         );
       }
 
@@ -1092,7 +1126,7 @@ module.exports = {
         success: 1,
         message: "Payment successful!",
         paymentDetails: payment,
-        invoicePath
+        invoice,
       });
     } catch (error) {
       console.error("Error verifying payment:", error);
@@ -1206,6 +1240,54 @@ module.exports = {
     }
   },
 
+  getAllInvoices: async function (req, res) {
+    try {
+      // Extract token from headers
+      const token = req.headers.authorization?.split(" ")[1];
+      if (!token) {
+        return res.status(401).json({
+          success: 0,
+          message: "Unauthorized. No token provided.",
+        });
+      }
+
+      // Verify token and extract user ID
+      let decoded;
+      try {
+        decoded = jwt.verify(token, process.env.SECRET_KEY);
+      } catch (err) {
+        return res.status(401).json({
+          success: 0,
+          message: "Unauthorized. Invalid token.",
+        });
+      }
+
+      const userId = decoded.userId; // Extract user ID from token
+
+      // Fetch the latest invoice for the logged-in user
+      const invoice = await Invoice.findOne({ userId }).sort({ createdAt: -1 });
+
+      if (!invoice) {
+        return res.status(404).json({
+          success: 0,
+          message: "No invoices found for this user.",
+        });
+      }
+
+      return res.status(200).json({
+        success: 1,
+        message: "Invoice retrieved successfully.",
+        ...invoice.toObject(), // Spread all attributes directly
+      });
+    } catch (error) {
+      console.error("Error fetching invoice:", error);
+      return res.status(500).json({
+        success: 0,
+        message: "Something went wrong.",
+        error: error.message,
+      });
+    }
+  },
   // Store Register Route End
 
   getUserSubscribe_dashboard: async function (req, res) {

@@ -12,6 +12,7 @@ router.get('/list', is_authenticated, customs.list);
 
 // Get Customs Route Start
 router.post('/get_customs', customs.get_customs);
+router.post('/get_customs_website', customs.get_customs_website);
 // Get Customs Route End
 
 // Customs Add Route Start

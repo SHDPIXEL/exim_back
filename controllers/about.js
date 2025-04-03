@@ -1,170 +1,210 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const fs = require('fs');
+const fs = require("fs");
 
 // Bring in About Model
-let About = require('../models/about');
+let About = require("../models/about");
 // Bring in Log Model
-let Log = require('../models/log');
+let Log = require("../models/log");
 
 module.exports = {
-	// About Add Edit Form Start
-	add_edit: function(req, res) {
-		About.findOne({}, function(err, about) {
-			if(about) {
-	  			res.render('about/add_edit_about', {
-	  				about: about
-	  			});
-			}
-		});
-	},
-	// About Add Edit Form End
+  // About Add Edit Form Start
+  add_edit: function (req, res) {
+    About.findOne({}, function (err, about) {
+      if (about) {
+        res.render("about/add_edit_about", {
+          about: about,
+        });
+      }
+    });
+  },
 
-	// About Store Update Data Start
-	store_update: function(req, res) {
-		const about_id = req.body.about_id;
-		if(about_id == '') {
-		  	const description = req.body.description;
-		  	const readers = req.body.readers;
-	    	const networks = (req.files.image !== undefined) ? 'https://eximback.demo.shdpixel.com/uploads/about/networks/'+req.files.image[0].filename : '';
-		    let new_about = new About({
-		      description: description,
-		      readers: readers,
-		      networks: networks
-		    });
+  getAbout: async function (req, res) {
+    try {
+      // Assuming there's only one About document in the collection.
+      const aboutInfo = await About.findOne();
+      if (!aboutInfo) {
+        return res.status(404).json({ message: "About information not found" });
+      }
+      res.status(200).json(aboutInfo);
+    } catch (error) {
+      console.error("Error fetching About information:", error);
+      res.status(500).json({ message: "Server Error", error: error.message });
+    }
+  },
+  // About Add Edit Form End
 
-		    if(req.files['edition_images[]'] != undefined) {
-		    	const name = req.body.name;
-		    	req.files['edition_images[]'].map(function(image, ind) {
-		    		let edition = {};
-		    		edition.image = 'https://eximback.demo.shdpixel.com/uploads/about/editions/'+image.filename;
-		    		edition.name = name[ind];
-		    		editions.push(edition);
-		    	});
-		    }
+  // About Store Update Data Start
+  store_update: function (req, res) {
+    const about_id = req.body.about_id;
+    if (about_id == "") {
+      const description = req.body.description;
+      const readers = req.body.readers;
+      const networks =
+        req.files.image !== undefined
+          ? "https://eximback.demo.shdpixel.com/uploads/about/networks/" +
+            req.files.image[0].filename
+          : "";
+      let new_about = new About({
+        description: description,
+        readers: readers,
+        networks: networks,
+      });
 
-	        new_about.save(function(err) {
-	          if(err) {
-	            console.log(err);
-	            res.send('error|'+err);
-	          } else {
-	          	let new_log = new Log({
-			        user_id: req.user._id,
-			        message: 'Add',
-			        table: 'abouts'
-	      		});
+      if (req.files["edition_images[]"] != undefined) {
+        const name = req.body.name;
+        req.files["edition_images[]"].map(function (image, ind) {
+          let edition = {};
+          edition.image =
+            "https://eximback.demo.shdpixel.com/uploads/about/editions/" +
+            image.filename;
+          edition.name = name[ind];
+          editions.push(edition);
+        });
+      }
 
-	        	new_log.save(function(err, user) {
-	        		if(err) {
-	          			console.log('err '+err);
-	          			return res.send(err);
-	        		}
-	      		});
-	            res.send('success|Record Inserted Successfully.');
-	          }
-	        });
-		} else {
-			About.findOne({}, function(err, about) {
-				if(about) {
-					about.description = req.body.description;
-					about.readers = req.body.readers;
-					if(req.files.image !== undefined) {
-	    			if(about.networks !== '') {
-	    				var image = about.networks.split('/');
-	    				image = './public/'+image[3]+'/'+image[4]+'/'+image[5]+'/'+image[6];
-						// console.log(image);
-		    			fs.unlink(image, function (err) {
-						    if (err) { 
-						    	console.log(err);
-						    }
-						    // if no error, file has been deleted successfully
-						    console.log('File deleted!');
-						});
-	    			}
-    				about.networks = 'https://eximback.demo.shdpixel.com/uploads/about/networks/'+req.files.image[0].filename;
-    				// console.log(req.files.image[0].filename);return false;
-		    		}
-		    		if(req.files['edition_images[]'] != undefined) {
-				    	const name = req.body.name;
-				    	req.files['edition_images[]'].map(function(image, ind) {
-				    		let edition = {};
-				    		edition.image = 'https://eximback.demo.shdpixel.com/uploads/about/editions/'+image.filename;
-				    		edition.name = name[ind];
-				    		about.editions.unshift(edition);
-				    	});
-				    }
-		    		about.save(function(err) {
-			    		if(err) {
-			      			console.log(err);
-			      			res.send('error|'+err);
-			    		} else {
-			    			let new_log = new Log({
-						        user_id: req.user._id,
-						        message: 'Edit',
-						        table: 'abouts'
-				      		});
+      new_about.save(function (err) {
+        if (err) {
+          console.log(err);
+          res.send("error|" + err);
+        } else {
+          let new_log = new Log({
+            user_id: req.user._id,
+            message: "Add",
+            table: "abouts",
+          });
 
-				        	new_log.save(function(err, user) {
-				        		if(err) {
-				          			console.log('err '+err);
-				          			return res.send(err);
-				        		}
-				      		});
-			      			res.send('success|Record Updated Successfully.');
-			    		}
-			  		});
-				}
-			});
-		}
-	},
-	// About Store Update Data Start
+          new_log.save(function (err, user) {
+            if (err) {
+              console.log("err " + err);
+              return res.send(err);
+            }
+          });
+          res.send("success|Record Inserted Successfully.");
+        }
+      });
+    } else {
+      About.findOne({}, function (err, about) {
+        if (about) {
+          about.description = req.body.description;
+          about.readers = req.body.readers;
+          if (req.files.image !== undefined) {
+            if (about.networks !== "") {
+              var image = about.networks.split("/");
+              image =
+                "./public/" +
+                image[3] +
+                "/" +
+                image[4] +
+                "/" +
+                image[5] +
+                "/" +
+                image[6];
+              // console.log(image);
+              fs.unlink(image, function (err) {
+                if (err) {
+                  console.log(err);
+                }
+                // if no error, file has been deleted successfully
+                console.log("File deleted!");
+              });
+            }
+            about.networks =
+              "https://eximback.demo.shdpixel.com/uploads/about/networks/" +
+              req.files.image[0].filename;
+            // console.log(req.files.image[0].filename);return false;
+          }
+          if (req.files["edition_images[]"] != undefined) {
+            const name = req.body.name;
+            req.files["edition_images[]"].map(function (image, ind) {
+              let edition = {};
+              edition.image =
+                "https://eximback.demo.shdpixel.com/uploads/about/editions/" +
+                image.filename;
+              edition.name = name[ind];
+              about.editions.unshift(edition);
+            });
+          }
+          about.save(function (err) {
+            if (err) {
+              console.log(err);
+              res.send("error|" + err);
+            } else {
+              let new_log = new Log({
+                user_id: req.user._id,
+                message: "Edit",
+                table: "abouts",
+              });
 
-	// About Edition Image Delete Data Start
-	delete_edition_image: function(req, res) {
-  		About.findOne({}, function(err, about) {
-    		if(about) {
-    			// console.log(about.editions.length);return false;
-			    // for(var i = 0; i <= about.editions.length; i++) {
-			    	about.editions.map(function(edition, ind) {
-			        if (JSON.stringify(edition._id) == JSON.stringify(req.params.id)) {
-			            // console.log(edition.image);
-			            var image = edition.image.split('/');
-						image = './public/'+image[3]+'/'+image[4]+'/'+image[5]+'/'+image[6];
-						// console.log(image);return false;
-		    			fs.unlink(image, function (err) {
-						    if (err) { 
-						    	// throw err;
-						    	console.log(err);
-						    	return res.send('error|'+err);
-						    }
-						    // if no error, file has been deleted successfully
-						    console.log('File deleted!');
-						});
-			        }
-			    });
-			        // return false;
-    			about.editions.pull({"_id": req.params.id});
-			    about.save(function(err) {
-		    		if(err) {
-		      			console.log(err);
-		      			res.send('error|'+err);
-		    		} else {
-		    			let new_log = new Log({
-					        user_id: req.user._id,
-					        message: 'Delete Edition Image',
-					        table: 'abouts'
-			      		});
+              new_log.save(function (err, user) {
+                if (err) {
+                  console.log("err " + err);
+                  return res.send(err);
+                }
+              });
+              res.send("success|Record Updated Successfully.");
+            }
+          });
+        }
+      });
+    }
+  },
+  // About Store Update Data Start
 
-			        	new_log.save(function(err, user) {
-			        		if(err) {
-			          			console.log('err '+err);
-			          			return res.send(err);
-			        		}
-			      		});
-		      			res.send('success|Record Updated Successfully.');
-		    		}
-			  	});
-				/*var image = about.editions.split('/');
+  // About Edition Image Delete Data Start
+  delete_edition_image: function (req, res) {
+    About.findOne({}, function (err, about) {
+      if (about) {
+        // console.log(about.editions.length);return false;
+        // for(var i = 0; i <= about.editions.length; i++) {
+        about.editions.map(function (edition, ind) {
+          if (JSON.stringify(edition._id) == JSON.stringify(req.params.id)) {
+            // console.log(edition.image);
+            var image = edition.image.split("/");
+            image =
+              "./public/" +
+              image[3] +
+              "/" +
+              image[4] +
+              "/" +
+              image[5] +
+              "/" +
+              image[6];
+            // console.log(image);return false;
+            fs.unlink(image, function (err) {
+              if (err) {
+                // throw err;
+                console.log(err);
+                return res.send("error|" + err);
+              }
+              // if no error, file has been deleted successfully
+              console.log("File deleted!");
+            });
+          }
+        });
+        // return false;
+        about.editions.pull({ _id: req.params.id });
+        about.save(function (err) {
+          if (err) {
+            console.log(err);
+            res.send("error|" + err);
+          } else {
+            let new_log = new Log({
+              user_id: req.user._id,
+              message: "Delete Edition Image",
+              table: "abouts",
+            });
+
+            new_log.save(function (err, user) {
+              if (err) {
+                console.log("err " + err);
+                return res.send(err);
+              }
+            });
+            res.send("success|Record Updated Successfully.");
+          }
+        });
+        /*var image = about.editions.split('/');
 				image = './public/'+image[3]+'/'+image[4]+'/'+image[5];
 				// console.log(image);return false;
     			fs.unlink(image, function (err) {
@@ -184,9 +224,9 @@ module.exports = {
 	          			res.send('success|Record Deleted Successfully.');
 	        		}
 	      		});*/
-	    	// }
-			}
-		});
- 	}
-	// About Edition Image Delete Data End
-}
+        // }
+      }
+    });
+  },
+  // About Edition Image Delete Data End
+};

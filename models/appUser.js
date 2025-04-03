@@ -68,13 +68,19 @@ const AppUserSchema = mongoose.Schema(
     // ✅ Store login history with timestamps & IP addresses
     login_history: [
       {
-        timestamp: { type: Date, default: Date.now },
+        timestamp: {
+          type: Date,
+          default: () =>
+            new Date(
+              new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" })
+            ),
+        },
         ip: { type: String, required: true },
-        country: { type: String }, // ✅ Store only country
-        deviceId: { type: String, required: true }, // ✅ Unique identifier for device
+        country: { type: String },
+        deviceId: { type: String, required: true },
       },
     ],
-    resetPasswordToken: { type: String },    
+    resetPasswordToken: { type: String },
   },
   { timestamps: true }
 );

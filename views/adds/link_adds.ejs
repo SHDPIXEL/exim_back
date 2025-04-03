@@ -305,13 +305,16 @@
           console.log("Matched adData:", adData);
 
           let url = adData && adData.media ? adData.media.url : ""; // Extract correct URL
+          let googleId = adData && adData.media ? adData.media.googleId : "";
           console.log("Extracted URL:", url);
+          console.log("Extracted URL:", googleId);
 
           if ($(this).is(":checked")) {
             selectedMedia.push({
               mediaUrl: mediaUrl,
               mediaType: mediaType,
               url: url, // Store the correct URL
+              googleId: googleId, // Store Google ID
               sequenceNumber: selectedMedia.length + 1,
             });
           } else {

@@ -22,6 +22,7 @@ let about = require('../controllers/about');
 
 // About Add Edit Route Start
 router.get('/add_edit', is_authenticated, about.add_edit);
+router.get('/get_about', about.getAbout);
 // About Add Edit Route End
 
 // About Store Update Route Start

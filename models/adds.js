@@ -19,6 +19,10 @@ const NewsSchema = mongoose.Schema({
       enum: ['image', 'video'],
       required: true
     },
+    googleId: {
+      type: String, // Google ad ID or tracking ID
+      required: true
+    },
     status: {
       type: String, // 'Active' or 'Inactive'
       enum: ['Active', 'Inactive'],

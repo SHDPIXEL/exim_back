@@ -66,7 +66,7 @@
                     url: "/polls/get_Poll",
                     dataSrc: function(json) {
                         console.log("API Response:", json); // Debugging
-                        return json || [];
+                        return json.polls || [];
                     },
                     error: function(xhr, status, error) {
                         console.error("Error fetching poll data:", error);
@@ -78,10 +78,15 @@
                     { 
                         data: 'options', 
                         name: 'options', 
-                        render: function(data) {
-                            return Array.isArray(data) ? data.map(opt => opt.text).join(', ') : 'No options';
+                        render: function(data, type, row) {
+                          if (Array.isArray(data) && data.length > 0) {
+                            let html = `<strong>Total Votes:</strong> ${row.totalVotes}<br>`;
+                            html += data.map(opt => `${opt.text}: ${opt.votes} (${opt.percentage}%)`).join('<br>');
+                            return html;
+                          }
+                          return 'No options';
                         }
-                    },
+                      },
                     { 
                         data: 'correctAnswerIndex', 
                         name: 'correctAnswerIndex', 

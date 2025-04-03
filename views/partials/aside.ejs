@@ -151,101 +151,108 @@
     </li>
 
     <% if (url == '/polls/list' || url == '/polls/add') { %>
-      <li class="treeview active">
-    <% } else { %>
-      <li class="treeview">
-    <% } %>
-        <a href="#">
-          <i class="fa fa-bar-chart"></i> <span>Polls</span>
-          <i class="fa fa-angle-left pull-right"></i>
-        </a>
-        <ul class="treeview-menu">
-          <li class="<%= (url == '/polls/list') ? 'active' : '' %>">
-            <a href="/polls/list"><i class="fa fa-circle-o"></i> List Polls </a>
-          </li>
-          <li class="<%= (url == '/polls/add') ? 'active' : '' %>">
-            <a href="/polls/add"><i class="fa fa-circle-o"></i> Add Poll </a>
-          </li>
-        </ul>
-    </li>    
+    <li class="treeview active"><% } else { %></li>
+
+    <li class="treeview">
+      <% } %>
+      <a href="#">
+        <i class="fa fa-bar-chart"></i> <span>Polls</span>
+        <i class="fa fa-angle-left pull-right"></i>
+      </a>
+      <ul class="treeview-menu">
+        <li class="<%= (url == '/polls/list') ? 'active' : '' %>">
+          <a href="/polls/list"><i class="fa fa-circle-o"></i> List Polls </a>
+        </li>
+        <li class="<%= (url == '/polls/add') ? 'active' : '' %>">
+          <a href="/polls/add"><i class="fa fa-circle-o"></i> Add Poll </a>
+        </li>
+      </ul>
+    </li>
 
     <% if (url == '/files/list' || url == '/files/add') { %>
-      <li class="treeview active">
-    <% } else { %>
-      <li class="treeview">
-    <% } %>
-        <a href="#">
-          <i class="fa fa-folder"></i> <span>Files</span>
-          <i class="fa fa-angle-left pull-right"></i>
-        </a>
-        <ul class="treeview-menu">
-          <li class="<%= (url == '/files/list') ? 'Active' : '' %>">
-            <a href="/files/list"><i class="fa fa-circle-o"></i> List Files </a>
-          </li>
-          <li class="<%= (url == '/files/add') ? 'Active' : '' %>">
-            <a href="/files/add"><i class="fa fa-circle-o"></i> Add Files </a>
-          </li>
-        </ul>
-    </li>    
+    <li class="treeview active"><% } else { %></li>
+
+    <li class="treeview">
+      <% } %>
+      <a href="#">
+        <i class="fa fa-folder"></i> <span>Files</span>
+        <i class="fa fa-angle-left pull-right"></i>
+      </a>
+      <ul class="treeview-menu">
+        <li class="<%= (url == '/files/list') ? 'Active' : '' %>">
+          <a href="/files/list"><i class="fa fa-circle-o"></i> List Files </a>
+        </li>
+        <li class="<%= (url == '/files/add') ? 'Active' : '' %>">
+          <a href="/files/add"><i class="fa fa-circle-o"></i> Add Files </a>
+        </li>
+      </ul>
+    </li>
 
     <% if (url == '/videoNews/list' || url == '/VideoNews/add') { %>
-      <li class="treeview active">
-    <% } else { %>
-      <li class="treeview">
-    <% } %>
-        <a href="#">
-          <i class="fa fa-film"></i> <span>Video News</span>
-          <i class="fa fa-angle-left pull-right"></i>
-        </a>
-        <ul class="treeview-menu">
-          <li class="<%= (url == '/videoNews/list') ? 'Active' : '' %>">
-            <a href="/videoNews/list"><i class="fa fa-circle-o"></i> List Files </a>
-          </li>
-          <li class="<%= (url == '/videoNews/list') ? 'Active' : '' %>">
-            <a href="/VideoNews/add"><i class="fa fa-circle-o"></i> Add Files </a>
-          </li>
-        </ul>
-    </li>    
+    <li class="treeview active"><% } else { %></li>
+
+    <li class="treeview">
+      <% } %>
+      <a href="#">
+        <i class="fa fa-film"></i> <span>Video News</span>
+        <i class="fa fa-angle-left pull-right"></i>
+      </a>
+      <ul class="treeview-menu">
+        <li class="<%= (url == '/videoNews/list') ? 'Active' : '' %>">
+          <a href="/videoNews/list"
+            ><i class="fa fa-circle-o"></i> List Files
+          </a>
+        </li>
+        <li class="<%= (url == '/videoNews/list') ? 'Active' : '' %>">
+          <a href="/VideoNews/add"><i class="fa fa-circle-o"></i> Add Files </a>
+        </li>
+      </ul>
+    </li>
 
     <% if (url == '/upcomingrenewals/list') { %>
-      <li class="treeview active">
-    <% } else { %>
-      <li class="treeview">
-    <% } %>
-        <a href="#">
-          <i class="fa fa-refresh"></i> <span>Upcoming Renewals</span>
-          <i class="fa fa-angle-left pull-right"></i>
-        </a>
-        <ul class="treeview-menu">
-          <li class="<%= (url == '/upcomingrenewals/list') ? 'Active' : '' %>">
-            <a href="/upcomingrenewals/list"><i class="fa fa-circle-o"></i> List Upcoming Renewals </a>
-          </li>
-        </ul>
-    </li>    
+    <li class="treeview active"><% } else { %></li>
 
-    <% if (url == '/adds/list' || url == '/adds/add' || url == '/adds/link' || url == "/adds/linklist") { %>
-      <li class="treeview active">
-    <% } else { %>
-      <li class="treeview">
-    <% } %>
-        <a href="#">
-          <i class="fa fa-bullhorn"></i> <span>Ads</span>
-          <i class="fa fa-angle-left pull-right"></i>
-        </a>
-        <ul class="treeview-menu">
-          <li class="<%= (url == '/adds/list') ? 'Active' : '' %>">
-            <a href="/adds/list"><i class="fa fa-circle-o"></i> List Ads </a>
-          </li>
-          <li class="<%= (url == '/adds/add') ? 'Active' : '' %>">
-            <a href="/adds/add"><i class="fa fa-circle-o"></i> Add Ads </a>
-          </li>
-          <li class="<%= (url == '/adds/link') ? 'Active' : '' %>">
-            <a href="/adds/link"><i class="fa fa-circle-o"></i> Select Ads </a>
-          </li>
-          <li class="<%= (url == '/adds/linklist') ? 'Active' : '' %>">
-            <a href="/adds/linklist"><i class="fa fa-circle-o"></i> List Selected Ads </a>
-          </li>
-        </ul>
+    <li class="treeview">
+      <% } %>
+      <a href="#">
+        <i class="fa fa-refresh"></i> <span>Upcoming Renewals</span>
+        <i class="fa fa-angle-left pull-right"></i>
+      </a>
+      <ul class="treeview-menu">
+        <li class="<%= (url == '/upcomingrenewals/list') ? 'Active' : '' %>">
+          <a href="/upcomingrenewals/list"
+            ><i class="fa fa-circle-o"></i> List Upcoming Renewals
+          </a>
+        </li>
+      </ul>
+    </li>
+
+    <% if (url == '/adds/list' || url == '/adds/add' || url == '/adds/link' ||
+    url == "/adds/linklist") { %>
+    <li class="treeview active"><% } else { %></li>
+
+    <li class="treeview">
+      <% } %>
+      <a href="#">
+        <i class="fa fa-bullhorn"></i> <span>Ads</span>
+        <i class="fa fa-angle-left pull-right"></i>
+      </a>
+      <ul class="treeview-menu">
+        <li class="<%= (url == '/adds/list') ? 'Active' : '' %>">
+          <a href="/adds/list"><i class="fa fa-circle-o"></i> List Ads </a>
+        </li>
+        <li class="<%= (url == '/adds/add') ? 'Active' : '' %>">
+          <a href="/adds/add"><i class="fa fa-circle-o"></i> Add Ads </a>
+        </li>
+        <li class="<%= (url == '/adds/link') ? 'Active' : '' %>">
+          <a href="/adds/link"><i class="fa fa-circle-o"></i> Select Ads </a>
+        </li>
+        <li class="<%= (url == '/adds/linklist') ? 'Active' : '' %>">
+          <a href="/adds/linklist"
+            ><i class="fa fa-circle-o"></i> List Selected Ads
+          </a>
+        </li>
+      </ul>
     </li>
 
     <% if(url == '/vessels/list' || url == '/sectors/list' || url ==
@@ -444,11 +451,8 @@
       </ul>
     </li>
 
-    <% if(url == '/digital_copies/list' || url == '/year_books/list') { %>
-    <li class="treeview active">
-      <% } else if(url == '/digital_copies/add' || url == '/year_books/add') {
-      %>
-    </li>
+    <% if(url == '/year_books/list') { %>
+    <li class="treeview active"><% } else if(url == '/year_books/add') { %></li>
 
     <li class="treeview active"><% } else { %></li>
 
@@ -459,16 +463,6 @@
         <i class="fa fa-angle-left pull-right"></i>
       </a>
       <ul class="treeview-menu">
-        <li class="<%= (url == '/digital_copies/list') ? 'active' : '' %>">
-          <a href="/digital_copies/list"
-            ><i class="fa fa-circle-o"></i> list Digital Copies
-          </a>
-        </li>
-        <li class="<%= (url == '/digital_copies/add') ? 'active' : '' %>">
-          <a href="/digital_copies/add"
-            ><i class="fa fa-circle-o"></i> Add Digital Copy
-          </a>
-        </li>
         <li class="<%= (url == '/year_books/list') ? 'active' : '' %>">
           <a href="/year_books/list"
             ><i class="fa fa-circle-o"></i> list Year Books
@@ -478,6 +472,31 @@
           <a href="/year_books/add"
             ><i class="fa fa-circle-o"></i> Add Year Book
           </a>
+        </li>
+      </ul>
+    </li>
+
+    <% if(url == '/digital_copies/list') { %>
+    <li class="treeview active">
+      <% } else if(url == '/digital_copies/add') { %>
+    </li>
+    <li class="treeview active"><% } else { %></li>
+    <li class="treeview">
+      <% } %>
+      <a href="#">
+        <i class="fa fa-file"></i> <span>Digital Copies</span>
+        <i class="fa fa-angle-left pull-right"></i>
+      </a>
+      <ul class="treeview-menu">
+        <li class="<%= (url == '/digital_copies/list') ? 'active' : '' %>">
+          <a href="/digital_copies/list"
+            ><i class="fa fa-circle-o"></i> List Digital Copies</a
+          >
+        </li>
+        <li class="<%= (url == '/digital_copies/add') ? 'active' : '' %>">
+          <a href="/digital_copies/add"
+            ><i class="fa fa-circle-o"></i> Add Digital Copy</a
+          >
         </li>
       </ul>
     </li>

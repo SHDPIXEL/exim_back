@@ -12,6 +12,7 @@ const adSchema = new mongoose.Schema({
           mediaType: String, // "image" or "video"
           sequenceNumber: Number, // Sequence number
           url: String, // URL associated with the media
+          googleId: { type: String, default: "" }, // ✅ Added Google ID field
           status: { type: String, enum: ["Active", "Inactive"], default: "Active" }, // Media status
         }
       ]

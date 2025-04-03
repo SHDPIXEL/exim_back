@@ -18,21 +18,27 @@ const generateHTML = async function (newsData, date) {
     <img src='https://eximin.net/DataFiles/cmsnewsletters/images/exim-header.png' width='600' alt='Exim' /></td></tr>
     <tr><td colspan='2' bgcolor='#2957a4' align='center'>
     <h2 style='color: #fff; font-size: 13px;'>India's Leading Maritime & Logistics Publication</h2></td></tr>
+    <td colspan='2' style='line-height: 0px;'>
+    <a href='https://register.eximin.net/Visitor/VisitorRegistration.aspx' target='_blank'><img src='https://eximin.net/DataFiles/cmsadvertisements/bwof6926.jpg' + width='600' height='100' alt='Exim' /></a>
+    </td>
     <tr><td width='425px' bgcolor='#eee' valign='top'>
     <table border='0' cellspacing='0' cellpadding='0'>
+    <tr>
+    </tr>
     <tr><td colspan='2' bgcolor='#eee' align='center'>
-    <p style='font-size: 13px;'><strong>${date}</strong></p></td></tr>`;
+    <p style='font-size: 13px;padding:10px;'><strong>${date}</strong></p></td></tr>
+`;
 
-  for (const [category, newsList] of Object.entries(newsData)) {
-    if (newsList.length > 0) {
+  for (const category of newsData) {
+    if (category.news.length > 0) {
       html += `<tr><td bgcolor='#2957a4'>
-            <p style='color: #fff; font-size: 13px; font-weight: bold;'><img src='https://eximin.net/DataFiles/cmsnewsletters/images/news-head.png' alt='' width='14' /> ${category}</p>
-            </td></tr>`;
+          <p style='color: #fff; font-size: 13px; font-weight: bold;'><img src='https://eximin.net/DataFiles/cmsnewsletters/images/news-head.png' alt='' width='14' /> ${category.name}</p>
+          </td></tr>`;
 
-      newsList.forEach((news) => {
+      category.news.forEach((news) => {
         html += `<tr><td style='padding: 8px 7px; border-bottom: 3px solid #ddd;'>
-                <p style='font-size: 13px;'><a style='color: #000;' href='https://eximin.net/newsdetails.aspx?news_id=${news.id}&frndate=${date}&tondate=${date}&snkeywords=' target='_blank'>
-                ${news.headline}</a></p></td></tr>`;
+              <p style='font-size: 13px;'><a style='color: #000;text-decoration: none;' href='https://exim.demo.shdpixel.com/newsDetails/${news._id}' target='_blank'>
+              ${news.headline}</a></p></td></tr>`;
       });
     }
   }
@@ -40,7 +46,7 @@ const generateHTML = async function (newsData, date) {
   html += `</table></td>
     <td width='175px' valign='top'>
     <table border='0' cellspacing='0' cellpadding='0'><tr><td style='border:2px solid #ddd;' align='center' valign='top'><a style='color: #000; text-decoration: none;' href='https://ctl.net.in/ctl-bhp-2025-default.aspx' target='_blank'>
-    <img src ='https://eximin.net/DataFiles/cmsevents/wc22016CTL-BHP25_exim.jpg'  width='199' alt='' />
+    <img src ='https://eximin.net/DataFiles/cmsevents/wc22016CTL-BHP25_exim.jpg'  width='210' alt='' />
     </a></td>
     </tr>
     </table></td>
@@ -74,29 +80,60 @@ module.exports = {
       { id: "6", name: "Special Report" },
     ];
 
-    let newsData = {};
+    try {
+      // Fetch the latest news for all categories (ignoring date filter)
+      const allNews = await News.find().sort({ createdAt: -1 });
 
-    for (const category of categories) {
-      let categoryObjectId;
+      console.log("📢 All News Fetched:");
+      allNews.forEach((news) => {
+        console.log(
+          `News ID: ${news._id}, Category ID: '${
+            news.category_id
+          }' (${typeof news.category_id})`
+        );
+      });
 
-      try {
-        categoryObjectId = new mongoose.Types.ObjectId(category.id);
-      } catch (error) {
-        console.error(`Invalid category ID: ${category.id}`);
-        continue;
-      }
+      // Map news to respective categories with different limits
+      const newsData = categories.map((category) => {
+        // Convert category id to a number for checking odd/even
+        const catIdNum = parseInt(category.id, 10);
+        // Odd category ids get latest 4 news, even category ids get latest 2 news
+        const limit = catIdNum % 2 !== 0 ? 4 : 2;
 
-      newsData[category.name] = await News.find({
-        category_id: categoryObjectId, // Converted to ObjectId
-        date: date,
-      })
-        .sort({ createdAt: -1 })
-        .limit(4);
+        const filteredNews = allNews
+          .filter((news) => {
+            if (!news.category_id) {
+              console.warn(
+                `⚠️ Skipping News ID ${news._id} - Missing category_id`
+              );
+              return false;
+            }
+            return (
+              news.category_id.toString().trim() === category.id.toString()
+            );
+          })
+          .slice(0, limit); // Use dynamic limit
+
+        console.log(
+          `📌 Category: ${category.name}, News Count: ${filteredNews.length} (Limit: ${limit})`
+        );
+
+        return { name: category.name, news: filteredNews };
+      });
+
+      console.log("✅ Filtered News Data:", newsData);
+
+      // Format the date to 'Monday, 03 March 2025'
+      const formattedDate = moment(date, "YYYY-MM-DD").format(
+        "dddd, DD MMMM YYYY"
+      );
+
+      return generateHTML(newsData, formattedDate); // Pass formatted date
+    } catch (error) {
+      console.error("❌ Error fetching news:", error);
+      return "<p>Error generating news HTML</p>";
     }
-
-    return generateHTML(newsData, date);
   },
-
   // Newsletters List Start
   /*list: function(req, res) {
   		// res.render('user/list_user');

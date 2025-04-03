@@ -9,7 +9,7 @@ let selectedAd = require("../models/selectedAds");
 module.exports = {
   createAdd: async function (req, res) {
     try {
-      const { status, url } = req.body;
+      const { status, url, googleId } = req.body;
 
       // Ensure at least one media file is uploaded
       if (!req.files || (!req.files.images && !req.files.videos)) {
@@ -26,6 +26,7 @@ module.exports = {
           filePath: req.files.images[0].path, // Take only the first image
           url: url || "#", // Default to "#" if no URL provided
           mediaType: "image",
+          googleId: googleId || "", // Default to empty string if not provided
           status: "Active",
         };
       }
@@ -35,6 +36,7 @@ module.exports = {
           filePath: req.files.videos[0].path, // Take only the first video
           url: url || "#",
           mediaType: "video",
+          googleId: googleId || "",
           status: "Active",
         };
       }
@@ -143,6 +145,7 @@ module.exports = {
                 )}`,
                 url: add.media.url,
                 mediaType: add.media.mediaType,
+                googleId: add.media.googleId || "", // Include googleId
                 status: add.media.status,
               }
             : null,
@@ -248,6 +251,8 @@ module.exports = {
         if (ad.media && ad.media.filePath) {
           // Ensure forward slashes and prepend baseURL
           ad.media.filePath = baseURL + ad.media.filePath.replace(/\\/g, "/");
+          ad.media.googleId = ad.media.googleId || ""; // Ensure googleId is included
+          ad.media.url = ad.media.url || "#"; // Ensure url is included
         }
       });
   
@@ -310,6 +315,7 @@ module.exports = {
               mediaType: newMedia.mediaType,
               sequenceNumber: newMedia.sequenceNumber,
               url: newMedia.url, // ✅ Include the URL field
+              googleId: newMedia.googleId || "", // ✅ Ensure googleId is included
               status: "Active",
             }));
   
@@ -346,6 +352,7 @@ module.exports = {
                 mediaType: media.mediaType,
                 sequenceNumber: media.sequenceNumber,
                 url: media.url, // ✅ Include the URL field
+                googleId: media.googleId || "", // ✅ Ensure googleId is included
                 status: "Active",
               })),
             },
@@ -385,6 +392,7 @@ module.exports = {
             sequenceNumber: item.sequenceNumber, // Include sequenceNumber
             status: item.status, // Include status field
             url: item.url || "", // ✅ Include URL (ensure it's not undefined)
+            googleId: item.googleId || "", // ✅ Ensure googleId is included
           })),
         })),
       }));
@@ -403,7 +411,6 @@ module.exports = {
       });
     }
   },
-  
 
   getSelectedMediaAdmin: async function (req, res) {
     try {
@@ -447,6 +454,7 @@ module.exports = {
               filePath: item.mediaUrl,
               mediaType: item.mediaType,
               sequenceNumber: item.sequenceNumber,
+              googleId: item.googleId || "", // ✅ Ensure googleId is included
               status: item.status,
             };
           });

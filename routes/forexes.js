@@ -1,5 +1,5 @@
 const express = require('express');
-const router = express.Router();
+const   router = express.Router();
 
 // Bring in Forexes Contoller
 let forexes = require('../controllers/forexes');
@@ -10,6 +10,7 @@ router.get('/list', is_authenticated, forexes.list);
 
 // Get Forexes Route Start
 router.post('/get_forexes', forexes.get_forexes);
+router.post('/get_forexes_website', forexes.get_forexes_website);
 // Get Forexes Route End
 
 // Forex  Add Route Start
