@@ -76,29 +76,24 @@ module.exports = {
 
   get_event_categories_website: function (req, res) {
     try {
-      // Safely extract column and order
       const orderIndex = req.body.order?.[0]?.column;
       const col = req.body.columns?.[orderIndex]?.data || "category";
       const orderDirection = req.body.order?.[0]?.dir === "asc" ? 1 : -1;
       const column_order = { [col]: orderDirection };
-
-      // Safely extract status filter
+  
       const statusValue = req.body.columns?.[2]?.search?.value;
       const status_search = statusValue ? { status: statusValue } : {};
-
-      // Safely extract search filter
+  
       const searchValue = req.body.search?.value;
       const common_search = searchValue
         ? { category: { $regex: searchValue, $options: "i" } }
         : {};
-
-      // Combine all filters
+  
       const searchStr = { $and: [common_search, status_search] };
-
-      // Count records
+  
       let recordsTotal = 0;
       let recordsFiltered = 0;
-
+  
       EventCategory.count({})
         .then((total) => {
           recordsTotal = total;
@@ -106,7 +101,7 @@ module.exports = {
         })
         .then((filtered) => {
           recordsFiltered = filtered;
-          return EventCategory.find(searchStr, "_id category status")
+          return EventCategory.find(searchStr, "_id category") // 👈 Only _id and category
             .skip(Number(req.body.start) || 0)
             .limit(
               req.body.length != -1 ? Number(req.body.length) : recordsFiltered
@@ -119,7 +114,10 @@ module.exports = {
             draw: req.body.draw || 0,
             recordsFiltered,
             recordsTotal,
-            data: results,
+            data: results.map(item => ({
+              _id: item._id,
+              category: item.category
+            }))
           });
         })
         .catch((err) => {
@@ -130,7 +128,7 @@ module.exports = {
       console.error("Unexpected error:", error);
       res.status(500).json({ error: "Internal server error" });
     }
-  },
+  },  
 
   // Event Category Add Form Start
   add: function (req, res) {

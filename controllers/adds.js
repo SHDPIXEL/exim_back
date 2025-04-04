@@ -55,6 +55,7 @@ module.exports = {
     }
   },
 
+
   getAllAdds: async function (req, res) {
     try {
       const allAdds = await Adds.find();
@@ -177,27 +178,27 @@ module.exports = {
   updateMediaStatus: async function (req, res) {
     try {
       const { addId, status } = req.body;
-  
+
       // Validate status
       if (!["Active", "Inactive"].includes(status)) {
         return res.status(400).json({ message: "Invalid status" });
       }
-  
+
       // Find the ad by ID
       const ad = await Adds.findById(addId);
       if (!ad) {
         return res.status(404).json({ message: "Ad not found" });
       }
-  
+
       // Check if media exists
       if (!ad.media) {
         return res.status(404).json({ message: "Media not found" });
       }
-  
+
       // Update the media status
       ad.media.status = status;
       await ad.save();
-  
+
       res.status(200).json({
         message: "Media status updated successfully",
         updatedMedia: ad.media, // Returning updated media object
@@ -239,13 +240,13 @@ module.exports = {
   getMediaFromAdds: async function (req, res) {
     try {
       const baseURL = "https://eximback.demo.shdpixel.com/"; // Server base URL
-  
+
       const ads = await Adds.find({ status: "Active" }).lean();
-  
+
       if (!ads || ads.length === 0) {
         return res.json({ success: false, message: "No active ads found" });
       }
-  
+
       // Normalize file paths and ensure the base URL is prepended
       ads.forEach((ad) => {
         if (ad.media && ad.media.filePath) {
@@ -255,9 +256,9 @@ module.exports = {
           ad.media.url = ad.media.url || "#"; // Ensure url is included
         }
       });
-  
+
       console.log("✅ Fixed Ads Data:", JSON.stringify(ads, null, 2));
-  
+
       res.json({ success: true, ads });
     } catch (error) {
       console.error("❌ Error fetching ads:", error);
@@ -268,18 +269,18 @@ module.exports = {
       });
     }
   },
-  
+
   saveSelectedMedia: async function (req, res) {
     try {
       console.log("Request body:", req.body);
       const { position, mediaUrls, startDate, endDate } = req.body;
-  
+
       if (!mediaUrls) {
         return res
           .status(400)
           .json({ success: false, message: "No media selected" });
       }
-  
+
       let mediaArray;
       try {
         mediaArray = JSON.parse(mediaUrls);
@@ -288,26 +289,26 @@ module.exports = {
           .status(400)
           .json({ success: false, message: "Invalid media data format" });
       }
-  
+
       console.log("Received media:", mediaArray);
-  
+
       // Find if an ad with the same position exists
       let existingAd = await selectedAd.findOne({
         "selectedMedia.position": position,
       });
-  
+
       if (existingAd) {
         let mediaIndex = existingAd.selectedMedia.findIndex(
           (media) => media.position === position
         );
-  
+
         if (mediaIndex !== -1) {
           let existingUrls = new Set(
             existingAd.selectedMedia[mediaIndex].media.map(
               (item) => item.mediaUrl
             )
           );
-  
+
           let newMediaItems = mediaArray
             .filter((newMedia) => !existingUrls.has(newMedia.mediaUrl))
             .map((newMedia) => ({
@@ -318,7 +319,7 @@ module.exports = {
               googleId: newMedia.googleId || "", // ✅ Ensure googleId is included
               status: "Active",
             }));
-  
+
           if (newMediaItems.length > 0) {
             // ✅ Update existing media list for the position
             await selectedAd.updateOne(
@@ -333,7 +334,7 @@ module.exports = {
             );
           }
         }
-  
+
         return res.status(200).json({
           success: true,
           message: "Ad updated successfully",
@@ -358,9 +359,9 @@ module.exports = {
             },
           ],
         });
-  
+
         console.log("New Ad:", newAd);
-  
+
         await newAd.save();
         return res.status(201).json({
           success: true,
@@ -376,11 +377,11 @@ module.exports = {
       });
     }
   },
-  
+
   getSelectedMedia: async function (req, res) {
     try {
       const allSelectedAds = await selectedAd.find();
-  
+
       // Transform data to rename mediaUrl -> filePath and include additional fields
       const transformedAds = allSelectedAds.map((ad) => ({
         ...ad.toObject(),
@@ -392,11 +393,11 @@ module.exports = {
             sequenceNumber: item.sequenceNumber, // Include sequenceNumber
             status: item.status, // Include status field
             url: item.url || "", // ✅ Include URL (ensure it's not undefined)
-            googleId: item.googleId || "", // ✅ Ensure googleId is included
+            name: item.googleId || "", // ✅ Ensure googleId is included
           })),
         })),
       }));
-  
+
       return res.status(200).json({
         success: true,
         message: "Selected Ads Retrieved successfully",
@@ -417,17 +418,17 @@ module.exports = {
       const page = parseInt(req.body.page) || 1;
       const limit = parseInt(req.body.limit) || 25;
       const skip = (page - 1) * limit;
-  
+
       // Fetch total count
       const totalRecords = await selectedAd.count();
-  
+
       // Fetch paginated data, sorted by creation date (if needed)
       const allSelectedAds = await selectedAd
         .find()
         .sort({ _id: 1 }) // Sorting to maintain order
         .skip(skip)
         .limit(limit);
-  
+
       // Function to format date as 'DD-MM-YYYY'
       const formatDate = (date) => {
         if (!date) return null;
@@ -436,10 +437,10 @@ module.exports = {
           d.getMonth() + 1
         ).padStart(2, "0")}-${d.getFullYear()}`;
       };
-  
+
       // Get today's date in the format YYYY-MM-DD
       const today = new Date().setHours(0, 0, 0, 0); // Normalize to midnight
-  
+
       // Transform data and update status if endDate < today
       const transformedAds = allSelectedAds.map((ad) => {
         const updatedMedia = ad.selectedMedia.map((media) => {
@@ -458,22 +459,22 @@ module.exports = {
               status: item.status,
             };
           });
-  
+
           return {
             ...media,
             position: media.position,
-            startDate: formatDate(media.startDate), 
-            endDate: formatDate(media.endDate), 
+            startDate: formatDate(media.startDate),
+            endDate: formatDate(media.endDate),
             media: updatedMediaItems,
           };
         });
-  
+
         return {
           ...ad.toObject(),
           selectedMedia: updatedMedia,
         };
       });
-  
+
       return res.status(200).json({
         success: true,
         message: "Selected Ads Retrieved successfully",
@@ -495,7 +496,7 @@ module.exports = {
         error: error.message,
       });
     }
-  },  
+  },
 
   deleteSelectedMedia: async function (req, res) {
     try {
@@ -586,7 +587,5 @@ module.exports = {
       console.error(error);
       res.status(500).json({ message: "Server error" });
     }
-  }, 
+  },
 };
-
-

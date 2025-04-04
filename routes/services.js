@@ -56,6 +56,7 @@ router.post("/get_dashboardSubscription", services.getUserSubscribe_dashboard);
 // ✅ Route for requesting a password reset
 router.post("/forgot-password", services.forgotPassword);
 router.post("/get_invoice", services.getAllInvoices);
+router.post("/logout", services.logoutDevice);
 
 // ✅ Route for resetting the password
 router.post("/reset-password/:token", services.resetPassword);

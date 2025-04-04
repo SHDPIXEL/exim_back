@@ -524,6 +524,24 @@ const generateDeviceId = (req) => {
   return crypto.createHash("sha256").update(fingerprint).digest("hex");
 };
 
+const decodeJWT = (token, res) => {
+  if (!token) {
+    return res
+      .status(401)
+      .json({ success: 0, message: "Unauthorized: Token missing." });
+  }
+
+  let decoded;
+  try {
+    decoded = jwt.verify(token, process.env.SECRET_KEY);
+  } catch (err) {
+    return res.status(401).json({ success: 0, message: "Invalid token." });
+  }
+
+  return decoded.userId;
+}
+
+
 // Store Register Route Start
 module.exports = {
   register: async function (req, res) {
@@ -643,40 +661,55 @@ module.exports = {
     }
   },
 
+  logoutDevice: async function (req, res) {
+    try {
+      const token = req.headers.authorization?.split(" ")[1];
+      const userId = decodeJWT(token, res);
+  
+      const deviceId = generateDeviceId(req);
+      const user = await AppUser.findById(userId);
+      if (!user) {
+        return res.status(404).json({ success: 0, message: "User not found." });
+      }
+  
+      user.active_tokens = user.active_tokens.filter((entry) => entry.deviceId !== deviceId);
+      await user.save();
+  
+      return res.status(200).json({
+        success: 1,
+        message: "Device logged out successfully.",
+        activeDevices: user.active_tokens,
+      });
+    } catch (err) {
+      console.error("Error in logoutDevice:", err);
+      return res.status(500).json({ success: 0, message: "Server error" });
+    }
+  },
+
   login: async function (req, res) {
     try {
-      console.log("required", req.body);
       const { email, password, ip } = req.body;
-
-      // Validate required fields
+  
       if (!email || !password || !ip) {
         return res.status(400).json({
           success: 0,
-          message: "Email, password, IP address, and deviceId are required.",
+          message: "Email, password, and IP address are required.",
         });
       }
-
-      // Find user by email
+  
       const user = await AppUser.findOne({ email });
       if (!user) {
-        return res.status(400).json({
-          success: 0,
-          message: "Invalid email or password.",
-        });
+        return res.status(400).json({ success: 0, message: "Invalid email or password." });
       }
-
-      // Compare hashed password
+  
       const isMatch = await bcrypt.compare(password, user.password);
       if (!isMatch) {
-        return res.status(400).json({
-          success: 0,
-          message: "Invalid email or password.",
-        });
+        return res.status(400).json({ success: 0, message: "Invalid email or password." });
       }
-
-      // ✅ Generate Unique Device Fingerprint in Backend
+  
+      // ✅ Generate device ID from backend
       const deviceId = generateDeviceId(req);
-
+  
       // ✅ Fetch country from IP
       let country = "Unknown";
       try {
@@ -687,69 +720,65 @@ module.exports = {
       } catch (error) {
         console.error("IP Location Fetch Error:", error.message);
       }
-
-      // ✅ Restrict to Max 3 Unique Devices
-      let loginHistory = user.login_history || [];
-      const uniqueDevices = new Set(
-        loginHistory.map((entry) => entry.deviceId)
-      );
-
-      const existingDeviceIndex = loginHistory.findIndex(
+  
+      // ✅ Filter out expired tokens (MongoDB TTL might auto-remove, but just in case)
+      user.active_tokens = user.active_tokens.filter((entry) => entry.token && entry.deviceId);
+  
+      // ✅ Check device limit
+      const isAlreadyLoggedInFromThisDevice = user.active_tokens.find(
         (entry) => entry.deviceId === deviceId
       );
-
-      if (existingDeviceIndex !== -1) {
-        // 🔹 If the same device logs in again, update timestamp, IP, and country
-        loginHistory[existingDeviceIndex] = {
-          timestamp: new Date(),
-          ip,
-          country,
-          deviceId,
-        };
-      } else {
-        if (uniqueDevices.size >= 3) {
-          return res.status(403).json({
-            success: 0,
-            message:
-              "Maximum 3 devices allowed. Logout from another device to login here.",
-            activeDevices: loginHistory,
-          });
-        }
-        // 🔹 If new device, add to history
-        loginHistory.push({ timestamp: new Date(), ip, country, deviceId });
+  
+      const uniqueDeviceCount = new Set(user.active_tokens.map((entry) => entry.deviceId)).size;
+  
+      if (!isAlreadyLoggedInFromThisDevice && uniqueDeviceCount >= 3) {
+        return res.status(403).json({
+          success: 0,
+          message: "Maximum 3 devices allowed. Logout from another device to login here.",
+          activeDevices: user.active_tokens.map((d) => ({
+            deviceId: d.deviceId,
+            createdAt: d.createdAt,
+          })),
+        });
       }
-
-      // 🔹 Keep only the last 10 login entries
-      user.login_history = loginHistory.slice(-10);
-      await user.save();
-
-      // Fetch updated user details (excluding passwords)
-      const updatedUser = await AppUser.findById(user._id).select(
-        "-password -confirm_password"
-      );
-
-      // Format login history for response
-      const formattedLoginHistory = updatedUser.login_history.map((entry) => ({
-        timestamp: moment(entry.timestamp).format("MMMM D, YYYY, h:mm A"),
-        ip: entry.ip,
-        country: entry.country,
-        deviceId: entry.deviceId,
-      }));
-
-      console.log("Active Devices:", formattedLoginHistory);
-
-      // Generate JWT token
+  
+      // ✅ Generate token
       const token = jwt.sign(
         { userId: user._id, email: user.email },
         process.env.SECRET_KEY,
         { expiresIn: "1h" }
       );
+  
+      if (isAlreadyLoggedInFromThisDevice) {
+        // Update token for existing device
+        isAlreadyLoggedInFromThisDevice.token = token;
+        isAlreadyLoggedInFromThisDevice.createdAt = new Date();
+      } else {
+        // Add new device
+        user.active_tokens = [...user.active_tokens, { deviceId, token }];
 
+      }
+  
+      // ✅ Append login history (keep max 10)
+      const newLoginEntry = { timestamp: new Date(), ip, country, deviceId };
+      user.login_history = [...user.login_history, newLoginEntry].slice(-10);
+      
+  
+      await user.save();
+  
+      const formattedLoginHistory = user.login_history.map((entry) => ({
+        timestamp: moment(entry.timestamp).format("MMMM D, YYYY, h:mm A"),
+        ip: entry.ip,
+        country: entry.country,
+        deviceId: entry.deviceId,
+      }));
+  
       return res.status(200).json({
         success: 1,
         message: "Login Successful.",
         token,
         user_data: {
+          activeDevices : user.active_tokens,
           id: user._id,
           name: user.name,
           company_name: user.company_name,
@@ -769,14 +798,10 @@ module.exports = {
       });
     } catch (err) {
       console.error("Error in login:", err);
-      return res.status(500).json({
-        success: 0,
-        message: "Something went wrong.",
-        error: err,
-      });
+      return res.status(500).json({ success: 0, message: "Something went wrong.", error: err });
     }
   },
-
+  
   changePassword: async function (req, res) {
     try {
       const { oldPassword, newPassword, confirmPassword } = req.body;

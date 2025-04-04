@@ -56,35 +56,41 @@ module.exports = {
     try {
       // Retrieve all polls
       const polls = await Polls.find();
-  
+
       // Map each poll to include totalVotes and formatted options
       const formattedPolls = polls.map((poll) => {
         // Calculate total votes for the poll
-        const totalVotes = poll.options.reduce((sum, option) => sum + option.votes, 0);
-  
+        const totalVotes = poll.options.reduce(
+          (sum, option) => sum + option.votes,
+          0
+        );
+
         // Format each option with its vote count and percentage (if any votes exist)
         const formattedOptions = poll.options.map((option) => ({
           text: option.text,
           votes: option.votes,
-          percentage: totalVotes > 0 ? ((option.votes / totalVotes) * 100).toFixed(2) : "0.00"
+          percentage:
+            totalVotes > 0
+              ? ((option.votes / totalVotes) * 100).toFixed(2)
+              : "0.00",
         }));
-  
+
         return {
           _id: poll._id,
           question: poll.question,
           options: formattedOptions,
           correctAnswerIndex: poll.correctAnswerIndex,
-          totalVotes: totalVotes
+          totalVotes: totalVotes,
         };
       });
-  
+
       // Return the polls with additional vote information
       res.json({ polls: formattedPolls });
     } catch (err) {
       console.error("Error fetching polls:", err);
       res.status(500).json({ error: err.message });
     }
-  },  
+  },
 
   //     submitPoll: async function(req, res) {
   //       try {
@@ -153,77 +159,61 @@ module.exports = {
     try {
       console.log("🔹 Request received:", req.body);
 
-      const { responses } = req.body;
-      if (!Array.isArray(responses) || responses.length === 0) {
-        console.log("❌ Invalid request format");
-        return res
-          .status(400)
-          .json({ status: "error", message: "Responses array is required." });
-      }
+      const { id, optionIndex } = req.body;
 
-      const updatedPolls = [];
-
-      for (const response of responses) {
-        const { id, optionIndex } = response;
-
-        if (!id || optionIndex === undefined) {
-          console.log("❌ Missing ID or option index in response:", response);
-          return res.status(400).json({
-            status: "error",
-            message: "Poll ID and option index are required.",
-          });
-        }
-
-        console.log("🔹 Finding poll with ID:", id);
-        const poll = await Polls.findById(id);
-        if (!poll) {
-          console.log("❌ Poll not found for ID:", id);
-          return res.status(404).json({
-            status: "error",
-            message: `Poll with ID ${id} not found.`,
-          });
-        }
-
-        console.log("🔹 Poll found:", poll);
-        if (optionIndex < 0 || optionIndex >= poll.options.length) {
-          console.log("❌ Invalid option index:", optionIndex);
-          return res
-            .status(400)
-            .json({ status: "error", message: "Invalid option index." });
-        }
-
-        console.log("🔹 Voting for option index:", optionIndex);
-        poll.options[optionIndex].votes += 1;
-        await poll.save();
-
-        // Calculate total votes for the poll
-        const totalVotes = poll.options.reduce(
-          (sum, option) => sum + option.votes,
-          0
-        );
-
-        // Format the response with vote counts and percentages
-        updatedPolls.push({
-          _id: poll._id,
-          question: poll.question,
-          options: poll.options.map((option) => ({
-            text: option.text,
-            votes: option.votes,
-            percentage:
-              totalVotes > 0
-                ? ((option.votes / totalVotes) * 100).toFixed(2)
-                : 0, // Calculate percentage
-          })),
-          correctAnswerIndex: poll.correctAnswerIndex,
-          totalVotes: totalVotes, // Total votes for this poll
+      // Validate
+      if (!id || optionIndex === undefined) {
+        return res.status(400).json({
+          status: "error",
+          message: "Poll ID and option index are required.",
         });
       }
 
-      console.log("✅ Votes submitted successfully:", updatedPolls);
+      console.log("🔹 Finding poll with ID:", id);
+      const poll = await Polls.findById(id);
+      if (!poll) {
+        return res.status(404).json({
+          status: "error",
+          message: `Poll with ID ${id} not found.`,
+        });
+      }
+
+      if (optionIndex < 0 || optionIndex >= poll.options.length) {
+        return res.status(400).json({
+          status: "error",
+          message: "Invalid option index.",
+        });
+      }
+
+      // ✅ Vote for the selected option
+      poll.options[optionIndex].votes += 1;
+      await poll.save();
+
+      // ✅ Calculate total votes
+      const totalVotes = poll.options.reduce(
+        (sum, option) => sum + option.votes,
+        0
+      );
+
+      // ✅ Return updated poll with percentages
+      const updatedPoll = {
+        _id: poll._id,
+        question: poll.question,
+        options: poll.options.map((option) => ({
+          text: option.text,
+          votes: option.votes,
+          percentage:
+            totalVotes > 0 ? ((option.votes / totalVotes) * 100).toFixed(2) : 0,
+        })),
+        correctAnswerIndex: poll.correctAnswerIndex,
+        totalVotes,
+      };
+
+      console.log("✅ Vote submitted successfully:", updatedPoll);
       return res.json({
         status: "success",
-        message: "Votes submitted successfully!",
-        polls: updatedPolls,
+        message: "Vote submitted successfully!",
+        poll: updatedPoll,
       });
     } catch (err) {
       console.error("🚨 Error submitting poll:", err);

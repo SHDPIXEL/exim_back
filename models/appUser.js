@@ -1,5 +1,21 @@
 const mongoose = require("mongoose");
 
+const TokenSchema = new mongoose.Schema({
+  deviceId: String,
+  token: String,
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+});
+
+const LoginHistorySchema = new mongoose.Schema({
+  timestamp: Date,
+  ip: String,
+  country: String,
+  deviceId: String,
+});
+
 // App User Schema
 const AppUserSchema = mongoose.Schema(
   {
@@ -64,24 +80,20 @@ const AppUserSchema = mongoose.Schema(
       type: String,
       required: false,
     },
+    active_tokens: {
+      type: [TokenSchema],
+      default: [],
+    },
+    
     // ✅ Store all login timestamps
     // ✅ Store login history with timestamps & IP addresses
-    login_history: [
-      {
-        timestamp: {
-          type: Date,
-          default: () =>
-            new Date(
-              new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" })
-            ),
-        },
-        ip: { type: String, required: true },
-        country: { type: String },
-        deviceId: { type: String, required: true },
-      },
-    ],
+    login_history: {
+      type: [LoginHistorySchema],
+    default: [],
+    },
     resetPasswordToken: { type: String },
   },
+  
   { timestamps: true }
 );
 

@@ -99,54 +99,73 @@ module.exports = {
       let order = req.body.order?.[0]?.dir === "asc" ? 1 : -1;
       let column_order = col ? { [col]: order } : { date: -1 }; // Default sorting by date descending
 
-      let category_search = req.body.columns?.[1]?.search?.value || "";
-      let date_search = req.body.columns?.[5]?.search?.value || "";
+      // Extract filters
+      // Extract filters
+      const nameSearch =
+        typeof req.body.name === "string" ? req.body.name.trim() : "";
+      const categoryValue = req.body.columns?.[1]?.search?.value || "";
+      const dateValue = req.body.columns?.[5]?.search?.value || "";
 
-      category_search = category_search
-        ? { $or: [{ category_id: category_search }] }
-        : {};
-      date_search = date_search ? { $or: [{ date: date_search }] } : {};
+      let filters = [];
 
-      let common_search = {};
-      if (req.body.search?.value) {
-        common_search = {
-          $or: [
-            { name: { $regex: req.body.search.value, $options: "i" } },
-            { url: { $regex: req.body.search.value, $options: "i" } },
-            { venue: { $regex: req.body.search.value, $options: "i" } },
-            { status: { $regex: req.body.search.value, $options: "i" } },
-            { date_two: { $regex: req.body.search.value, $options: "i" } },
-            { date_three: { $regex: req.body.search.value, $options: "i" } },
-          ],
-        };
+      // Name filter
+      if (nameSearch) {
+        filters.push({ name: { $regex: nameSearch, $options: "i" } });
       }
 
-      let searchStr = { $and: [common_search, category_search, date_search] };
+      // Category filter
+      if (categoryValue) {
+        filters.push({ category_id: categoryValue });
+      }
 
-      // Pagination variables
-      const page = parseInt(req.body.page) || 1; // Default page 1
-      const limit = 8; // Limit of 8 per page
-      const skip = (page - 1) * limit; // Calculate offset
+      // Date filter
+      if (dateValue) {
+        filters.push({ date: dateValue });
+      }
+
+      // Global search (if used)
+      if (req.body.search?.value) {
+        const value = req.body.search.value;
+        filters.push({
+          $or: [
+            { name: { $regex: value, $options: "i" } },
+            { url: { $regex: value, $options: "i" } },
+            { venue: { $regex: value, $options: "i" } },
+            { status: { $regex: value, $options: "i" } },
+            { date_two: { $regex: value, $options: "i" } },
+            { date_three: { $regex: value, $options: "i" } },
+          ],
+        });
+      }
+
+      const searchStr = filters.length > 0 ? { $and: filters } : {};
+
+      // Pagination
+      const page = parseInt(req.body.page) || 1;
+      const limit = 8;
+      const skip = (page - 1) * limit;
 
       Event.count({}, function (err, recordsTotal) {
-        if (err)
+        if (err) {
           return res
             .status(500)
             .json({ error: "Error counting total records" });
+        }
 
         Event.count(searchStr, function (err, recordsFiltered) {
-          if (err)
+          if (err) {
             return res
               .status(500)
               .json({ error: "Error counting filtered records" });
+          }
 
           Event.find(
             searchStr,
             "_id category_id name url venue date date_two date_three image status"
           )
-            .sort(column_order) // Sorting
-            .skip(skip) // Pagination offset
-            .limit(limit) // Limit per page
+            .sort(column_order)
+            .skip(skip)
+            .limit(limit)
             .exec(function (err, results) {
               if (err) {
                 console.error("Error while getting results:", err);
@@ -194,7 +213,8 @@ module.exports = {
     const status = req.body.status;
     const image =
       req.file !== undefined
-        ? "https://eximback.demo.shdpixel.com/uploads/events/" + req.file.filename
+        ? "https://eximback.demo.shdpixel.com/uploads/events/" +
+          req.file.filename
         : "";
 
     Event.findOne(

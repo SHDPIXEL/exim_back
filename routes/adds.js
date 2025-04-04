@@ -99,5 +99,4 @@ router.delete("/delete-selected-media/:id", Adds.deleteSelectedMedia);
 router.post("/updateSelectedMediaStatus", Adds.updateSelectedMediaStatus);
 router.post("/updateMediaSequence", Adds.updateMediaSequence);
 
-
 module.exports = router;
