@@ -59,13 +59,13 @@ module.exports = {
 
       // Map each poll to include totalVotes and formatted options
       const formattedPolls = polls.map((poll) => {
-        // Calculate total votes for the poll
+        // Calculate total votes
         const totalVotes = poll.options.reduce(
           (sum, option) => sum + option.votes,
           0
         );
 
-        // Format each option with its vote count and percentage (if any votes exist)
+        // Format each option
         const formattedOptions = poll.options.map((option) => ({
           text: option.text,
           votes: option.votes,
@@ -81,16 +81,16 @@ module.exports = {
           options: formattedOptions,
           correctAnswerIndex: poll.correctAnswerIndex,
           totalVotes: totalVotes,
+          votedEmails: poll.votedEmails || [], // ✅ Include voted emails
         };
       });
 
-      // Return the polls with additional vote information
       res.json({ polls: formattedPolls });
     } catch (err) {
       console.error("Error fetching polls:", err);
       res.status(500).json({ error: err.message });
     }
-  },
+  }, 
 
   //     submitPoll: async function(req, res) {
   //       try {
@@ -159,17 +159,16 @@ module.exports = {
     try {
       console.log("🔹 Request received:", req.body);
 
-      const { id, optionIndex } = req.body;
+      const { id, optionIndex, email } = req.body;
 
       // Validate
-      if (!id || optionIndex === undefined) {
+      if (!id || optionIndex === undefined || !email) {
         return res.status(400).json({
           status: "error",
-          message: "Poll ID and option index are required.",
+          message: "Poll ID, option index, and email are required.",
         });
       }
 
-      console.log("🔹 Finding poll with ID:", id);
       const poll = await Polls.findById(id);
       if (!poll) {
         return res.status(404).json({
@@ -185,17 +184,25 @@ module.exports = {
         });
       }
 
-      // ✅ Vote for the selected option
+      // ✅ Check if the user already voted
+      if (poll.votedEmails.includes(email)) {
+        return res.status(403).json({
+          status: "error",
+          message: "You have already voted in this poll.",
+        });
+      }
+
+      // ✅ Cast vote
       poll.options[optionIndex].votes += 1;
+      poll.votedEmails.push(email); // Add user email to voted list
       await poll.save();
 
-      // ✅ Calculate total votes
+      // Calculate total votes
       const totalVotes = poll.options.reduce(
         (sum, option) => sum + option.votes,
         0
       );
 
-      // ✅ Return updated poll with percentages
       const updatedPoll = {
         _id: poll._id,
         question: poll.question,

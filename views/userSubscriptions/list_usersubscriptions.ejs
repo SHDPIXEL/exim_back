@@ -1,0 +1,206 @@
+<% include ../partials/head %>
+<link href="../../datatables/jquery.dataTables.min.css" rel="stylesheet" type="text/css" />
+<link href="../../datatables/dataTables.bootstrap.css" rel="stylesheet" type="text/css" />
+<style>
+  /* Align filter dropdown with search box */
+  .dataTables_filter {
+    float: right !important;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+
+  .filter-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+</style>
+</head>
+
+<body class="hold-transition skin-blue sidebar-mini">
+  <div class="wrapper">
+    <header class="main-header">
+      <% include ../partials/header %>
+    </header>
+
+    <aside class="main-sidebar">
+      <% include ../partials/aside %>
+    </aside>
+
+    <div class="content-wrapper">
+      <section class="content-header">
+        <h1>All Subscriptions</h1>
+      </section>
+      <section class="content">
+        <div class="row">
+          <div class="col-md-12">
+            <div class="box box-info">
+              <div class="box-header clearfix">
+                <h3 class="box-title">List of User Subscriptions</h3>
+              </div>
+              <div class="table-responsive">
+                <table class="display compact" id="user_subscriptions_table">
+                  <thead>
+                    <tr>
+                      <th>Sr. No.</th>
+                      <th>User Name</th>
+                      <th>Email</th>
+                      <th>Mobile</th>
+                      <th>Edition</th>
+                      <th>Expiry Date</th>
+                      <th>Duration</th>
+                      <th>Price</th>
+                      <th>Type</th>
+                      <th>Date</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <footer class="main-footer">
+      <% include ../partials/footer %>
+    </footer>
+  </div>
+
+  <% include ../partials/tail %>
+
+  <script src="../../datatables/jquery.dataTables.js" type="text/javascript"></script>
+  <script src="../../moment/js/moment.min.js"></script>
+  <script type="text/javascript">
+    $(document).ready(function () {
+      // Append filter dropdown into the search area
+      const filterHTML = `
+      <div class="filter-container" style="display: flex; align-items: center; gap: 10px;">
+        <label for="typeFilter" style="white-space: nowrap; margin: 0;">Filter by Type:</label>
+        <select id="typeFilter" class="form-control input-sm" style="width: auto;">
+          <option value="">All</option>
+          <option value="Digital">Digital</option>
+          <option value="Hard">Hard</option>
+          <option value="Both">Both</option>
+        </select>
+      </div>
+    `;
+
+      // Inject before the default search box
+      $('#user_subscriptions_table').on('init.dt', function () {
+        $('.dataTables_filter label').before(filterHTML);
+      });
+
+      const table = $('#user_subscriptions_table').DataTable({
+        processing: true,
+        serverSide: false,
+        ajax: {
+          url: "/userSubscriptions/subscriptions",
+          type: "GET",
+          dataSrc: function (json) {
+            if (!json.success) {
+              alert("Failed to fetch subscriptions.");
+              return [];
+            }
+            return json.data;
+          }
+        },
+        columns: [
+          { data: null },
+          {
+            data: "userId",
+            render: function (user, type, row) {
+              let userName = user && typeof user === 'object' ? user.name : "-";
+              return `<span data-filter="${userName}">${userName}</span>`;
+            }
+          },
+          {
+            data: "userId",
+            render: function (user) {
+              let email = user && typeof user === 'object' ? user.email : "-";
+              return `<span data-filter="${email}">${email}</span>`;
+            }
+          },
+          {
+            data: "userId",
+            render: function (user) {
+              let mobile = user && typeof user === 'object' ? user.mobile : "-";
+              return `<span data-filter="${mobile}">${mobile}</span>`;
+            }
+          },
+          { data: "location" },
+          {
+            data: "expiryDate",
+            render: function (data) {
+              let formattedDate = moment(data).format("DD-MM-YYYY");
+              return `<span data-filter="${formattedDate}">${formattedDate}</span>`;
+            }
+          },          
+          { data: "duration" },
+          { data: "price" },
+          {
+            data: "type",
+            render: function (data) {
+              let type = data ? data.charAt(0).toUpperCase() + data.slice(1) : "-";
+              return `<span data-filter="${type}">${type}</span>`;
+            }
+          },
+          {
+            data: "createdAt",
+            render: function (data) {
+              const raw = moment(data).valueOf(); // milliseconds since epoch
+              const formatted = moment(data).format("DD-MM-YYYY hh:mm A");
+              return `<span data-order="${raw}" data-filter="${formatted}">${formatted}</span>`;
+            }
+          }                  
+        ],
+        order: [[9, "desc"]],
+        columnDefs: [
+          { orderable: false, targets: [0] }
+        ],
+        fnRowCallback: function (nRow, aData, iDisplayIndex) {
+          $("td:first", nRow).html(iDisplayIndex + 1);
+          return nRow;
+        }
+      });
+
+      // Filter logic
+      $(document).on('change', '#typeFilter', function () {
+        const selected = $(this).val();
+        if (selected) {
+          table.column(8).search('^' + selected + '$', true, false).draw();
+        } else {
+          table.column(8).search('').draw();
+        }
+      });
+
+      // Global search customization to search only specific fields
+      $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
+        const searchValue = $('.dataTables_filter input').val().toLowerCase();
+        const searchableFields = [
+        $(table.row(dataIndex).node()).find("td:eq(1) span").attr("data-filter"), // User Name
+        $(table.row(dataIndex).node()).find("td:eq(4)").text(), // Location
+        $(table.row(dataIndex).node()).find("td:eq(3) span").attr("data-filter"), // Mobile
+        $(table.row(dataIndex).node()).find("td:eq(5) span").attr("data-filter"), // Expiry Date
+        $(table.row(dataIndex).node()).find("td:eq(6)").text(), // Duration
+        $(table.row(dataIndex).node()).find("td:eq(7)").text(), // ✅ Price (newly added)
+        $(table.row(dataIndex).node()).find("td:eq(8) span").attr("data-filter"), // Type
+        $(table.row(dataIndex).node()).find("td:eq(9) span").attr("data-filter"), // Created At
+      ];
+      
+
+        return searchableFields.some(field => field && field.toLowerCase().includes(searchValue));
+      });
+
+      // Trigger search on keyup
+      $('.dataTables_filter input').off().on('keyup', function () {
+        const trimmed = $(this).val().trim();
+        $(this).val(trimmed); // Update input box to reflect trimmed text
+        table.draw();
+      });      
+    });
+  </script>
+</body>
+</html>

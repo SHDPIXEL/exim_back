@@ -255,6 +255,24 @@
       </ul>
     </li>
 
+    <% if (url == '/usersubscriptions/list') { %>
+    <li class="treeview active"><% } else { %></li>
+
+    <li class="treeview">
+      <% } %>
+      <a href="#">
+        <i class="fa fa-credit-card"></i> <span>User Subscriptions</span>
+        <i class="fa fa-angle-left pull-right"></i>
+      </a>
+      <ul class="treeview-menu">
+        <li class="<%= (url == '/usersubscriptions/list') ? 'Active' : '' %>">
+          <a href="/usersubscriptions/list"
+            ><i class="fa fa-circle-o"></i> List User Subscriptions
+          </a>
+        </li>
+      </ul>
+    </li>
+
     <% if(url == '/vessels/list' || url == '/sectors/list' || url ==
     '/terminals/list' || url == '/line_agents/list' || url ==
     '/break_bulk_vessels/list' || url == '/break_bulk_sectors/list' || url ==

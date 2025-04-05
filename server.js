@@ -213,6 +213,14 @@ app.get("/upcomingrenewals/list", (req, res) => {
   });
 });
 
+app.get("/usersubscriptions/list", (req, res) => {
+  console.log("User in request:", req.user);
+  res.render("userSubscriptions/list_usersubscriptions", {
+    user: req.user || null,
+    url: req.originalUrl,
+  });
+});
+
 app.get("/adds/list", (req, res) => {
   console.log("User in request:", req.user);
   res.render("adds/list_adds", {

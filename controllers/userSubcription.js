@@ -12,7 +12,10 @@ const checkExpiringSubscriptions = async () => {
       expiryDate: { $lte: oneMonthLater },
     }).populate("userId", "name email mobile");
 
-    console.log("Expiring Subscriptions Updated:", expiringSubscriptions.length);
+    console.log(
+      "Expiring Subscriptions Updated:",
+      expiringSubscriptions.length
+    );
   } catch (error) {
     console.error("Error fetching expiring subscriptions:", error);
   }
@@ -29,4 +32,29 @@ const getExpiringSubscriptions = (req, res) => {
   });
 };
 
-module.exports = { checkExpiringSubscriptions, getExpiringSubscriptions };
+const getAllUserSubscriptions = async (req, res) => {
+  try {
+    const subscriptions = await UserSubscriptions.find()
+      .select("userId location expiryDate duration price type createdAt")
+      .populate("userId", "name email mobile") // Ensure this matches your AppUser model
+      .sort({ createdAt: -1 });
+
+    // Debug log: shows first record to verify populated structure
+    if (subscriptions.length > 0) {
+      console.log("Sample populated subscription:", subscriptions[0]);
+    } else {
+      console.log("No subscriptions found");
+    }
+
+    res.status(200).json({ success: true, data: subscriptions });
+  } catch (error) {
+    console.error("Error fetching subscriptions:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+module.exports = {
+  checkExpiringSubscriptions,
+  getExpiringSubscriptions,
+  getAllUserSubscriptions,
+};
